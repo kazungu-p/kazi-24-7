@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% block title %}Edit Job — KaziConnect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3">Edit Job</h5>
+        <form method="post" enctype="multipart/form-data" id="edit-job-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <input type="hidden" name="remove_media_ids" id="remove_media_ids" value="">
+
+          <div class="mb-2">
+            <label class="form-label">Title</label>
+            <input class="form-control" name="title" value="{{ job.title }}" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Location</label>
+            <input class="form-control" name="location" value="{{ job.location }}" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Requirements</label>
+            <textarea class="form-control" name="requirements" rows="2">{{ job.requirements }}</textarea>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="description" rows="6" required>{{ job.description }}</textarea>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Status</label>
+            <select class="form-select" name="status">
+              <option value="open" {% if job.status=='open' %}selected{% endif %}>Open</option>
+              <option value="closed" {% if job.status=='closed' %}selected{% endif %}>Closed</option>
+            </select>
+          </div>
+
+          <hr>
+
+          <div class="mb-3">
+            <label class="form-label">Existing media</label>
+            <div class="form-text mb-2">Select media you want to remove, then save. Removed files will be deleted from disk.</div>
+            <div id="existing-media" class="d-flex flex-wrap gap-2">
+              {% for m in job.media %}
+                <div class="border p-1 bg-white text-center existing-media-item" data-media-id="{{ m.id }}" style="max-width:200px;">
+                  {% if m.media_type == 'image' %}
+                    <img src="{{ url_for('uploaded_file', filename=m.filename) }}" alt="" style="max-width:180px; height:auto;">
+                  {% elif m.media_type == 'video' %}
+                    <video width="200" controls preload="metadata">
+                      <source src="{{ url_for('uploaded_file', filename=m.filename) }}">
+                      Your browser does not support the video tag.
+                    </video>
+                  {% else %}
+                    <a href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank">{{ m.filename }}</a>
+                  {% endif %}
+                  <div class="form-check mt-1">
+                    <input class="form-check-input remove-media-checkbox" type="checkbox" name="remove_media" value="{{ m.id }}" id="remove_media_{{ m.id }}">
+                    <label class="form-check-label small" for="remove_media_{{ m.id }}">Remove</label>
+                  </div>
+                  <div class="small text-muted mt-1">ID: {{ m.id }}</div>
+                </div>
+              {% else %}
+                <div class="text-muted">No media uploaded for this job.</div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Add media (images or short videos)</label>
+            <input
+              class="form-control"
+              type="file"
+              id="media"
+              name="media"
+              multiple
+              accept="image/*,video/mp4,video/webm,video/quicktime"
+            >
+            <div class="form-text">
+              Allowed file types: PNG, JPG, JPEG, GIF, MP4, MOV, WEBM. Up to 5 files total per job (existing + new). Keep files small.
+            </div>
+            <div id="new-media-preview" class="mt-2 d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" id="save-job-btn">Save</button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('profile') }}">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const MAX_MEDIA = 5; // keep in sync with server-side MAX_MEDIA_PER_JOB
+  const MAX_FILE_BYTES = 16 * 1024 * 1024; // per-file soft-check
+  const allowedExtensions = ['png','jpg','jpeg','gif','mp4','mov','webm'];
+
+  const mediaInput = document.getElementById('media');
+  const newPreview = document.getElementById('new-media-preview');
+  const existingMediaContainer = document.getElementById('existing-media');
+  const form = document.getElementById('edit-job-form');
+  const removeMediaIdsInput = document.getElementById('remove_media_ids');
+
+  function extFromName(name) {
+    const parts = name.split('.');
+    return parts.length > 1 ? parts.pop().toLowerCase() : '';
+  }
+
+  function humanFileSize(size) {
+    if (size < 1024) return size + ' B';
+    const i = Math.floor(Math.log(size) / Math.log(1024));
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    return (size / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+  }
+
+  function clearNewPreviews() {
+    newPreview.innerHTML = '';
+  }
+
+  function createImagePreview(file) {
+    const reader = new FileReader();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'border p-1 bg-white';
+    wrapper.style.maxWidth = '150px';
+    wrapper.style.maxHeight = '120px';
+    wrapper.style.overflow = 'hidden';
+    reader.onload = function(e) {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      img.alt = '';
+      wrapper.appendChild(img);
+      const meta = document.createElement('div');
+      meta.className = 'small text-muted';
+      meta.textContent = file.name + ' · ' + humanFileSize(file.size);
+      wrapper.appendChild(meta);
+    };
+    reader.readAsDataURL(file);
+    return wrapper;
+  }
+
+  function createVideoPreview(file) {
+    const url = URL.createObjectURL(file);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'border p-1 bg-white';
+    wrapper.style.maxWidth = '200px';
+    wrapper.style.maxHeight = '140px';
+    wrapper.style.overflow = 'hidden';
+    const video = document.createElement('video');
+    video.src = url;
+    video.controls = true;
+    video.preload = 'metadata';
+    video.style.width = '100%';
+    wrapper.appendChild(video);
+    const meta = document.createElement('div');
+    meta.className = 'small text-muted';
+    meta.textContent = file.name + ' · ' + humanFileSize(file.size);
+    wrapper.appendChild(meta);
+    return wrapper;
+  }
+
+  function countExistingMedia() {
+    return existingMediaContainer ? existingMediaContainer.querySelectorAll('.existing-media-item').length : 0;
+  }
+
+  function countMarkedForRemoval() {
+    return existingMediaContainer ? existingMediaContainer.querySelectorAll('.remove-media-checkbox:checked').length : 0;
+  }
+
+  function handleNewFiles(files) {
+    clearNewPreviews();
+
+    if (!files || files.length === 0) return;
+
+    const existing = countExistingMedia();
+    const toRemove = countMarkedForRemoval();
+    const effectiveExisting = existing - toRemove;
+
+    if (effectiveExisting + files.length > MAX_MEDIA) {
+      alert('Adding these files would exceed the limit of ' + MAX_MEDIA + ' total media files for this job. Remove some existing files first or select fewer new files.');
+      mediaInput.value = '';
+      clearNewPreviews();
+      return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const ext = extFromName(f.name);
+      if (allowedExtensions.indexOf(ext) === -1) {
+        alert('Unsupported file type: ' + f.name);
+        mediaInput.value = '';
+        clearNewPreviews();
+        return;
+      }
+      if (f.size > MAX_FILE_BYTES) {
+        if (!confirm(f.name + ' is ' + humanFileSize(f.size) + '. This may exceed server limits. Continue?')) {
+          mediaInput.value = '';
+          clearNewPreviews();
+          return;
+        }
+      }
+
+      if (['mp4','mov','webm'].indexOf(ext) !== -1) {
+        newPreview.appendChild(createVideoPreview(f));
+      } else {
+        newPreview.appendChild(createImagePreview(f));
+      }
+    }
+  }
+
+  // Update hidden remove_media_ids before submit
+  function updateRemoveIdsInput() {
+    const checked = Array.from(document.querySelectorAll('.remove-media-checkbox:checked')).map(i => i.value);
+    removeMediaIdsInput.value = checked.join(',');
+  }
+
+  // When any existing remove checkbox changes, update hidden input and validate total
+  existingMediaContainer && existingMediaContainer.addEventListener('change', function(e){
+    if (e.target && e.target.classList && e.target.classList.contains('remove-media-checkbox')) {
+      updateRemoveIdsInput();
+      // Optionally visually mark removed items
+      const container = e.target.closest('.existing-media-item');
+      if (container) {
+        if (e.target.checked) {
+          container.style.opacity = '0.6';
+        } else {
+          container.style.opacity = '1';
+        }
+      }
+    }
+  });
+
+  mediaInput && mediaInput.addEventListener('change', function(e){
+    handleNewFiles(e.target.files);
+  });
+
+  form.addEventListener('submit', function(e){
+    updateRemoveIdsInput();
+
+    const files = mediaInput.files;
+    const existing = countExistingMedia();
+    const toRemove = countMarkedForRemoval();
+    const effectiveExisting = existing - toRemove;
+    const newCount = files ? files.length : 0;
+
+    if (effectiveExisting + newCount > MAX_MEDIA) {
+      e.preventDefault();
+      alert('You can have up to ' + MAX_MEDIA + ' media files per job (existing minus removed + new).');
+      return false;
+    }
+
+    // Validate new files extensions and sizes one last time
+    for (let i = 0; i < newCount; i++) {
+      const ext = extFromName(files[i].name);
+      if (allowedExtensions.indexOf(ext) === -1) {
+        e.preventDefault();
+        alert('Unsupported file type: ' + files[i].name);
+        return false;
+      }
+      if (files[i].size > MAX_FILE_BYTES) {
+        if (!confirm(files[i].name + ' is large (' + humanFileSize(files[i].size) + '). Continue?')) {
+          e.preventDefault();
+          return false;
+        }
+      }
+    }
+  });
+
+  // initialize hidden input from any pre-checked boxes
+  updateRemoveIdsInput();
+
+})();
+</script>
+{% endblock %}

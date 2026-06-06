@@ -1,0 +1,204 @@
+{% extends 'base.html' %}
+{% block title %}Open Jobs — KaziConnect{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
+  <div>
+    <h1 class="h4 mb-1">Open Jobs</h1>
+    <div class="small text-muted">Browse current opportunities and apply easily.</div>
+  </div>
+
+  <div class="d-flex gap-2">
+    {% if current_user.is_authenticated %}
+      <a class="btn btn-sm btn-primary" href="{{ url_for('post_job') }}">
+        <i class="bi bi-briefcase-fill me-1"></i> Post Job
+      </a>
+      <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('messages_list') }}">
+        <i class="bi bi-chat-dots me-1"></i> Messages
+        <span class="badge bg-danger ms-1" id="top-messages-badge" style="display:none"></span>
+      </a>
+    {% else %}
+      <a class="btn btn-sm btn-outline-primary" href="{{ url_for('login') }}">Login to apply</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  {% for job in jobs %}
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card h-100 shadow-sm">
+        <div class="card-body d-flex flex-column">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <h5 class="card-title mb-1">{{ job.title }}</h5>
+              <div class="small text-muted"><i class="bi bi-geo-alt me-1"></i>{{ job.location }}</div>
+            </div>
+            <div class="text-end">
+              <span class="badge bg-{{ 'success' if job.status=='open' else 'secondary' }} small">{{ job.status|capitalize }}</span>
+            </div>
+          </div>
+
+          {# Media preview: show first media if present (images or small video). If user not logged in show prompt to login to view media. #}
+          {% set first_media = job.media|first %}
+          {% if first_media %}
+            <div class="mt-3 mb-2 d-flex justify-content-center">
+              {% if current_user.is_authenticated %}
+                {% if first_media.media_type == 'image' %}
+                  <img src="{{ url_for('uploaded_file', filename=first_media.filename) }}"
+                       alt="Job media for {{ job.title }}"
+                       style="max-width:100%; width:220px; height:140px; object-fit:cover; border-radius:4px; border:1px solid #e9ecef;">
+                {% elif first_media.media_type == 'video' %}
+                  <video width="220" height="140" muted preload="metadata" style="border-radius:4px; border:1px solid #e9ecef; background:#000;">
+                    <source src="{{ url_for('uploaded_file', filename=first_media.filename) }}">
+                    Your browser does not support the video tag.
+                  </video>
+                {% else %}
+                  <a class="small text-muted" href="{{ url_for('uploaded_file', filename=first_media.filename) }}" target="_blank">View media</a>
+                {% endif %}
+              {% else %}
+                <div style="width:220px; height:140px; display:flex;align-items:center;justify-content:center;border-radius:4px;border:1px dashed #e9ecef;background:#f8f9fa;">
+                  <a href="{{ url_for('login') }}" class="small">Login to view media</a>
+                </div>
+              {% endif %}
+            </div>
+          {% endif %}
+
+          <p class="card-text text-truncate mt-1" style="min-height:3.6rem;" id="desc-{{ job.id }}">{{ job.description }}</p>
+
+          <div class="mt-auto d-flex justify-content-between align-items-center gap-2">
+            <div class="small text-muted">
+              <div>Posted by <strong>{{ job.poster.username or job.poster.email }}</strong></div>
+              <div>{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+
+            <div class="d-flex align-items-center gap-2">
+              {% if current_user.is_authenticated %}
+                <form action="{{ url_for('apply_job', job_id=job.id) }}" method="post" class="m-0">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-outline-success" title="Apply">
+                    <i class="bi bi-check2-circle"></i> Apply
+                  </button>
+                </form>
+              {% else %}
+                <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('login') }}" title="Login to apply">
+                  <i class="bi bi-lock-fill"></i>
+                </a>
+              {% endif %}
+
+              <a class="btn btn-sm btn-primary" href="{{ url_for('job_detail', job_id=job.id) }}" title="Details (JSON)">
+                <i class="bi bi-info-circle"></i> Details
+              </a>
+
+              <button class="btn btn-sm btn-light border copy-btn" data-copy-text="{{ url_for('job_detail', job_id=job.id, _external=true) }}" title="Copy job link">
+                <i class="bi bi-clipboard"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-footer d-flex justify-content-between align-items-center small text-muted">
+          <div>#{% if job.id %}{{ job.id }}{% endif %}</div>
+          <div>
+            <span class="me-2">Views: —</span>
+            <button class="btn btn-link btn-sm p-0 copy-desc-btn" data-target="#desc-{{ job.id }}">Copy description</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="col-12">
+      <div class="alert alert-info mb-0">No open jobs right now. Check back later or post a job.</div>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Floating quick actions for small screens -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1040;">
+  {% if current_user.is_authenticated %}
+    <a class="btn btn-primary btn-lg rounded-circle shadow-lg d-md-none" href="{{ url_for('post_job') }}" title="Post a job">
+      <i class="bi bi-plus-lg"></i>
+    </a>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Utility: simple copy-to-clipboard with temporary tooltip
+  async function copyText(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showTempFeedback(btn, 'Copied');
+    } catch (e) {
+      // fallback
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showTempFeedback(btn, 'Copied');
+      } catch (err) {
+        showTempFeedback(btn, 'Failed');
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+  }
+
+  function showTempFeedback(btn, text) {
+    const orig = btn.innerHTML;
+    btn.innerHTML = text;
+    btn.disabled = true;
+    setTimeout(() => {
+      btn.innerHTML = orig;
+      btn.disabled = false;
+    }, 1400);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // copy link buttons
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        const payload = btn.getAttribute('data-copy-text') || '';
+        copyText(payload, btn);
+      });
+    });
+
+    // copy description buttons
+    document.querySelectorAll('.copy-desc-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const target = btn.getAttribute('data-target');
+        const el = document.querySelector(target);
+        if (!el) return;
+        copyText(el.innerText.trim(), btn);
+      });
+    });
+
+    // update top badge via API polling (same logic already in base.html but ensure page badge too)
+    async function updateTopMessagesBadge() {
+      try {
+        const res = await fetch('{{ url_for("messages_unread_count") }}', {credentials: 'same-origin'});
+        if (!res.ok) return;
+        const data = await res.json();
+        const el = document.getElementById('top-messages-badge');
+        if (!el) return;
+        if (data.count && data.count > 0) {
+          el.style.display = 'inline-block';
+          el.textContent = data.count > 99 ? '99+' : data.count;
+        } else {
+          el.style.display = 'none';
+        }
+      } catch (err) {
+        console.debug('badge fetch failed', err);
+      }
+    }
+
+    {% if current_user.is_authenticated %}
+      updateTopMessagesBadge();
+      setInterval(updateTopMessagesBadge, 20000);
+    {% endif %}
+  });
+</script>
+{% endblock %}

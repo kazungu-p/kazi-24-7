@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title %}Applications — KaziConnect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10">
+    <div class="card shadow-sm">
+      <div class="card-header d-flex justify-content-between">
+        <div><strong>Applications for:</strong> {{ job.title }}</div>
+        <div class="small text-muted">{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+      </div>
+      <div class="list-group list-group-flush">
+        {% for a in applications %}
+          <div class="list-group-item d-flex justify-content-between align-items-start">
+            <div>
+              <strong>{{ a.applicant.username or a.applicant.email }}</strong>
+              <div class="small text-muted">Applied: {{ a.applied_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            </div>
+            <div class="text-end">
+              <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <select class="form-select form-select-sm d-inline-block" name="status" style="width:120px;">
+                  <option value="pending" {% if a.status=='pending' %}selected{% endif %}>Pending</option>
+                  <option value="accepted" {% if a.status=='accepted' %}selected{% endif %}>Accepted</option>
+                  <option value="rejected" {% if a.status=='rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+                <button class="btn btn-sm btn-primary">Update</button>
+              </form>
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('messages_conversation', other_id=a.applicant.id) }}">Message</a>
+            </div>
+          </div>
+        {% else %}
+          <div class="list-group-item">No applications yet.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

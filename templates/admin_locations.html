@@ -1,0 +1,578 @@
+{% extends 'base.html' %}
+{% block title %}Location Monitoring — Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="fw-bold text-primary">📍 Location Integrity Dashboard</h3>
+                            <p class="text-muted">Monitor user locations, track discrepancies, and manage suspensions</p>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary me-2">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Admin
+                            </a>
+                            <button class="btn btn-primary" onclick="window.location.reload()">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-people text-primary fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Total Users</h6>
+                            <h3 class="fw-bold mb-0">{{ total_users }}</h3>
+                            <small class="text-muted">Registered users</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-warning bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Location Discrepancies</h6>
+                            <h3 class="fw-bold mb-0">{{ discrepancy_count }}</h3>
+                            <small class="text-muted">Custom vs Real location mismatch</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-globe text-info fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Countries</h6>
+                            <h3 class="fw-bold mb-0">{{ unique_countries }}</h3>
+                            <small class="text-muted">Unique countries represented</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger bg-opacity-10 p-3 rounded-3 me-3">
+                            <i class="bi bi-clock-history text-danger fs-4"></i>
+                        </div>
+                        <div>
+                            <h6 class="text-muted mb-1">Suspended Now</h6>
+                            <h3 class="fw-bold mb-0">{{ suspended_now }}</h3>
+                            <small class="text-muted">Active suspensions</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <input type="text" class="form-control" id="searchUser" placeholder="🔍 Search by name, email, or location...">
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterDiscrepancy">
+                                <option value="all">All Users</option>
+                                <option value="discrepancy">With Location Discrepancy</option>
+                                <option value="no-discrepancy">No Discrepancy</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" id="filterStatus">
+                                <option value="all">All Status</option>
+                                <option value="active">Active</option>
+                                <option value="suspended">Suspended</option>
+                                <option value="burned">Permanently Banned</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-outline-primary w-100" onclick="applyFilters()">
+                                <i class="bi bi-funnel me-2"></i>Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Map Preview -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-semibold mb-3">
+                        <i class="bi bi-map me-2 text-primary"></i>User Location Heatmap
+                    </h5>
+                    <div class="bg-light rounded-3 p-5 text-center">
+                        {% if users_with_coords > 0 %}
+                            <div id="mapPreview" style="height: 300px; background: #e9ecef; border-radius: 12px; position: relative;">
+                                <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
+                                    <i class="bi bi-geo-alt-fill text-primary fs-1"></i>
+                                    <p class="text-muted mt-2">{{ users_with_coords }} users with coordinates</p>
+                                    <small class="text-muted">Map integration coming soon (Google Maps/Leaflet)</small>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="py-4">
+                                <i class="bi bi-map text-muted fs-1"></i>
+                                <p class="text-muted mt-2">No location coordinates available yet</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Table with Location Data -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-semibold mb-0">
+                            <i class="bi bi-table me-2 text-primary"></i>User Location Details
+                        </h5>
+                        <span class="badge bg-primary">{{ users|length }} total users</span>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" id="usersTable">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th>User</th>
+                                    <th>Real Location (from IP)</th>
+                                    <th>Custom Location</th>
+                                    <th>IP Address</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                               {% for user in users %}
+    <tr class="{% if user.location_discrepancy %}table-warning{% endif %} {% if user.burned %}table-danger{% endif %} user-row"
+        data-discrepancy="{{ 'true' if user.location_discrepancy else 'false' }}"
+        data-status="{% if user.burned %}burned{% elif user|is_active_suspension %}suspended{% else %}active{% endif %}">
+        <td>
+            <div class="d-flex align-items-center">
+                <!-- rest of your code -->
+                                            {% if user.profile_picture %}
+                                                <img src="{{ url_for('uploaded_file', filename=user.profile_picture) }}" 
+                                                     class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">
+                                            {% else %}
+                                                <div class="bg-secondary bg-opacity-10 rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                     style="width:40px; height:40px;">
+                                                    <i class="bi bi-person text-secondary"></i>
+                                                </div>
+                                            {% endif %}
+                                            <div>
+                                                <div class="fw-semibold">{{ user.username or 'No username' }}</div>
+                                                <small class="text-muted">{{ user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if user.real_city %}
+                                            <span class="fw-semibold">{{ user.real_city }}</span><br>
+                                            <small class="text-muted">{{ user.real_region or '' }}, {{ user.real_country or '' }}</small><br>
+                                            {% if user.real_latitude and user.real_longitude %}
+                                                <small class="text-muted">📍 {{ "%.4f"|format(user.real_latitude) }}, {{ "%.4f"|format(user.real_longitude) }}</small>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">Not captured</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.location %}
+                                            <span class="fw-semibold">{{ user.location }}</span>
+                                            {% if user.location_discrepancy %}
+                                                <span class="badge bg-warning ms-1" title="Custom location differs from real location">⚠️ Mismatch</span>
+                                            {% else %}
+                                                <span class="badge bg-success ms-1">✓ Verified</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="text-muted">Not provided</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            {{ user.real_ip or 'N/A' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if user.burned %}
+                                            <span class="badge bg-danger">🔥 Permanently Banned</span>
+                                        {% elif user|is_active_suspension %}
+                                            <span class="badge bg-warning">⏸️ Suspended</span>
+                                           {% if user|is_active_suspension %}
+    <br><small class="text-danger">{{ user|hours_remaining }}h remaining</small>
+{% endif %}
+                                        {% else %}
+                                            <span class="badge bg-success">✅ Active</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{% if user.created_at %}{{ user.created_at.strftime('%Y-%m-%d') }}{% else %}<span class="text-muted">Unknown</span>{% endif %}</td></td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-sm btn-outline-primary dropdown-toggle" 
+                                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                                Actions
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" href="{{ url_for('profile', user_id=user.id) }}" target="_blank">
+                                                        <i class="bi bi-person me-2"></i>View Profile
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" 
+                                                       data-bs-target="#locationModal{{ user.id }}">
+                                                        <i class="bi bi-geo-alt me-2"></i>Location Details
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" data-bs-toggle="modal" 
+                                                       data-bs-target="#suspendModal{{ user.id }}">
+                                                        <i class="bi bi-clock-history me-2"></i>Suspend User
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <form method="post" action="{{ url_for('admin_warn', user_id=user.id) }}" class="d-inline">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <input type="hidden" name="reason" value="Location integrity issue">
+                                                        <button type="submit" class="dropdown-item">
+                                                            <i class="bi bi-exclamation-triangle me-2"></i>Send Warning
+                                                        </button>
+                                                    </form>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" 
+                                                       data-bs-target="#burnModal{{ user.id }}">
+                                                        <i class="bi bi-fire me-2"></i>Permanently Ban
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                        <!-- Location Details Modal -->
+                                        <div class="modal fade" id="locationModal{{ user.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title">📍 Location Details - {{ user.username or user.email }}</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="row">
+                                                            <div class="col-md-6">
+                                                                <h6 class="fw-semibold">Real Location (from IP)</h6>
+                                                                <p>
+                                                                    <strong>IP:</strong> {{ user.real_ip or 'N/A' }}<br>
+                                                                    <strong>City:</strong> {{ user.real_city or 'N/A' }}<br>
+                                                                    <strong>Region:</strong> {{ user.real_region or 'N/A' }}<br>
+                                                                    <strong>Country:</strong> {{ user.real_country or 'N/A' }}<br>
+                                                                    {% if user.real_latitude and user.real_longitude %}
+                                                                        <strong>Coordinates:</strong> {{ "%.6f"|format(user.real_latitude) }}, {{ "%.6f"|format(user.real_longitude) }}
+                                                                    {% endif %}
+                                                                </p>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <h6 class="fw-semibold">Custom Location</h6>
+                                                                <p>
+                                                                    <strong>Provided:</strong> {{ user.location or 'Not provided' }}<br>
+                                                                    {% if user.latitude and user.longitude %}
+                                                                        <strong>Coordinates:</strong> {{ "%.6f"|format(user.latitude) }}, {{ "%.6f"|format(user.longitude) }}
+                                                                    {% endif %}
+                                                                </p>
+                                                                {% if user.location_discrepancy %}
+                                                                    <div class="alert alert-warning">
+                                                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                                                        <strong>Location Mismatch Detected!</strong><br>
+                                                                        Custom location differs from real location.
+                                                                    </div>
+                                                                {% else %}
+                                                                    <div class="alert alert-success">
+                                                                        <i class="bi bi-check-circle me-2"></i>
+                                                                        <strong>Location Verified</strong><br>
+                                                                        Custom location matches real location.
+                                                                    </div>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-3 text-muted small">
+                                                            <i class="bi bi-clock me-1"></i>
+                                                            Verified: {% if user.location_verified_at %}{{ user.location_verified_at.strftime('%Y-%m-%d %H:%M:%S') }}{% else %}Not verified{% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Suspend Modal with Duration -->
+                                        <div class="modal fade" id="suspendModal{{ user.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="post" action="{{ url_for('admin_suspend_with_duration', user_id=user.id) }}">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title">⏸️ Suspend User: {{ user.username or user.email }}</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Suspension Duration</label>
+                                                                <select class="form-select" name="duration" id="duration{{ user.id }}" required>
+                                                                    <option value="hour">1 Hour</option>
+                                                                    <option value="day" selected>1 Day</option>
+                                                                    <option value="week">1 Week</option>
+                                                                    <option value="month">1 Month</option>
+                                                                    <option value="year">1 Year</option>
+                                                                    <option value="custom">Custom (specify hours)</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3" id="customHours{{ user.id }}" style="display: none;">
+                                                                <label class="form-label">Custom Hours</label>
+                                                                <input type="number" class="form-control" name="custom_hours" min="1" max="8760" placeholder="Enter number of hours">
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Reason for Suspension</label>
+                                                                <textarea class="form-control" name="reason" rows="3" required 
+                                                                          placeholder="Location discrepancy, suspicious activity, etc."></textarea>
+                                                            </div>
+                                                            <div class="alert alert-info">
+                                                                <i class="bi bi-info-circle me-2"></i>
+                                                                The user will be unable to log in or post jobs during the suspension period.
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-warning">Suspend User</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Permanent Ban Modal -->
+                                        <div class="modal fade" id="burnModal{{ user.id }}" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form method="post" action="{{ url_for('admin_burn', user_id=user.id) }}">
+                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title text-danger">🔥 Permanently Ban User</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <p>Are you sure you want to permanently ban <strong>{{ user.username or user.email }}</strong>?</p>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Reason for Permanent Ban</label>
+                                                                <textarea class="form-control" name="reason" rows="3" required 
+                                                                          placeholder="Repeated violations, fraudulent activity, etc."></textarea>
+                                                            </div>
+                                                            <div class="alert alert-danger">
+                                                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                                                This action cannot be undone. The user will lose all access permanently.
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                            <button type="submit" class="btn btn-danger">Permanently Ban</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <script>
+                                            // Show/hide custom hours field based on selection for this specific user
+                                            document.getElementById('duration{{ user.id }}').addEventListener('change', function() {
+                                                document.getElementById('customHours{{ user.id }}').style.display = 
+                                                    this.value === 'custom' ? 'block' : 'none';
+                                            });
+                                        </script>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {% if not users %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-emoji-frown text-muted fs-1"></i>
+                        <p class="text-muted mt-3">No users found</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Program Progress Tracking -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-semibold mb-3">
+                        <i class="bi bi-graph-up me-2 text-primary"></i>Program Progress Over Time
+                    </h5>
+                    
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-4">
+                            <div class="bg-light p-4 rounded-3">
+                                <h6 class="text-muted mb-2">New Users (Last 30 Days)</h6>
+                                <h2 class="fw-bold text-primary">{{ new_users_30d }}</h2>
+                                <small class="text-muted">+{{ ((new_users_30d / total_users) * 100)|round(1) if total_users > 0 else 0 }}% of total</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light p-4 rounded-3">
+                                <h6 class="text-muted mb-2">Active Job Posters</h6>
+                                <h2 class="fw-bold text-success">{{ active_posters }}</h2>
+                                <small class="text-muted">{{ ((active_posters / total_users) * 100)|round(1) if total_users > 0 else 0 }}% of users</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="bg-light p-4 rounded-3">
+                                <h6 class="text-muted mb-2">Suspension Rate</h6>
+                                <h2 class="fw-bold text-warning">{{ suspension_rate }}%</h2>
+                                <small class="text-muted">{{ suspended_now }} currently suspended</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Registrations by Country -->
+                    <h6 class="fw-semibold mb-3">Registrations by Country</h6>
+                    <div class="row">
+                        {% for country, count in registrations_by_country.items() %}
+                        <div class="col-md-3 mb-2">
+                            <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded-3">
+                                <span>
+                                    <i class="bi bi-flag me-2 text-primary"></i>
+                                    {{ country }}
+                                </span>
+                                <span class="badge bg-primary rounded-pill">{{ count }}</span>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="col-12">
+                            <p class="text-muted text-center">No country data available</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter and Search JavaScript -->
+<script>
+function applyFilters() {
+    const searchTerm = document.getElementById('searchUser').value.toLowerCase();
+    const discrepancyFilter = document.getElementById('filterDiscrepancy').value;
+    const statusFilter = document.getElementById('filterStatus').value;
+    
+    const rows = document.querySelectorAll('.user-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const discrepancy = row.dataset.discrepancy === 'true';
+        const status = row.dataset.status;
+        
+        // Search filter
+        const matchesSearch = searchTerm === '' || text.includes(searchTerm);
+        
+        // Discrepancy filter
+        let matchesDiscrepancy = true;
+        if (discrepancyFilter === 'discrepancy') {
+            matchesDiscrepancy = discrepancy;
+        } else if (discrepancyFilter === 'no-discrepancy') {
+            matchesDiscrepancy = !discrepancy;
+        }
+        
+        // Status filter
+        let matchesStatus = true;
+        if (statusFilter !== 'all') {
+            matchesStatus = status === statusFilter;
+        }
+        
+        if (matchesSearch && matchesDiscrepancy && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Add event listeners for real-time filtering
+document.getElementById('searchUser').addEventListener('keyup', applyFilters);
+document.getElementById('filterDiscrepancy').addEventListener('change', applyFilters);
+document.getElementById('filterStatus').addEventListener('change', applyFilters);
+
+// Handle custom hours fields for all modals
+document.addEventListener('DOMContentLoaded', function() {
+    // This will be handled by individual event listeners in each modal
+});
+</script>
+
+<style>
+.bg-primary-soft {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+.table td, .table th {
+    vertical-align: middle;
+}
+.dropdown-menu {
+    box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+}
+.modal-content {
+    border: none;
+    box-shadow: 0 1rem 3rem rgba(0,0,0,0.175);
+}
+.table-warning {
+    --bs-table-bg: rgba(255, 193, 7, 0.05);
+}
+.table-danger {
+    --bs-table-bg: rgba(220, 53, 69, 0.05);
+}
+</style>
+{% endblock %}

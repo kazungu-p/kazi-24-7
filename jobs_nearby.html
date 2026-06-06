@@ -1,0 +1,139 @@
+cat > templates/jobs_nearby.html << 'EOF'
+{% extends "base.html" %}
+
+{% block title %}Jobs Near You - KaziConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="display-5 fw-bold">
+            <i class="bi bi-pin-map-fill" style="color: var(--color-accent-cyan);"></i>
+            Jobs Near You
+        </h1>
+        <a href="{{ url_for('verify_location') }}" class="btn btn-outline-primary">
+            <i class="bi bi-arrow-repeat"></i> Update Location
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-12">
+            <div class="card mb-4" style="background: var(--color-bg-elevated); border-radius: var(--radius-xl);">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <div class="d-flex align-items-center">
+                                <div class="me-3">
+                                    {% if user_location.trust_score >= 80 %}
+                                        <i class="bi bi-shield-fill-check fs-1 text-success"></i>
+                                    {% elif user_location.trust_score >= 50 %}
+                                        <i class="bi bi-shield-check fs-1 text-warning"></i>
+                                    {% else %}
+                                        <i class="bi bi-shield-exclamation fs-1 text-danger"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Your Verified Location</h5>
+                                    <p class="mb-0">
+                                        <strong>
+                                            {% if user_location.city %}{{ user_location.city }}{% endif %}
+                                            {% if user_location.region %}, {{ user_location.region }}{% endif %}
+                                            {% if user_location.country %}, {{ user_location.country }}{% endif %}
+                                        </strong>
+                                    </p>
+                                    <small class="text-secondary">
+                                        <i class="bi bi-crosshair"></i> Accuracy: {{ "%.0f"|format(user_location.accuracy) }} meters
+                                        • Trust Score: {{ user_location.trust_score }}%
+                                        • Radius: {{ radius }}km
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                            <span class="badge bg-primary p-3">
+                                <i class="bi bi-briefcase"></i> {{ jobs|length }} Jobs Found
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        {% for job_loc in jobs %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100" style="background: var(--color-bg-elevated); border-radius: var(--radius-lg);">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="card-title fw-bold mb-0">
+                            <a href="{{ url_for('job_detail', job_id=job_loc.job.id) }}" style="color: var(--color-text-primary); text-decoration: none;">
+                                {{ job_loc.job.title }}
+                            </a>
+                        </h5>
+                        {% if job_loc.distance < 5 %}
+                            <span class="badge bg-success">Very Close</span>
+                        {% elif job_loc.distance < 20 %}
+                            <span class="badge bg-info">Nearby</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <i class="bi bi-building me-2" style="color: var(--color-accent-cyan);"></i>
+                        <span>{{ job_loc.job.poster.display_name or job_loc.job.poster.username or job_loc.job.poster.email }}</span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <i class="bi bi-geo-alt me-2" style="color: var(--color-accent-purple);"></i>
+                        <span>
+                            {% if job_loc.city %}{{ job_loc.city }}{% endif %}
+                            {% if job_loc.region %}, {{ job_loc.region }}{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <i class="bi bi-arrows-angle-expand me-2" style="color: var(--color-accent-orange);"></i>
+                        <span class="fw-bold fs-5">{{ "%.1f"|format(job_loc.distance) }} km away</span>
+                    </div>
+                    
+                    <div class="mb-3 small text-secondary">
+                        <i class="bi bi-shield-check me-1"></i>
+                        Verified location • Accuracy: {{ "%.0f"|format(job_loc.accuracy) }}m
+                    </div>
+                    
+                    <a href="{{ url_for('job_detail', job_id=job_loc.job.id) }}" class="btn w-100 mt-2" 
+                       style="background: var(--gradient-primary); color: white; border-radius: 50px;">
+                        View Job
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="bi bi-pin-map fs-1 text-secondary"></i>
+                <h3 class="mt-4">No Jobs Found Within {{ radius }}km</h3>
+                <p class="text-secondary">Try increasing your search radius or check back later.</p>
+                <div class="mt-4">
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-2">
+                        <i class="bi bi-briefcase"></i> Browse All Jobs
+                    </a>
+                    <a href="{{ url_for('verify_location') }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-geo-alt"></i> Update Location
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    {% if jobs %}
+    <div class="text-center mt-4">
+        <small class="text-secondary">
+            <i class="bi bi-shield-lock-fill"></i>
+            All locations cryptographically verified • Cannot be faked • OpenStreetMap (FREE)
+        </small>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+EOF

@@ -1,0 +1,192 @@
+{% extends 'base.html' %}
+{% block title %}Post Job — KaziConnect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="mb-3">Post a new job</h5>
+        <form method="post" enctype="multipart/form-data" id="post-job-form">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-2">
+            <label class="form-label">Title</label>
+            <input class="form-control" name="title" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Location</label>
+            <input class="form-control" name="location" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Requirements (brief)</label>
+            <textarea class="form-control" name="requirements" rows="2"></textarea>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" name="description" rows="6" required></textarea>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Media (images or short videos)</label>
+            <input
+              class="form-control"
+              type="file"
+              id="media"
+              name="media"
+              multiple
+              accept="image/*,video/mp4,video/webm,video/quicktime"
+            >
+            <div class="form-text">
+              Allowed file types: PNG, JPG, JPEG, GIF, MP4, MOV, WEBM. Up to 5 files. Keep files small (client and server limit).
+            </div>
+
+            <div id="media-preview" class="mt-2 d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <div class="d-grid">
+            <button class="btn btn-success" id="post-job-btn">Post Job</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const MAX_MEDIA = 5; // keep in sync with server-side MAX_MEDIA_PER_JOB
+  const MAX_FILE_BYTES = 16 * 1024 * 1024; // per-file soft-check (server also enforces MAX_CONTENT_LENGTH)
+
+  const allowedExtensions = ['png','jpg','jpeg','gif','mp4','mov','webm'];
+
+  const mediaInput = document.getElementById('media');
+  const previewContainer = document.getElementById('media-preview');
+  const form = document.getElementById('post-job-form');
+
+  function extFromName(name) {
+    const parts = name.split('.');
+    return parts.length > 1 ? parts.pop().toLowerCase() : '';
+  }
+
+  function humanFileSize(size) {
+    if (size < 1024) return size + ' B';
+    const i = Math.floor(Math.log(size) / Math.log(1024));
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    return (size / Math.pow(1024, i)).toFixed(1) + ' ' + sizes[i];
+  }
+
+  function clearPreviews() {
+    previewContainer.innerHTML = '';
+  }
+
+  function createImagePreview(file) {
+    const reader = new FileReader();
+    const wrapper = document.createElement('div');
+    wrapper.className = 'border p-1 bg-white';
+    wrapper.style.maxWidth = '150px';
+    wrapper.style.maxHeight = '120px';
+    wrapper.style.overflow = 'hidden';
+    reader.onload = function(e) {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.style.width = '100%';
+      img.style.height = 'auto';
+      img.alt = '';
+      wrapper.appendChild(img);
+      const meta = document.createElement('div');
+      meta.className = 'small text-muted';
+      meta.textContent = file.name + ' · ' + humanFileSize(file.size);
+      wrapper.appendChild(meta);
+    };
+    reader.readAsDataURL(file);
+    return wrapper;
+  }
+
+  function createVideoPreview(file) {
+    const url = URL.createObjectURL(file);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'border p-1 bg-white';
+    wrapper.style.maxWidth = '200px';
+    wrapper.style.maxHeight = '140px';
+    wrapper.style.overflow = 'hidden';
+    const video = document.createElement('video');
+    video.src = url;
+    video.controls = true;
+    video.preload = 'metadata';
+    video.style.width = '100%';
+    wrapper.appendChild(video);
+    const meta = document.createElement('div');
+    meta.className = 'small text-muted';
+    meta.textContent = file.name + ' · ' + humanFileSize(file.size);
+    wrapper.appendChild(meta);
+    return wrapper;
+  }
+
+  function handleFiles(files) {
+    clearPreviews();
+
+    if (!files || files.length === 0) return;
+
+    if (files.length > MAX_MEDIA) {
+      alert('You can upload up to ' + MAX_MEDIA + ' media files.');
+      mediaInput.value = '';
+      return;
+    }
+
+    for (let i = 0; i < files.length; i++) {
+      const f = files[i];
+      const ext = extFromName(f.name);
+      if (allowedExtensions.indexOf(ext) === -1) {
+        alert('Unsupported file type: ' + f.name);
+        mediaInput.value = '';
+        clearPreviews();
+        return;
+      }
+      if (f.size > MAX_FILE_BYTES) {
+        if (!confirm(f.name + ' is ' + humanFileSize(f.size) + '. This may exceed server limits. Continue?')) {
+          mediaInput.value = '';
+          clearPreviews();
+          return;
+        }
+      }
+
+      if (ext === 'mp4' || ext === 'mov' || ext === 'webm') {
+        previewContainer.appendChild(createVideoPreview(f));
+      } else {
+        previewContainer.appendChild(createImagePreview(f));
+      }
+    }
+  }
+
+  mediaInput.addEventListener('change', function(e){
+    handleFiles(e.target.files);
+  });
+
+  // Final check before submit
+  form.addEventListener('submit', function(e){
+    const files = mediaInput.files;
+    if (files && files.length > MAX_MEDIA) {
+      e.preventDefault();
+      alert('You can upload up to ' + MAX_MEDIA + ' media files.');
+      return false;
+    }
+    for (let i = 0; i < files.length; i++) {
+      const ext = extFromName(files[i].name);
+      if (allowedExtensions.indexOf(ext) === -1) {
+        e.preventDefault();
+        alert('Unsupported file type: ' + files[i].name);
+        return false;
+      }
+      if (files[i].size > MAX_FILE_BYTES) {
+        // allow submit but warn users (server may reject)
+        if (!confirm(files[i].name + ' is large (' + humanFileSize(files[i].size) + '). Continue?')) {
+          e.preventDefault();
+          return false;
+        }
+      }
+    }
+  });
+
+})();
+</script>
+{% endblock %}

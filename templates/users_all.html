@@ -1,0 +1,931 @@
+{% extends 'base.html' %}
+{% block title %}All Users — KaziConnect{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --users-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --users-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --users-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --users-gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --users-gradient-5: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --users-bg-card: #ffffff;
+    --users-bg-elevated: #fafbfd;
+    --users-border: rgba(99, 102, 241, 0.1);
+    --users-text-primary: #1a1d29;
+    --users-text-secondary: #6b7280;
+    --users-text-muted: #9ca3af;
+    --users-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --users-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
+    --users-shadow-lg: 0 16px 40px rgba(102, 126, 234, 0.12);
+    --users-shadow-xl: 0 24px 56px rgba(102, 126, 234, 0.16);
+    --users-shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
+    --users-radius-sm: 10px;
+    --users-radius-md: 14px;
+    --users-radius-lg: 18px;
+    --users-radius-xl: 24px;
+  }
+
+  .users-page-header {
+    margin-bottom: 2.5rem;
+    animation: fadeInDown 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding: 1.5rem 0;
+  }
+
+  .header-left h1 {
+    font-family: 'Poppins', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: var(--users-gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.03em;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .header-left h1 i {
+    background: var(--users-gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header-subtitle {
+    font-size: 1.05rem;
+    color: var(--users-text-secondary);
+    font-weight: 400;
+  }
+
+  .btn-header-action {
+    padding: 0.85rem 1.75rem;
+    border-radius: var(--users-radius-lg);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: 2px solid var(--users-border);
+    background: white;
+    color: var(--users-text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    box-shadow: var(--users-shadow-sm);
+  }
+
+  .btn-header-action:hover {
+    transform: translateY(-3px);
+    border-color: #667eea;
+    color: #667eea;
+    box-shadow: var(--users-shadow-md);
+  }
+
+  /* Search Card */
+  .search-card {
+    background: var(--users-bg-card);
+    border-radius: var(--users-radius-xl);
+    border: 1px solid var(--users-border);
+    box-shadow: var(--users-shadow-lg);
+    padding: 1.75rem;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1) 0.1s backwards;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .search-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--users-gradient-1);
+  }
+
+  .search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--users-bg-elevated);
+    border: 2px solid var(--users-border);
+    border-radius: var(--users-radius-lg);
+    padding: 0.5rem 1.25rem;
+    transition: all 0.3s ease;
+  }
+
+  .search-wrapper:focus-within {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  }
+
+  .search-icon {
+    font-size: 1.3rem;
+    color: var(--users-text-muted);
+    margin-right: 1rem;
+  }
+
+  .search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    padding: 0.75rem 0;
+    color: var(--users-text-primary);
+    outline: none;
+  }
+
+  .search-input::placeholder {
+    color: var(--users-text-muted);
+  }
+
+  /* Users Grid */
+  .users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+  }
+
+  /* User Card */
+  .user-card-modern {
+    background: var(--users-bg-card);
+    border-radius: var(--users-radius-xl);
+    border: 1px solid var(--users-border);
+    box-shadow: var(--users-shadow-md);
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+
+  .user-card-modern:hover {
+    transform: translateY(-12px);
+    box-shadow: var(--users-shadow-xl);
+    border-color: rgba(102, 126, 234, 0.3);
+  }
+
+  /* Stagger animation for cards */
+  {% for i in range(50) %}
+  .user-card-modern:nth-child({{ i + 1 }}) {
+    animation-delay: {{ i * 0.05 }}s;
+  }
+  {% endfor %}
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .user-card-gradient {
+    height: 100px;
+    background: var(--users-gradient-1);
+    position: relative;
+  }
+
+  .user-card-modern:nth-child(4n+1) .user-card-gradient { background: var(--users-gradient-1); }
+  .user-card-modern:nth-child(4n+2) .user-card-gradient { background: var(--users-gradient-2); }
+  .user-card-modern:nth-child(4n+3) .user-card-gradient { background: var(--users-gradient-3); }
+  .user-card-modern:nth-child(4n+4) .user-card-gradient { background: var(--users-gradient-4); }
+
+  .user-card-body {
+    padding: 1.75rem;
+    text-align: center;
+    margin-top: -50px;
+    position: relative;
+  }
+
+  .user-avatar-wrapper {
+    display: inline-block;
+    position: relative;
+    margin-bottom: 1.25rem;
+  }
+
+  .user-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 5px solid white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    object-fit: cover;
+    background: white;
+    transition: all 0.3s ease;
+  }
+
+  .user-card-modern:hover .user-avatar {
+    transform: scale(1.08);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .user-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 5px solid white;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    background: var(--users-gradient-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 2.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .user-card-modern:hover .user-avatar-placeholder {
+    transform: scale(1.08);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .online-indicator {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 18px;
+    height: 18px;
+    background: #00ff88;
+    border: 3px solid white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.5);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 0.8;
+    }
+  }
+
+  .user-name {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--users-text-primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+  }
+
+  .user-job-title {
+    font-size: 0.9rem;
+    color: var(--users-text-secondary);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .user-job-title i {
+    color: var(--users-text-muted);
+  }
+
+  /* Job Media Thumbnail */
+  .job-media-wrapper {
+    margin-bottom: 1.25rem;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .job-media-thumb-modern {
+    display: inline-block;
+    border-radius: var(--users-radius-md);
+    overflow: hidden;
+    box-shadow: var(--users-shadow-sm);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .job-media-thumb-modern:hover {
+    transform: scale(1.05);
+    box-shadow: var(--users-shadow-md);
+  }
+
+  .job-media-thumb-modern img,
+  .job-media-thumb-modern video {
+    display: block;
+    border-radius: var(--users-radius-md);
+  }
+
+  /* Action Buttons */
+  .user-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-user-action {
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--users-radius-md);
+    font-weight: 600;
+    font-size: 0.85rem;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-user-action::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-user-action:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-user-primary {
+    background: var(--users-gradient-1);
+    color: white;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-user-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .btn-user-success {
+    background: var(--users-gradient-4);
+    color: white;
+    box-shadow: 0 4px 14px rgba(67, 233, 123, 0.3);
+  }
+
+  .btn-user-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(67, 233, 123, 0.4);
+    color: white;
+  }
+
+  .btn-user-warning {
+    background: var(--users-gradient-5);
+    color: white;
+    box-shadow: 0 4px 14px rgba(250, 112, 154, 0.3);
+  }
+
+  .btn-user-warning:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(250, 112, 154, 0.4);
+    color: white;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 5rem 2rem;
+    background: var(--users-bg-elevated);
+    border-radius: var(--users-radius-xl);
+    border: 2px dashed var(--users-border);
+    grid-column: 1 / -1;
+  }
+
+  .empty-state-icon {
+    font-size: 5rem;
+    background: var(--users-gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1.5rem;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-15px);
+    }
+  }
+
+  .empty-state-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--users-text-primary);
+    margin-bottom: 0.75rem;
+  }
+
+  .empty-state-text {
+    color: var(--users-text-secondary);
+    font-size: 1.05rem;
+    margin-bottom: 0;
+  }
+
+  /* No Results State */
+  .no-results-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    grid-column: 1 / -1;
+  }
+
+  .no-results-icon {
+    font-size: 4rem;
+    color: var(--users-text-muted);
+    margin-bottom: 1.5rem;
+    opacity: 0.6;
+  }
+
+  .no-results-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--users-text-secondary);
+    margin-bottom: 0.5rem;
+  }
+
+  .no-results-text {
+    color: var(--users-text-muted);
+    font-size: 1rem;
+  }
+
+  /* Pagination */
+  .pagination-modern {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 3rem;
+  }
+
+  .page-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--users-radius-md);
+    border: 2px solid var(--users-border);
+    background: white;
+    color: var(--users-text-primary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .page-btn:hover:not(.disabled):not(.active) {
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+  }
+
+  .page-btn.active {
+    background: var(--users-gradient-1);
+    border-color: transparent;
+    color: white;
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+  }
+
+  .page-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  /* Loading State */
+  .loading-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+    border-radius: var(--users-radius-md);
+  }
+
+  @keyframes loading {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .header-left h1 {
+      font-size: 2rem;
+    }
+
+    .users-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .btn-header-action {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .search-card {
+      padding: 1.25rem;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .user-card-gradient {
+      height: 80px;
+    }
+
+    .user-avatar,
+    .user-avatar-placeholder {
+      width: 80px;
+      height: 80px;
+    }
+
+    .user-card-body {
+      margin-top: -40px;
+      padding: 1.25rem;
+    }
+  }
+</style>
+
+<div class="users-page-header">
+  <div class="header-content">
+    <div class="header-left">
+      <h1>
+        <i class="bi bi-people-fill"></i>
+        All Users
+      </h1>
+      <p class="header-subtitle">Browse and connect with other users on the platform</p>
+    </div>
+    <div>
+      <a href="{{ url_for('index') }}" class="btn-header-action">
+        <i class="bi bi-briefcase-fill"></i>
+        View Jobs
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Search Card -->
+<div class="search-card">
+  <div class="search-wrapper">
+    <i class="bi bi-search search-icon"></i>
+    <input type="text" 
+           class="search-input" 
+           id="userSearch" 
+           placeholder="Search users by name or email...">
+  </div>
+</div>
+
+<!-- Users Grid -->
+<div class="users-grid" id="usersContainer">
+  {% for user in users %}
+  <div class="user-card-modern user-card" data-username="{{ user.username }}" data-job="{{ user.job_title }}">
+    <div class="user-card-gradient"></div>
+    
+    <div class="user-card-body">
+      <div class="user-avatar-wrapper">
+        {% if user.profile_picture %}
+          <img src="{{ url_for('uploaded_file', filename=user.profile_picture) }}" 
+               alt="{{ user.username }}" 
+               class="user-avatar">
+        {% else %}
+          <div class="user-avatar-placeholder">
+            <i class="bi bi-person-fill"></i>
+          </div>
+        {% endif %}
+        <!-- Optional: Add online indicator -->
+        <!-- <div class="online-indicator"></div> -->
+      </div>
+
+      <h3 class="user-name">{{ user.username }}</h3>
+      
+      <div class="user-job-title">
+        <i class="bi bi-briefcase-fill"></i>
+        <span>{{ user.job_title }}</span>
+      </div>
+
+      <!-- Job Media Thumbnail -->
+      {% if user.job_id %}
+        <div class="job-media-wrapper" data-job-id="{{ user.job_id }}" aria-hidden="true">
+          <!-- Will be populated by JavaScript -->
+        </div>
+      {% endif %}
+      
+      <!-- Action Buttons -->
+      <div class="user-actions">
+        <a href="{{ url_for('profile', user_id=user.id) }}" 
+           class="btn-user-action btn-user-primary">
+          <i class="bi bi-person-fill"></i>
+          View Profile
+        </a>
+        
+        {% if user.job_id %}
+          <a href="{{ url_for('index') }}" 
+             class="btn-user-action btn-user-success">
+            <i class="bi bi-eye-fill"></i>
+            View Jobs
+          </a>
+        {% endif %}
+        
+        <a href="{{ url_for('messages_conversation', other_id=user.id) }}" 
+           class="btn-user-action btn-user-warning">
+          <i class="bi bi-chat-dots-fill"></i>
+          Send Message
+        </a>
+      </div>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">
+      <i class="bi bi-inbox"></i>
+    </div>
+    <h2 class="empty-state-title">No Users Found</h2>
+    <p class="empty-state-text">There are currently no other users on the platform.</p>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if users|length > 20 %}
+<nav class="pagination-modern" aria-label="Users pagination">
+  <a href="#" class="page-btn disabled" tabindex="-1">
+    <i class="bi bi-chevron-left"></i>
+  </a>
+  <a href="#" class="page-btn active">1</a>
+  <a href="#" class="page-btn">2</a>
+  <a href="#" class="page-btn">3</a>
+  <a href="#" class="page-btn">
+    <i class="bi bi-chevron-right"></i>
+  </a>
+</nav>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// ========================================
+// SEARCH FUNCTIONALITY
+// ========================================
+document.getElementById('userSearch').addEventListener('input', function(e) {
+  const searchTerm = e.target.value.toLowerCase();
+  const userCards = document.querySelectorAll('.user-card');
+  
+  userCards.forEach(function(card) {
+    const username = card.getAttribute('data-username').toLowerCase();
+    const jobTitle = card.getAttribute('data-job').toLowerCase();
+    
+    if (username.includes(searchTerm) || jobTitle.includes(searchTerm)) {
+      card.style.display = '';
+      // Reset animation
+      card.style.animation = 'none';
+      setTimeout(() => {
+        card.style.animation = '';
+      }, 10);
+    } else {
+      card.style.display = 'none';
+    }
+  });
+  
+  // Show "no results" message if all cards are hidden
+  const visibleCards = Array.from(userCards).filter(card => card.style.display !== 'none');
+  const container = document.getElementById('usersContainer');
+  
+  let noResultsMsg = document.getElementById('noResultsMsg');
+  if (visibleCards.length === 0 && searchTerm) {
+    if (!noResultsMsg) {
+      noResultsMsg = document.createElement('div');
+      noResultsMsg.id = 'noResultsMsg';
+      noResultsMsg.className = 'no-results-state';
+      noResultsMsg.innerHTML = `
+        <div class="no-results-icon">
+          <i class="bi bi-search"></i>
+        </div>
+        <h3 class="no-results-title">No users found</h3>
+        <p class="no-results-text">Try a different search term</p>
+      `;
+      container.appendChild(noResultsMsg);
+    }
+  } else if (noResultsMsg) {
+    noResultsMsg.remove();
+  }
+});
+
+// ========================================
+// LOAD JOB THUMBNAILS
+// ========================================
+async function loadJobThumbnails(root=document) {
+  const placeholders = root.querySelectorAll('[data-job-id]');
+  if (!placeholders || placeholders.length === 0) return;
+
+  placeholders.forEach(async (ph) => {
+    const jobId = ph.getAttribute('data-job-id');
+    if (!jobId) return;
+
+    try {
+      const res = await fetch(`/job/${encodeURIComponent(jobId)}`, { 
+        credentials: 'same-origin' 
+      });
+      
+      if (!res.ok) return;
+      const job = await res.json();
+      if (!job.media || job.media.length === 0) return;
+
+      const m = job.media[0];
+      const container = document.createElement('div');
+      container.className = 'job-media-thumb-modern job-media-thumb';
+      container.setAttribute('data-media-url', m.url);
+      container.setAttribute('data-media-type', m.media_type);
+      container.setAttribute('title', 'Click to preview media');
+
+      if (m.media_type === 'image') {
+        const img = document.createElement('img');
+        img.src = m.url;
+        img.alt = job.title || 'Job media';
+        img.style.width = '120px';
+        img.style.height = '80px';
+        img.style.objectFit = 'cover';
+        container.appendChild(img);
+      } else if (m.media_type === 'video') {
+        const video = document.createElement('video');
+        video.src = m.url;
+        video.muted = true;
+        video.preload = 'metadata';
+        video.style.width = '120px';
+        video.style.height = '80px';
+        video.style.objectFit = 'cover';
+        container.appendChild(video);
+      } else {
+        const link = document.createElement('a');
+        link.href = m.url;
+        link.target = '_blank';
+        link.className = 'small';
+        link.style.color = 'var(--users-text-secondary)';
+        link.textContent = 'View media';
+        container.appendChild(link);
+      }
+
+      ph.innerHTML = '';
+      ph.appendChild(container);
+    } catch (err) {
+      console.debug('Failed to load job media for job', jobId, err);
+    }
+  });
+}
+
+// ========================================
+// ALTERNATIVE: AJAX SEARCH
+// ========================================
+async function searchUsersAPI(query) {
+  try {
+    const response = await fetch(`{{ url_for('search_users') }}?q=${encodeURIComponent(query)}`);
+    if (!response.ok) return;
+    
+    const users = await response.json();
+    const container = document.getElementById('usersContainer');
+    
+    if (users.length === 0) {
+      container.innerHTML = `
+        <div class="no-results-state">
+          <div class="no-results-icon">
+            <i class="bi bi-search"></i>
+          </div>
+          <h3 class="no-results-title">No users found</h3>
+          <p class="no-results-text">Try a different search term</p>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = users.map((user, index) => {
+      const gradients = [
+        'var(--users-gradient-1)',
+        'var(--users-gradient-2)',
+        'var(--users-gradient-3)',
+        'var(--users-gradient-4)'
+      ];
+      const gradient = gradients[index % 4];
+      
+      return `
+        <div class="user-card-modern user-card" data-username="${user.username}" data-job="${user.job_title}">
+          <div class="user-card-gradient" style="background: ${gradient};"></div>
+          
+          <div class="user-card-body">
+            <div class="user-avatar-wrapper">
+              ${user.profile_picture 
+                ? `<img src="/uploads/${user.profile_picture}" alt="${user.username}" class="user-avatar">`
+                : `<div class="user-avatar-placeholder" style="background: ${gradient};">
+                     <i class="bi bi-person-fill"></i>
+                   </div>`
+              }
+            </div>
+
+            <h3 class="user-name">${user.username}</h3>
+            
+            <div class="user-job-title">
+              <i class="bi bi-briefcase-fill"></i>
+              <span>${user.job_title}</span>
+            </div>
+
+            ${user.job_id ? `<div class="job-media-wrapper" data-job-id="${user.job_id}" aria-hidden="true"></div>` : ''}
+            
+            <div class="user-actions">
+              <a href="/profile/${user.id}" class="btn-user-action btn-user-primary">
+                <i class="bi bi-person-fill"></i> View Profile
+              </a>
+              
+              ${user.job_id ? `
+                <a href="{{ url_for('index') }}" class="btn-user-action btn-user-success">
+                  <i class="bi bi-eye-fill"></i> View Jobs
+                </a>
+              ` : ''}
+              
+              <a href="/messages/${user.id}" class="btn-user-action btn-user-warning">
+                <i class="bi bi-chat-dots-fill"></i> Send Message
+              </a>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    // Load thumbnails for newly injected cards
+    loadJobThumbnails(container);
+  } catch (error) {
+    console.error('Search error:', error);
+  }
+}
+
+// ========================================
+// PAGE INITIALIZATION
+// ========================================
+document.addEventListener('DOMContentLoaded', function() {
+  // Load job thumbnails on initial load
+  loadJobThumbnails();
+
+  // Optional: Add smooth scroll to top on search
+  const searchInput = document.getElementById('userSearch');
+  searchInput.addEventListener('focus', function() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+</script>
+{% endblock %}

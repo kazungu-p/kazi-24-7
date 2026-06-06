@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Program Impact - Transforming Lives Through Employment</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for beautiful animated graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            overflow-x: hidden;
+        }
+        
+        .impact-wrapper {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 30px 30px 0 0;
+            padding: 40px 20px;
+            margin-top: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 -20px 40px rgba(0,0,0,0.1);
+        }
+        
+        .hero-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .hero-title {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            animation: fadeInDown 1s ease-out;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            opacity: 0.9;
+            max-width: 800px;
+            margin: 0 auto;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+        
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #667eea;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .stat-trend {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .trend-up { color: #10b981; }
+        .trend-down { color: #ef4444; }
+        
+        .chart-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .timeline-marker {
+            position: absolute;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #f59e0b, #ef4444);
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0.3;
+        }
+        
+        .program-badge {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .improvement-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .improvement-positive {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10b981;
+        }
+        
+        .comparison-card {
+            background: linear-gradient(135deg, #667eea15, #764ba215);
+            border-radius: 20px;
+            padding: 30px;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+        }
+        
+        .success-story {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .success-story:hover {
+            transform: scale(1.02);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        
+        .story-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 20px;
+        }
+        
+        .counter {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #667eea;
+            display: inline-block;
+        }
+        
+        .btn-gradient {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            color: white;
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container position-relative">
+            <span class="program-badge animate__animated animate__fadeIn">
+                <i class="fas fa-chart-line me-2"></i>Program Launch 2024
+            </span>
+            <h1 class="hero-title animate__animated animate__fadeInDown">
+                TRANSFORMING LIVES
+            </h1>
+            <p class="hero-subtitle animate__animated animate__fadeInUp">
+                From Unemployment to Economic Independence: 2 Years of Impact
+            </p>
+            <div class="mt-5 animate__animated animate__fadeInUp animate__delay-1s">
+                <a href="#impact" class="btn btn-gradient btn-lg me-3">
+                    <i class="fas fa-chart-bar me-2"></i>View Impact
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-briefcase me-2"></i>Join Program
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="impact-wrapper" id="impact">
+        <div class="container">
+            <!-- Key Metrics Overview -->
+            <div class="row mb-5">
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card animate__animated animate__fadeInUp">
+                        <div class="stat-trend trend-down">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="stat-number counter" data-target="{{ improvements.unemployment_reduction }}" data-suffix="%">0%</div>
+                        <div class="stat-label">Unemployment Reduction</div>
+                        <small class="text-success">Since program launch</small>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card animate__animated animate__fadeInUp animate__delay-1s">
+                        <div class="stat-trend trend-down">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="stat-number counter" data-target="{{ improvements.idleness_reduction }}" data-suffix="%">0%</div>
+                        <div class="stat-label">Idleness Reduction</div>
+                        <small class="text-success">Community engagement up</small>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card animate__animated animate__fadeInUp animate__delay-2s">
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stat-number counter" data-target="{{ improvements.total_jobs_created }}">0</div>
+                        <div class="stat-label">Jobs Created</div>
+                        <small class="text-success">Direct placements</small>
+                    </div>
+                </div>
+                <div class="col-md-3 mb-4">
+                    <div class="stat-card animate__animated animate__fadeInUp animate__delay-3s">
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stat-number counter" data-target="{{ improvements.financial_stability_gain }}" data-suffix="%">0%</div>
+                        <div class="stat-label">Financial Stability ↑</div>
+                        <small class="text-success">Household income growth</small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Before/After Comparison -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <div class="comparison-card">
+                        <div class="row align-items-center">
+                            <div class="col-md-6 text-center">
+                                <h3 class="text-danger mb-4">
+                                    <i class="fas fa-times-circle me-2"></i>BEFORE PROGRAM
+                                </h3>
+                                <div class="display-4 text-danger mb-3">{{ comparison_data.before_program.avg_unemployment }}%</div>
+                                <p class="lead">Unemployment Rate</p>
+                                <div class="mt-4">
+                                    <span class="badge bg-danger p-3 me-2">{{ comparison_data.before_program.period }}</span>
+                                    <span class="text-muted">No intervention</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 text-center">
+                                <h3 class="text-success mb-4">
+                                    <i class="fas fa-check-circle me-2"></i>AFTER PROGRAM
+                                </h3>
+                                <div class="display-4 text-success mb-3">{{ comparison_data.after_program.avg_unemployment }}%</div>
+                                <p class="lead">Unemployment Rate</p>
+                                <div class="mt-4">
+                                    <span class="badge bg-success p-3 me-2">{{ comparison_data.after_program.period }}</span>
+                                    <span class="text-muted">With program support</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <div class="improvement-badge improvement-positive pulse">
+                                <i class="fas fa-arrow-down me-2"></i>{{ improvements.unemployment_reduction }}% DECREASE IN UNEMPLOYMENT
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Charts Row -->
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="chart-container">
+                        <h3 class="mb-4">
+                            <i class="fas fa-user-graduate me-2" style="color: #667eea;"></i>
+                            Unemployment & Idleness Rate
+                        </h3>
+                        <canvas id="unemploymentChart" style="height: 300px; width: 100%;"></canvas>
+                        <div class="mt-3 text-center">
+                            <span class="badge bg-primary me-2">Program Launch 2024</span>
+                            <span class="text-muted">Dramatic decline after intervention</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="chart-container">
+                        <h3 class="mb-4">
+                            <i class="fas fa-chart-pie me-2" style="color: #764ba2;"></i>
+                            Financial Stability Index
+                        </h3>
+                        <canvas id="financialChart" style="height: 300px; width: 100%;"></canvas>
+                        <div class="mt-3 text-center">
+                            <span class="badge bg-success me-2">+{{ improvements.financial_stability_gain }}%</span>
+                            <span class="text-muted">Improvement since program start</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Job Placements & Innovation -->
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="chart-container">
+                        <h3 class="mb-4">
+                            <i class="fas fa-briefcase me-2" style="color: #10b981;"></i>
+                            Job Placements Through Program
+                        </h3>
+                        <canvas id="placementsChart" style="height: 300px; width: 100%;"></canvas>
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>{{ improvements.total_jobs_created }}</strong> Total Jobs
+                                </div>
+                                <div class="col-6">
+                                    <strong>{{ job_placements[-1] }}</strong> This Year
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6 mb-4">
+                    <div class="chart-container">
+                        <h3 class="mb-4">
+                            <i class="fas fa-lightbulb me-2" style="color: #f59e0b;"></i>
+                            Innovation Projects Launched
+                        </h3>
+                        <canvas id="innovationChart" style="height: 300px; width: 100%;"></canvas>
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-6">
+                                    <strong>{{ improvements.total_innovations }}</strong> Total Projects
+                                </div>
+                                <div class="col-6">
+                                    <strong>{{ innovation_projects[-1] }}</strong> Active Now
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Success Stories -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <h2 class="text-center mb-5">
+                        <i class="fas fa-star text-warning me-2"></i>
+                        REAL LIVES, REAL TRANSFORMATIONS
+                    </h2>
+                </div>
+                {% for story in success_stories %}
+                <div class="col-md-4 mb-4">
+                    <div class="success-story animate__animated animate__fadeInUp">
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="story-icon floating">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <div>
+                                <h4 class="mb-0">{{ story.name }}</h4>
+                                <span class="badge bg-success">{{ story.improvement }}</span>
+                            </div>
+                        </div>
+                        <p class="text-muted mb-2">
+                            <strong>Before:</strong> {{ story.before }}
+                        </p>
+                        <p class="text-success">
+                            <strong>After:</strong> {{ story.after }}
+                        </p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Community Impact Grid -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="chart-container">
+                        <h3 class="mb-4 text-center">
+                            <i class="fas fa-heart me-2" style="color: #ef4444;"></i>
+                            Community-Wide Transformation
+                        </h3>
+                        <div class="row text-center">
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="display-4 text-primary" id="stableHouseholds">0</div>
+                                <p>Households Financially Stable</p>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="display-4 text-success">87.3%</div>
+                                <p>Job Retention Rate</p>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="display-4 text-info">{{ innovation_projects[-1] }}</div>
+                                <p>Active Community Projects</p>
+                            </div>
+                            <div class="col-md-3 col-6 mb-4">
+                                <div class="display-4 text-warning">{{ income_increase[-1] }}%</div>
+                                <p>Average Income Increase</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Call to Action -->
+            <div class="row mt-5">
+                <div class="col-12 text-center">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                        <h2 class="mb-4">Be Part of the Solution</h2>
+                        <p class="lead mb-4">Every job created, every life transformed - you can make a difference</p>
+                        <a href="{{ url_for('post_job') }}" class="btn btn-light btn-lg me-3">
+                            <i class="fas fa-plus-circle me-2"></i>Post a Job
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Join Program
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Chart Initialization Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Counter Animation
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseFloat(counter.getAttribute('data-target'));
+                const suffix = counter.getAttribute('data-suffix') || '';
+                let count = 0;
+                const updateCounter = () => {
+                    const increment = target / 50;
+                    if (count < target) {
+                        count += increment;
+                        if (count > target) count = target;
+                        counter.innerText = Math.round(count) + suffix;
+                        setTimeout(updateCounter, 20);
+                    }
+                };
+                updateCounter();
+            });
+            
+            // Households counter
+            let households = 0;
+            const targetHouseholds = {{ improvements.total_stable_households }};
+            const householdElement = document.getElementById('stableHouseholds');
+            const updateHouseholds = () => {
+                const increment = targetHouseholds / 50;
+                if (households < targetHouseholds) {
+                    households += increment;
+                    if (households > targetHouseholds) households = targetHouseholds;
+                    householdElement.innerText = Math.round(households).toLocaleString();
+                    setTimeout(updateHouseholds, 20);
+                }
+            };
+            updateHouseholds();
+            
+            // Unemployment & Idleness Chart
+            const ctx1 = document.getElementById('unemploymentChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: {{ years|safe }},
+                    datasets: [{
+                        label: 'Unemployment Rate (%)',
+                        data: {{ unemployment_rate|safe }},
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
+                        fill: true
+                    }, {
+                        label: 'Idleness Rate (%)',
+                        data: {{ idleness_rate|safe }},
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 8,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutQuart'
+                    },
+                    plugins: {
+                        annotation: {
+                            annotations: {
+                                line1: {
+                                    type: 'line',
+                                    xMin: 3.5,
+                                    xMax: 3.5,
+                                    borderColor: '#10b981',
+                                    borderWidth: 2,
+                                    borderDash: [6, 6],
+                                    label: {
+                                        content: 'Program Launch',
+                                        enabled: true,
+                                        position: 'top'
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Financial Stability Chart
+            const ctx2 = document.getElementById('financialChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: {{ years|safe }},
+                    datasets: [{
+                        label: 'Financial Stability Index',
+                        data: {{ financial_stability|safe }},
+                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
+                        borderColor: '#667eea',
+                        borderWidth: 2,
+                        borderRadius: 8,
+                        barPercentage: 0.7
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutBounce'
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // Job Placements Chart
+            const ctx3 = document.getElementById('placementsChart').getContext('2d');
+            new Chart(ctx3, {
+                type: 'line',
+                data: {
+                    labels: {{ years|safe }},
+                    datasets: [{
+                        label: 'Job Placements',
+                        data: {{ job_placements|safe }},
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 4,
+                        pointRadius: 6,
+                        pointBackgroundColor: '#10b981',
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 2,
+                        pointHoverRadius: 10,
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutExpo'
+                    }
+                }
+            });
+            
+            // Innovation Projects Chart
+            const ctx4 = document.getElementById('innovationChart').getContext('2d');
+            new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: {{ years|safe }},
+                    datasets: [{
+                        label: 'Innovation Projects',
+                        data: {{ innovation_projects|safe }},
+                        backgroundColor: 'rgba(245, 158, 11, 0.7)',
+                        borderColor: '#f59e0b',
+                        borderWidth: 2,
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 2000,
+                        easing: 'easeInOutBounce'
+                    }
+                }
+            });
+        });
+    </script>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

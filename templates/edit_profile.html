@@ -1,0 +1,420 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile — KaziConnect{% endblock %}
+
+{% block content %}
+<style>
+  .location-status {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  
+  .location-status.pending {
+    background: #fef3c7;
+    border: 2px solid #fbbf24;
+    color: #92400e;
+  }
+  
+  .location-status.verified {
+    background: #d1fae5;
+    border: 2px solid #10b981;
+    color: #065f46;
+  }
+  
+  .location-status.error {
+    background: #fee2e2;
+    border: 2px solid #ef4444;
+    color: #991b1b;
+  }
+  
+  .detect-btn {
+    background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+  
+  .detect-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(67, 233, 123, 0.4);
+  }
+  
+  .detect-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .detect-btn-group {
+    display: flex;
+    gap: 0.5rem;
+  }
+  
+  .detect-btn-group button {
+    flex: 1;
+  }
+  
+  #location {
+    background: #f3f4f6;
+  }
+  
+  .gps-info {
+    font-size: 0.85rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+  }
+  
+  .coordinates-display {
+    background: #f0fdf4;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+    display: none;
+  }
+  
+  .coordinates-display.show {
+    display: block;
+  }
+  
+  .alert-sm {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+</style>
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow">
+        <div class="card-header bg-primary text-white">
+          <h3><i class="bi bi-pencil-fill"></i> Edit Profile</h3>
+        </div>
+        <div class="card-body">
+          
+          <!-- Location Status Alert -->
+          <div id="locationStatus" class="location-status pending">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem;"></i>
+            <div>
+              <strong>GPS Location Required</strong><br>
+              <small>Click "Quick Detect" for fast WiFi-based location or "High Accuracy GPS" for precise coordinates</small>
+            </div>
+          </div>
+
+          <form method="POST" enctype="multipart/form-data" id="profileForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <!-- Hidden GPS fields -->
+            <input type="hidden" name="latitude" id="latitude" value="{{ current_user.latitude or '' }}">
+            <input type="hidden" name="longitude" id="longitude" value="{{ current_user.longitude or '' }}">
+            
+            <!-- Username -->
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control" id="username" name="username" 
+                     value="{{ current_user.username or '' }}" placeholder="Choose a username">
+            </div>
+
+            <!-- Phone Number -->
+            <div class="mb-3">
+              <label for="phone_number" class="form-label">Phone Number</label>
+              <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                     value="{{ current_user.phone_number or '' }}" placeholder="Your phone number">
+            </div>
+
+            <!-- Location Section -->
+            <div class="mb-3">
+              <label for="location" class="form-label">
+                <i class="bi bi-geo-alt-fill"></i> Location 
+                <span class="text-danger">*</span>
+              </label>
+              
+              <div class="mb-2">
+                <input type="text" class="form-control" id="location" name="location" 
+                       value="" 
+                       placeholder="Click a button below to detect your location"
+                       readonly>
+              </div>
+              
+              <!-- Dual Detection Buttons -->
+              <div class="detect-btn-group">
+                <button type="button" class="btn btn-warning" id="quickDetect">
+                  <i class="bi bi-lightning-fill"></i> Quick Detect (WiFi)
+                </button>
+                <button type="button" class="btn detect-btn" id="detectLocation">
+                  <i class="bi bi-crosshair"></i> High Accuracy GPS
+                </button>
+              </div>
+              
+              {% if current_user.location %}
+              <div class="alert alert-warning alert-sm mt-2">
+                <small><i class="bi bi-exclamation-triangle"></i> 
+                Old location: <strong>{{ current_user.location }}</strong>. 
+                Update with your real GPS coordinates!</small>
+              </div>
+              {% endif %}
+              
+              <div id="coordinatesDisplay" class="coordinates-display">
+                <strong>📍 GPS Coordinates:</strong><br>
+                Latitude: <span id="latDisplay">-</span><br>
+                Longitude: <span id="lngDisplay">-</span><br>
+                Accuracy: <span id="accDisplay">-</span> meters
+              </div>
+              
+              <div class="gps-info">
+                <i class="bi bi-info-circle"></i> 
+                <strong>Quick Detect:</strong> Fast WiFi/IP location (±500m accuracy)<br>
+                <strong>High Accuracy GPS:</strong> Precise satellite GPS (±10m accuracy)
+              </div>
+            </div>
+
+            <!-- Work Type -->
+            <div class="mb-3">
+              <label for="work_type" class="form-label">Work Type</label>
+              <input type="text" class="form-control" id="work_type" name="work_type" 
+                     value="{{ current_user.work_type or '' }}" placeholder="e.g., Nursing, Construction">
+            </div>
+
+            <!-- Profile Picture -->
+            <div class="mb-3">
+              <label for="profile_picture" class="form-label">Profile Picture</label>
+              <input type="file" class="form-control" id="profile_picture" name="profile_picture" accept="image/*">
+              {% if current_user.profile_picture %}
+                <small class="text-muted">Current: {{ current_user.profile_picture }}</small>
+              {% endif %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2">
+              <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                <i class="bi bi-check-circle-fill"></i> Save Changes
+              </button>
+              <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancel
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// GPS Detection Script
+let locationVerified = {{ 'true' if current_user.latitude and current_user.longitude else 'false' }};
+const statusDiv = document.getElementById('locationStatus');
+const quickDetectBtn = document.getElementById('quickDetect');
+const detectBtn = document.getElementById('detectLocation');
+const submitBtn = document.getElementById('submitBtn');
+const profileForm = document.getElementById('profileForm');
+
+// Update UI based on verification status
+function updateLocationStatus(status, message) {
+  statusDiv.className = `location-status ${status}`;
+  
+  if (status === 'verified') {
+    statusDiv.innerHTML = `
+      <i class="bi bi-check-circle-fill" style="font-size: 1.5rem;"></i>
+      <div>
+        <strong>✓ Real Location Verified</strong><br>
+        <small>${message}</small>
+      </div>
+    `;
+    locationVerified = true;
+  } else if (status === 'pending') {
+    statusDiv.innerHTML = `
+      <i class="bi bi-hourglass-split" style="font-size: 1.5rem;"></i>
+      <div>
+        <strong>Detecting Location...</strong><br>
+        <small>${message}</small>
+      </div>
+    `;
+  } else if (status === 'error') {
+    statusDiv.innerHTML = `
+      <i class="bi bi-x-circle-fill" style="font-size: 1.5rem;"></i>
+      <div>
+        <strong>Location Detection Failed</strong><br>
+        <small>${message}</small>
+      </div>
+    `;
+  }
+}
+
+// Shared success handler
+function handleLocationSuccess(lat, lng, accuracy, method) {
+  console.log(`Location detected via ${method}:`, {lat, lng, accuracy});
+  
+  document.getElementById('latitude').value = lat;
+  document.getElementById('longitude').value = lng;
+  document.getElementById('latDisplay').textContent = lat.toFixed(6);
+  document.getElementById('lngDisplay').textContent = lng.toFixed(6);
+  document.getElementById('accDisplay').textContent = Math.round(accuracy);
+  document.getElementById('coordinatesDisplay').classList.add('show');
+  
+  // Reverse geocoding
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+    .then(response => response.json())
+    .then(data => {
+      const address = data.address;
+      const locationStr = [
+        address.suburb || address.neighbourhood || address.village,
+        address.city || address.town,
+        address.state || address.county,
+        address.country
+      ].filter(Boolean).join(', ');
+      
+      document.getElementById('location').value = locationStr;
+      updateLocationStatus('verified', 
+        `${locationStr} (${method}, ±${Math.round(accuracy)}m accuracy)`
+      );
+    })
+    .catch(error => {
+      console.error('Geocoding error:', error);
+      document.getElementById('location').value = `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      updateLocationStatus('verified', 
+        `Coordinates captured via ${method} (±${Math.round(accuracy)}m)`
+      );
+    });
+}
+
+// Check if already verified
+if (locationVerified) {
+  updateLocationStatus('verified', 'Your GPS location has been verified');
+  document.getElementById('coordinatesDisplay').classList.add('show');
+  document.getElementById('latDisplay').textContent = '{{ current_user.latitude }}';
+  document.getElementById('lngDisplay').textContent = '{{ current_user.longitude }}';
+}
+
+// QUICK DETECT - WiFi/IP based (fast, lower accuracy)
+quickDetectBtn.addEventListener('click', function() {
+  const btn = this;
+  btn.disabled = true;
+  detectBtn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Detecting...';
+  
+  updateLocationStatus('pending', 'Using WiFi/network location...');
+  
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        handleLocationSuccess(
+          position.coords.latitude,
+          position.coords.longitude,
+          position.coords.accuracy,
+          'WiFi/Network'
+        );
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> ✓ Location Set';
+        btn.classList.add('btn-success');
+        btn.classList.remove('btn-warning');
+        setTimeout(() => {
+          btn.disabled = false;
+          detectBtn.disabled = false;
+        }, 2000);
+      },
+      function(error) {
+        console.error('Quick detect error:', error);
+        updateLocationStatus('error', 'Quick detect failed. Try High Accuracy GPS.');
+        btn.innerHTML = '<i class="bi bi-x-circle"></i> Failed - Try GPS';
+        btn.disabled = false;
+        detectBtn.disabled = false;
+      },
+      {
+        enableHighAccuracy: false,  // Use WiFi/IP (faster)
+        timeout: 5000,
+        maximumAge: 60000  // Accept cached location up to 1 min old
+      }
+    );
+  }
+});
+
+// HIGH ACCURACY GPS - Satellite GPS (slower, high accuracy)
+detectBtn.addEventListener('click', function() {
+  const btn = this;
+  btn.disabled = true;
+  quickDetectBtn.disabled = true;
+  btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Getting GPS Signal...';
+  
+  updateLocationStatus('pending', 'Acquiring satellite GPS... This may take 15-30 seconds.');
+  
+  if ('geolocation' in navigator) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        handleLocationSuccess(
+          position.coords.latitude,
+          position.coords.longitude,
+          position.coords.accuracy,
+          'GPS Satellite'
+        );
+        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> ✓ GPS Verified';
+        btn.classList.add('btn-success');
+        setTimeout(() => {
+          btn.disabled = false;
+          quickDetectBtn.disabled = false;
+          btn.classList.remove('btn-success');
+          btn.classList.add('detect-btn');
+          btn.innerHTML = '<i class="bi bi-crosshair"></i> High Accuracy GPS';
+        }, 3000);
+      },
+      function(error) {
+        console.error('GPS error:', error);
+        let errorMsg = 'GPS timeout. ';
+        
+        if (error.code === error.TIMEOUT) {
+          errorMsg += 'Try: 1) Move outdoors/near window 2) Enable GPS on device 3) Try Quick Detect instead';
+        } else if (error.code === error.PERMISSION_DENIED) {
+          errorMsg += 'Location permission denied. Enable in browser settings.';
+        } else {
+          errorMsg += 'GPS unavailable. Try Quick Detect (WiFi) instead.';
+        }
+        
+        updateLocationStatus('error', errorMsg);
+        btn.innerHTML = '<i class="bi bi-arrow-clockwise"></i> Try Again';
+        btn.classList.add('btn-warning');
+        btn.disabled = false;
+        quickDetectBtn.disabled = false;
+        
+        setTimeout(() => {
+          btn.classList.remove('btn-warning');
+          btn.classList.add('detect-btn');
+          btn.innerHTML = '<i class="bi bi-crosshair"></i> High Accuracy GPS';
+        }, 5000);
+      },
+      {
+        enableHighAccuracy: true,  // Use GPS satellites
+        timeout: 30000,  // 30 second timeout
+        maximumAge: 0  // Must be fresh
+      }
+    );
+  } else {
+    updateLocationStatus('error', 'Geolocation not supported');
+    btn.disabled = false;
+    quickDetectBtn.disabled = false;
+  }
+});
+
+// Form validation
+profileForm.addEventListener('submit', function(e) {
+  const lat = document.getElementById('latitude').value;
+  const lng = document.getElementById('longitude').value;
+  
+  if (!lat || !lng) {
+    e.preventDefault();
+    alert('⚠️ Location Required!\n\nPlease detect your location first:\n• Click "Quick Detect" for fast WiFi location\n• OR click "High Accuracy GPS" for precise coordinates');
+    updateLocationStatus('error', 'You must detect your location before saving');
+    quickDetectBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return false;
+  }
+  
+  return true;
+});
+</script>
+
+{% endblock %}

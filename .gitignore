@@ -1,0 +1,6 @@
+*.corrupted
+*.backup*
+*.bak*
+*.db.backup*
+*.Zone.Identifier
+venv/

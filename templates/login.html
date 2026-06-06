@@ -1,0 +1,811 @@
+{% extends 'base.html' %}
+{% block title %}Login — KaziConnect{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
+
+  :root {
+    --login-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --login-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --login-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --login-bg-card: #ffffff;
+    --login-bg-page: #fafbfd;
+    --login-border: rgba(99, 102, 241, 0.12);
+    --login-text-primary: #1a1d29;
+    --login-text-secondary: #6b7280;
+    --login-text-muted: #9ca3af;
+    --login-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --login-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
+    --login-shadow-lg: 0 20px 48px rgba(102, 126, 234, 0.15);
+    --login-shadow-xl: 0 30px 64px rgba(102, 126, 234, 0.2);
+    --login-shadow-glow: 0 0 50px rgba(102, 126, 234, 0.4);
+    --login-radius-sm: 12px;
+    --login-radius-md: 16px;
+    --login-radius-lg: 20px;
+    --login-radius-xl: 28px;
+  }
+
+  .login-container {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 0;
+    position: relative;
+  }
+
+  /* Animated Background Elements */
+  .login-bg-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    opacity: 0.3;
+    pointer-events: none;
+    z-index: -1;
+    animation: float 20s ease-in-out infinite;
+  }
+
+  .login-bg-orb-1 {
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, transparent 70%);
+    top: -10%;
+    right: -10%;
+    animation-delay: 0s;
+  }
+
+  .login-bg-orb-2 {
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(240, 147, 251, 0.3) 0%, transparent 70%);
+    bottom: -10%;
+    left: -10%;
+    animation-delay: 7s;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    25% { transform: translate(40px, -40px) scale(1.1); }
+    50% { transform: translate(-30px, 30px) scale(0.9); }
+    75% { transform: translate(30px, 40px) scale(1.05); }
+  }
+
+  /* Login Card */
+  .login-card {
+    background: var(--login-bg-card);
+    border-radius: var(--login-radius-xl);
+    border: 1px solid var(--login-border);
+    box-shadow: var(--login-shadow-xl);
+    overflow: hidden;
+    position: relative;
+    animation: fadeInScale 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 460px;
+    width: 100%;
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .login-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--login-gradient-1);
+  }
+
+  .login-card-body {
+    padding: 3rem 2.5rem;
+  }
+
+  /* Header Section */
+  .login-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .login-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: var(--login-gradient-1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+      transform: scale(1.05);
+      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+    }
+  }
+
+  .login-icon i {
+    font-size: 2.5rem;
+    color: white;
+  }
+
+  .login-title {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    background: var(--login-gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .login-subtitle {
+    font-size: 1rem;
+    color: var(--login-text-secondary);
+    font-weight: 400;
+  }
+
+  /* Alert Messages */
+  .login-alert {
+    border-radius: var(--login-radius-md);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.95rem;
+    animation: slideDown 0.5s ease-out;
+    border-left: 4px solid transparent;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .login-alert-danger {
+    background-color: rgba(239, 68, 68, 0.08);
+    border-left-color: #ef4444;
+    color: #991b1b;
+  }
+
+  .login-alert-warning {
+    background-color: rgba(245, 158, 11, 0.08);
+    border-left-color: #f59e0b;
+    color: #92400e;
+  }
+
+  .login-alert-success {
+    background-color: rgba(16, 185, 129, 0.08);
+    border-left-color: #10b981;
+    color: #065f46;
+  }
+
+  .login-alert-info {
+    background-color: rgba(59, 130, 246, 0.08);
+    border-left-color: #3b82f6;
+    color: #1e40af;
+  }
+
+  .alert-icon {
+    margin-right: 0.75rem;
+    font-size: 1.25rem;
+  }
+
+  /* Form Styles */
+  .login-form {
+    animation: fadeInUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) 0.2s backwards;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .form-group-modern {
+    margin-bottom: 1.75rem;
+  }
+
+  .form-label-modern {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--login-text-primary);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .form-input-wrapper {
+    position: relative;
+  }
+
+  .form-input-icon {
+    position: absolute;
+    left: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.2rem;
+    color: var(--login-text-muted);
+    transition: all 0.3s ease;
+    pointer-events: none;
+  }
+
+  .form-input-modern {
+    width: 100%;
+    padding: 1rem 1.25rem 1rem 3.25rem;
+    border: 2px solid var(--login-border);
+    border-radius: var(--login-radius-md);
+    font-size: 1rem;
+    color: var(--login-text-primary);
+    background: var(--login-bg-card);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+  }
+
+  .form-input-modern::placeholder {
+    color: var(--login-text-muted);
+  }
+
+  .form-input-modern:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+  }
+
+  .form-input-modern:focus + .form-input-icon {
+    color: #667eea;
+  }
+
+  /* Password Toggle */
+  .password-toggle {
+    position: absolute;
+    right: 1.25rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--login-text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.5rem;
+    transition: all 0.3s ease;
+  }
+
+  .password-toggle:hover {
+    color: #667eea;
+  }
+
+  /* Submit Button */
+  .btn-login-submit {
+    width: 100%;
+    padding: 1rem 2rem;
+    border-radius: var(--login-radius-md);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    border: none;
+    background: var(--login-gradient-1);
+    color: white;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .btn-login-submit::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-login-submit:hover::before {
+    width: 400px;
+    height: 400px;
+  }
+
+  .btn-login-submit:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 32px rgba(102, 126, 234, 0.45);
+  }
+
+  .btn-login-submit:active {
+    transform: translateY(-1px);
+  }
+
+  /* Footer Links */
+  .login-footer {
+    text-align: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--login-border);
+  }
+
+  .login-footer-text {
+    font-size: 0.95rem;
+    color: var(--login-text-secondary);
+    margin-bottom: 0;
+  }
+
+  .login-footer-link {
+    color: #667eea;
+    font-weight: 600;
+    text-decoration: none;
+    position: relative;
+    transition: all 0.3s ease;
+  }
+
+  .login-footer-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--login-gradient-1);
+    transition: width 0.3s ease;
+  }
+
+  .login-footer-link:hover {
+    color: #764ba2;
+  }
+
+  .login-footer-link:hover::after {
+    width: 100%;
+  }
+
+  /* Divider */
+  .divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.5rem 0;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--login-border);
+  }
+
+  .divider span {
+    padding: 0 1rem;
+    color: var(--login-text-muted);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  /* Remember Me Checkbox */
+  .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .checkbox-modern {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--login-border);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    accent-color: #667eea;
+  }
+
+  .checkbox-label {
+    font-size: 0.9rem;
+    color: var(--login-text-secondary);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* Forgot Password Link */
+  .forgot-password {
+    text-align: right;
+    margin-top: -1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .forgot-password-link {
+    font-size: 0.85rem;
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+
+  .forgot-password-link:hover {
+    color: #764ba2;
+    text-decoration: underline;
+  }
+
+  /* Loading State */
+  .btn-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.8;
+  }
+
+  .btn-loading::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    right: 2rem;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  @keyframes spin {
+    to { transform: translateY(-50%) rotate(360deg); }
+  }
+
+  /* Location Notice */
+  .location-notice {
+    background: rgba(102, 126, 234, 0.05);
+    border-radius: var(--login-radius-sm);
+    padding: 0.75rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+    color: var(--login-text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border: 1px dashed var(--login-border);
+  }
+
+  .location-notice i {
+    color: #667eea;
+    font-size: 1rem;
+  }
+
+  /* Suspension Banner */
+  .suspension-banner {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(245, 158, 11, 0.1) 100%);
+    border-radius: var(--login-radius-md);
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid #ef4444;
+  }
+
+  .suspension-banner i {
+    font-size: 1.5rem;
+    color: #ef4444;
+  }
+
+  .suspension-banner-content {
+    flex: 1;
+  }
+
+  .suspension-banner-title {
+    font-weight: 700;
+    color: #991b1b;
+    margin-bottom: 0.25rem;
+  }
+
+  .suspension-banner-text {
+    font-size: 0.9rem;
+    color: #b91c1c;
+  }
+
+  .suspension-banner-timer {
+    font-size: 0.85rem;
+    color: #92400e;
+    margin-top: 0.25rem;
+  }
+
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .login-container {
+      padding: 2rem 1rem;
+    }
+
+    .login-card-body {
+      padding: 2rem 1.5rem;
+    }
+
+    .login-title {
+      font-size: 1.75rem;
+    }
+
+    .login-icon {
+      width: 70px;
+      height: 70px;
+    }
+
+    .login-icon i {
+      font-size: 2rem;
+    }
+  }
+
+  /* Accessibility */
+  .form-input-modern:focus-visible {
+    outline: 3px solid rgba(102, 126, 234, 0.3);
+    outline-offset: 2px;
+  }
+
+  .btn-login-submit:focus-visible {
+    outline: 3px solid rgba(102, 126, 234, 0.5);
+    outline-offset: 2px;
+  }
+</style>
+
+<!-- Background Orbs -->
+<div class="login-bg-orb login-bg-orb-1"></div>
+<div class="login-bg-orb login-bg-orb-2"></div>
+
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-card-body">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="login-alert login-alert-{{ category }} alert-dismissible fade show" role="alert">
+              <div class="d-flex align-items-center">
+                {% if category == 'danger' %}
+                  <i class="bi bi-exclamation-triangle-fill alert-icon"></i>
+                {% elif category == 'warning' %}
+                  <i class="bi bi-exclamation-circle-fill alert-icon"></i>
+                {% elif category == 'success' %}
+                  <i class="bi bi-check-circle-fill alert-icon"></i>
+                {% else %}
+                  <i class="bi bi-info-circle-fill alert-icon"></i>
+                {% endif %}
+                <div>{{ message | safe }}</div>
+              </div>
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close" style="position: absolute; right: 1rem; top: 1rem;"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <!-- Header -->
+      <div class="login-header">
+        <div class="login-icon">
+          <i class="bi bi-person-circle"></i>
+        </div>
+        <h1 class="login-title">Welcome Back</h1>
+        <p class="login-subtitle">Sign in to continue to KaziConnect</p>
+      </div>
+
+      <!-- Location Notice (only shown when location is detected) -->
+      <div class="location-notice" id="locationNotice" style="display: none;">
+        <i class="bi bi-geo-alt-fill"></i>
+        <span id="locationMessage">Detecting your location for security verification...</span>
+      </div>
+
+      <!-- Login Form -->
+      <form method="post" class="login-form" id="loginForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <!-- Hidden fields for location tracking on login (optional) -->
+        <input type="hidden" name="login_latitude" id="loginLatitude" value="">
+        <input type="hidden" name="login_longitude" id="loginLongitude" value="">
+        
+        <!-- Email/Username Input -->
+        <div class="form-group-modern">
+          <label class="form-label-modern" for="identifier">Email or Username</label>
+          <div class="form-input-wrapper">
+            <i class="bi bi-person-fill form-input-icon"></i>
+            <input 
+              class="form-input-modern" 
+              type="text"
+              id="identifier"
+              name="identifier" 
+              placeholder="you@example.com or username" 
+              required
+              autocomplete="username"
+              value="{{ request.form.identifier if request.form.identifier }}">
+          </div>
+        </div>
+
+        <!-- Password Input -->
+        <div class="form-group-modern">
+          <label class="form-label-modern" for="password">Password</label>
+          <div class="form-input-wrapper">
+            <i class="bi bi-lock-fill form-input-icon"></i>
+            <input 
+              class="form-input-modern" 
+              type="password"
+              id="password"
+              name="password" 
+              placeholder="Enter your password"
+              required
+              autocomplete="current-password">
+            <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
+              <i class="bi bi-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Remember Me & Forgot Password -->
+        <div class="d-flex justify-content-between align-items-center" style="margin-bottom: 1.5rem;">
+          <div class="checkbox-wrapper" style="margin-bottom: 0;">
+            <input type="checkbox" class="checkbox-modern" id="rememberMe" name="remember" {% if request.form.remember %}checked{% endif %}>
+            <label class="checkbox-label" for="rememberMe">Remember me</label>
+          </div>
+          <div class="forgot-password" style="margin: 0;">
+            <a href="{{ url_for('forgot_password') if 'forgot_password' in url_for('forgot_password', _external=True) else '#' }}" class="forgot-password-link">Forgot password?</a>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn-login-submit" id="submitBtn">
+          <span>Sign In</span>
+        </button>
+      </form>
+
+      <!-- Demo Account Notice (remove in production) -->
+      {% if config.DEBUG %}
+      <div class="mt-3 text-center">
+        <small class="text-muted">
+          <i class="bi bi-info-circle me-1"></i>
+          Demo: admin@example.com / Admin123
+        </small>
+      </div>
+      {% endif %}
+
+      <!-- Footer -->
+      <div class="login-footer">
+        <p class="login-footer-text">
+          Don't have an account? 
+          <a href="{{ url_for('register') }}" class="login-footer-link">Create one</a>
+        </p>
+        <p class="login-footer-text mt-2">
+          <small>
+            <i class="bi bi-shield-check me-1"></i>
+            Your location may be collected for security purposes
+          </small>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Password Toggle Functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    const passwordToggle = document.getElementById('passwordToggle');
+    if (passwordToggle) {
+      passwordToggle.addEventListener('click', function() {
+        const passwordInput = document.getElementById('password');
+        const icon = this.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+          passwordInput.type = 'text';
+          icon.classList.remove('bi-eye');
+          icon.classList.add('bi-eye-slash');
+        } else {
+          passwordInput.type = 'password';
+          icon.classList.remove('bi-eye-slash');
+          icon.classList.add('bi-eye');
+        }
+      });
+    }
+  });
+
+  // Form Submit Loading State
+  document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+    const submitBtn = document.getElementById('submitBtn');
+    submitBtn.classList.add('btn-loading');
+    submitBtn.querySelector('span').textContent = 'Signing in...';
+  });
+
+  // Input Focus Effects
+  document.querySelectorAll('.form-input-modern').forEach(input => {
+    input.addEventListener('focus', function() {
+      this.parentElement.classList.add('focused');
+    });
+    
+    input.addEventListener('blur', function() {
+      this.parentElement.classList.remove('focused');
+    });
+  });
+
+  // Prevent multiple form submissions
+  let formSubmitted = false;
+  document.getElementById('loginForm')?.addEventListener('submit', function(e) {
+    if (formSubmitted) {
+      e.preventDefault();
+      return false;
+    }
+    formSubmitted = true;
+  });
+
+  // Optional: Get user's location on login for additional security tracking
+  function getLoginLocation() {
+    const locationNotice = document.getElementById('locationNotice');
+    const locationMessage = document.getElementById('locationMessage');
+    const latInput = document.getElementById('loginLatitude');
+    const lngInput = document.getElementById('loginLongitude');
+    
+    if (navigator.geolocation) {
+      locationNotice.style.display = 'flex';
+      
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          // Success
+          latInput.value = position.coords.latitude;
+          lngInput.value = position.coords.longitude;
+          locationMessage.innerHTML = '<i class="bi bi-check-circle-fill text-success me-1"></i> Location verified for secure login';
+          
+          // Optional: Get location name via reverse geocoding
+          fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+            .then(response => response.json())
+            .then(data => {
+              const city = data.address?.city || data.address?.town || data.address?.village || '';
+              const country = data.address?.country || '';
+              if (city || country) {
+                locationMessage.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> Login from ${city} ${country}`.trim();
+              }
+            })
+            .catch(() => {});
+        },
+        function(error) {
+          // Error or denied - optional, don't block login
+          console.log('Location not available for login:', error.message);
+          locationNotice.style.display = 'none';
+        },
+        {
+          timeout: 5000,
+          maximumAge: 0
+        }
+      );
+    }
+  }
+
+  // Uncomment to enable location tracking on login (optional)
+  // getLoginLocation();
+
+  // Auto-dismiss alerts after 5 seconds
+  setTimeout(function() {
+    document.querySelectorAll('.alert-dismissible').forEach(alert => {
+      bootstrap.Alert.getOrCreateInstance(alert).close();
+    });
+  }, 5000);
+</script>
+
+{% endblock %}

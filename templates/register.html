@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+{% block title %}Register — KaziConnect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+    <div class="card shadow-lg border-0 rounded-4">
+      <div class="card-body p-4 p-md-5">
+        <!-- Header -->
+        <div class="text-center mb-4">
+          <div class="bg-primary bg-opacity-10 p-3 rounded-circle d-inline-flex mb-3">
+            <i class="bi bi-person-plus-fill text-primary fs-2"></i>
+          </div>
+          <h3 class="fw-bold text-primary">Join KaziConnect</h3>
+          <p class="text-muted">Create your account to start connecting with opportunities</p>
+        </div>
+
+        <!-- Location Detection Banner -->
+        <div class="alert alert-info bg-info bg-opacity-10 border-info border-opacity-25 rounded-3 mb-4" id="locationStatus">
+          <div class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm text-info me-3" role="status" id="locationSpinner">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <div>
+              <strong id="locationMessage">Detecting your location...</strong>
+              <br>
+              <small class="text-muted" id="locationDetails">We use your real location for verification purposes</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hidden fields for location data -->
+        <input type="hidden" name="latitude" id="latitude" value="">
+        <input type="hidden" name="longitude" id="longitude" value="">
+        
+        <form method="post" enctype="multipart/form-data" id="registerForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          
+          <!-- Account Information Section -->
+          <div class="bg-light p-4 rounded-4 mb-4">
+            <h5 class="text-primary mb-3">
+              <i class="bi bi-person-circle me-2"></i>Account Information
+            </h5>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Username <span class="text-muted fw-light">(optional)</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
+                  <input class="form-control" name="username" placeholder="Choose a username">
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Email <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-envelope"></i></span>
+                  <input class="form-control" type="email" name="email" placeholder="your@email.com" required>
+                </div>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Password <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text bg-white"><i class="bi bi-lock"></i></span>
+                <input class="form-control" type="password" name="password" placeholder="Create a strong password" required id="password">
+              </div>
+              <div class="form-text" id="passwordStrength">
+                <small class="text-muted">Minimum 8 characters with 1 uppercase and 1 number</small>
+              </div>
+            </div>
+          </div>
+
+          <!-- Professional Details Section -->
+          <div class="bg-light p-4 rounded-4 mb-4">
+            <h5 class="text-primary mb-3">
+              <i class="bi bi-briefcase me-2"></i>Professional Details
+            </h5>
+            
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Phone number</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-telephone"></i></span>
+                  <input class="form-control" name="phone_number" placeholder="+254 XXX XXX XXX">
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">National ID</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
+                  <input class="form-control" name="national_id" placeholder="ID/Passport number">
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Your Location (Custom)</label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
+                  <input class="form-control" name="location" id="customLocation" placeholder="City, Country" value="">
+                </div>
+                <div class="form-text">
+                  <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    This is your preferred display location
+                  </small>
+                </div>
+              </div>
+              
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Work Type</label>
+                <select class="form-select" name="work_type">
+                  <option value="" selected disabled>Select work type</option>
+                  <option value="full-time">Full Time</option>
+                  <option value="part-time">Part Time</option>
+                  <option value="contract">Contract</option>
+                  <option value="freelance">Freelance</option>
+                  <option value="internship">Internship</option>
+                  <option value="volunteer">Volunteer</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Certificate of Good Conduct</label>
+              <div class="upload-area border border-2 border-dashed rounded-3 p-3 text-center bg-white" id="certificateUpload">
+                <i class="bi bi-cloud-upload text-primary fs-2"></i>
+                <p class="mb-1 fw-semibold">Upload your certificate</p>
+                <p class="small text-muted mb-2">PDF, PNG, JPG (Max 16MB)</p>
+                <input class="form-control d-none" name="certificate" type="file" id="certificate" accept=".pdf,.png,.jpg,.jpeg">
+                <button type="button" class="btn btn-sm btn-outline-primary" onclick="document.getElementById('certificate').click()">
+                  <i class="bi bi-folder2-open me-2"></i>Choose File
+                </button>
+              </div>
+              <div id="fileSelected" class="small text-success mt-2" style="display: none;">
+                <i class="bi bi-check-circle me-1"></i> <span id="fileName"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Location Verification Notice -->
+          <div class="bg-primary-soft p-3 rounded-3 mb-4 border border-primary border-opacity-25" id="realLocationDisplay" style="display: none;">
+            <div class="d-flex align-items-center">
+              <i class="bi bi-shield-check text-primary fs-4 me-3"></i>
+              <div>
+                <span class="fw-semibold">✓ Location Verified</span>
+                <p class="small text-muted mb-0" id="verifiedLocation"></p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Terms and Conditions Section - Community Commitment -->
+          <div class="bg-primary-soft p-4 rounded-4 mb-4 border border-primary border-opacity-25">
+            <div class="d-flex align-items-center mb-3">
+              <i class="bi bi-shield-check text-primary fs-4 me-2"></i>
+              <h5 class="fw-bold text-primary mb-0">KaziConnect Community Commitment</h5>
+            </div>
+            
+            <p class="small text-muted mb-3">By joining KaziConnect, you agree to uphold our core values:</p>
+            
+            <div class="row g-3 mb-3">
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-patch-check-fill text-primary me-2 mt-1"></i>
+                  <div>
+                    <span class="fw-semibold">Ethical & Honest</span>
+                    <p class="small text-muted mb-0">I act with integrity and will not post misleading or fake jobs. I ensure all opportunities I share are real and fair.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-heart-fill text-primary me-2 mt-1"></i>
+                  <div>
+                    <span class="fw-semibold">Respectful & Value-driven</span>
+                    <p class="small text-muted mb-0">I genuinely value others' time, effort, and potential. I treat every community member with respect.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-check-circle-fill text-primary me-2 mt-1"></i>
+                  <div>
+                    <span class="fw-semibold">Responsible & Trustworthy</span>
+                    <p class="small text-muted mb-0">I keep my word and maintain professional standards. Others can rely on me to follow through.</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="col-12">
+                <div class="d-flex align-items-start">
+                  <i class="bi bi-people-fill text-primary me-2 mt-1"></i>
+                  <div>
+                    <span class="fw-semibold">Empathetic & Thoughtful</span>
+                    <p class="small text-muted mb-0">I consider how my actions affect others and strive to create positive impact in the community.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="bg-white p-3 rounded-3 border-start border-4 border-primary">
+              <p class="small fst-italic text-secondary mb-1">"A responsible and ethical individual who values others and ensures the opportunities they share are legitimate and fair."</p>
+              <p class="small fst-italic text-secondary mb-0">"Trustworthy and people-oriented professional committed to integrity, transparency, and respecting the potential of others."</p>
+            </div>
+            
+            <!-- Agreement Checkboxes -->
+            <div class="mt-3">
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="termsAgree" name="terms_agree" required>
+                <label class="form-check-label small" for="termsAgree">
+                  I agree to the <a href="#" class="text-primary text-decoration-none">Terms of Service</a> and <a href="#" class="text-primary text-decoration-none">Privacy Policy</a>
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="communityCommitment" name="community_commitment" required>
+                <label class="form-check-label small" for="communityCommitment">
+                  I commit to upholding the KaziConnect values of <span class="fw-semibold">ethics, respect, responsibility, and empathy</span> in all my interactions
+                </label>
+              </div>
+              <div class="form-check mb-2">
+                <input class="form-check-input" type="checkbox" id="opportunitiesAgree" name="opportunities_agree" required>
+                <label class="form-check-label small" for="opportunitiesAgree">
+                  I confirm that all opportunities I share will be <span class="fw-semibold">genuine, fair, and legitimate</span>
+                </label>
+              </div>
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="locationAgree" name="location_agree" required>
+                <label class="form-check-label small" for="locationAgree">
+                  I consent to the collection of my <span class="fw-semibold">real location data</span> for verification and platform integrity purposes
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button class="btn btn-primary py-2 fw-semibold" type="submit" id="submitBtn">
+              <i class="bi bi-person-plus me-2"></i>Create Account
+            </button>
+            <button class="btn btn-outline-secondary py-2" type="button" onclick="window.location.href='{{ url_for('login') }}'">
+              <i class="bi bi-google me-2"></i>Sign up with Google
+            </button>
+          </div>
+
+          <div class="mt-3 text-center">
+            <span class="small text-muted">Already have an account? <a href="{{ url_for('login') }}" class="text-primary fw-semibold text-decoration-none">Login</a></span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.bg-primary-soft {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+.border-dashed {
+  border-style: dashed !important;
+}
+.upload-area {
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.upload-area:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+  border-color: var(--bs-primary) !important;
+}
+</style>
+
+<script>
+// Geolocation and form handling
+document.addEventListener('DOMContentLoaded', function() {
+  const locationStatus = document.getElementById('locationStatus');
+  const locationSpinner = document.getElementById('locationSpinner');
+  const locationMessage = document.getElementById('locationMessage');
+  const locationDetails = document.getElementById('locationDetails');
+  const realLocationDisplay = document.getElementById('realLocationDisplay');
+  const verifiedLocation = document.getElementById('verifiedLocation');
+  const latitudeInput = document.getElementById('latitude');
+  const longitudeInput = document.getElementById('longitude');
+  const customLocationInput = document.getElementById('customLocation');
+  const submitBtn = document.getElementById('submitBtn');
+  
+  // File upload handling
+  const certificateInput = document.getElementById('certificate');
+  const fileSelected = document.getElementById('fileSelected');
+  const fileName = document.getElementById('fileName');
+  
+  certificateInput.addEventListener('change', function(e) {
+    if (this.files && this.files[0]) {
+      fileName.textContent = this.files[0].name;
+      fileSelected.style.display = 'block';
+    } else {
+      fileSelected.style.display = 'none';
+    }
+  });
+  
+  // Password strength indicator (simple)
+  const passwordInput = document.getElementById('password');
+  const passwordStrength = document.getElementById('passwordStrength');
+  
+  passwordInput.addEventListener('input', function() {
+    const password = this.value;
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasNumber = /[0-9]/.test(password);
+    const isLongEnough = password.length >= 8;
+    
+    if (password.length === 0) {
+      passwordStrength.innerHTML = '<small class="text-muted">Minimum 8 characters with 1 uppercase and 1 number</small>';
+    } else if (isLongEnough && hasUpperCase && hasNumber) {
+      passwordStrength.innerHTML = '<small class="text-success"><i class="bi bi-check-circle"></i> Strong password</small>';
+    } else if (password.length >= 8) {
+      passwordStrength.innerHTML = '<small class="text-warning"><i class="bi bi-exclamation-triangle"></i> Add uppercase letter and number</small>';
+    } else {
+      passwordStrength.innerHTML = '<small class="text-danger"><i class="bi bi-x-circle"></i> Password too short</small>';
+    }
+  });
+  
+  // Get user's real location
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      function(position) {
+        // Success
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        latitudeInput.value = lat;
+        longitudeInput.value = lng;
+        
+        // Reverse geocoding to get location name (using OpenStreetMap Nominatim)
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+          .then(response => response.json())
+          .then(data => {
+            const city = data.address.city || data.address.town || data.address.village || 'Unknown';
+            const country = data.address.country || 'Unknown';
+            const displayLocation = `${city}, ${country}`;
+            
+            // Update UI
+            locationSpinner.style.display = 'none';
+            locationMessage.innerHTML = '<i class="bi bi-check-circle-fill text-success me-2"></i> Location detected!';
+            locationDetails.innerHTML = `We detected you're in <strong>${displayLocation}</strong>`;
+            
+            // Show verified location
+            realLocationDisplay.style.display = 'block';
+            verifiedLocation.innerHTML = `<strong>Verified:</strong> ${displayLocation} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+            
+            // Pre-fill custom location if empty
+            if (!customLocationInput.value) {
+              customLocationInput.value = displayLocation;
+            }
+            
+            // Change banner color
+            locationStatus.classList.remove('alert-info');
+            locationStatus.classList.add('alert-success');
+          })
+          .catch(error => {
+            console.error('Reverse geocoding error:', error);
+            locationSpinner.style.display = 'none';
+            locationMessage.innerHTML = '<i class="bi bi-check-circle-fill text-success me-2"></i> Location detected!';
+            locationDetails.innerHTML = `Coordinates: ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            realLocationDisplay.style.display = 'block';
+            verifiedLocation.innerHTML = `<strong>Verified:</strong> ${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+            locationStatus.classList.remove('alert-info');
+            locationStatus.classList.add('alert-success');
+          });
+      },
+      function(error) {
+        // Error
+        console.warn('Geolocation error:', error);
+        locationSpinner.style.display = 'none';
+        
+        let errorMessage = 'Unable to detect your location.';
+        if (error.code === 1) {
+          errorMessage = 'Location access denied. Please enable location services for better verification.';
+        } else if (error.code === 2) {
+          errorMessage = 'Location unavailable. Please check your connection.';
+        } else if (error.code === 3) {
+          errorMessage = 'Location request timed out.';
+        }
+        
+        locationMessage.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> Location detection failed';
+        locationDetails.innerHTML = errorMessage;
+        locationStatus.classList.remove('alert-info');
+        locationStatus.classList.add('alert-warning');
+        
+        // Clear location inputs
+        latitudeInput.value = '';
+        longitudeInput.value = '';
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  } else {
+    // Browser doesn't support geolocation
+    locationSpinner.style.display = 'none';
+    locationMessage.innerHTML = '<i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> Location not supported';
+    locationDetails.innerHTML = 'Your browser does not support location detection.';
+    locationStatus.classList.remove('alert-info');
+    locationStatus.classList.add('alert-warning');
+  }
+  
+  // Form validation
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    const checkboxes = document.querySelectorAll('input[type="checkbox"][required]');
+    let allChecked = true;
+    
+    checkboxes.forEach(cb => {
+      if (!cb.checked) allChecked = false;
+    });
+    
+    if (!allChecked) {
+      e.preventDefault();
+      alert('Please agree to all terms and conditions before registering.');
+      return false;
+    }
+    
+    // Check if location was captured (optional warning)
+    if (!latitudeInput.value || !longitudeInput.value) {
+      if (!confirm('We could not detect your real location. You can still register, but some features may be limited. Continue?')) {
+        e.preventDefault();
+        return false;
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

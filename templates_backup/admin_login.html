@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title %}Admin Login — KaziConnect{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h4 class="mb-3">Admin Login</h4>
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-2">
+            <label class="form-label">Admin email</label>
+            <input class="form-control" type="email" name="email" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label">Password</label>
+            <input class="form-control" type="password" name="password" required>
+          </div>
+          <div class="d-grid">
+            <button class="btn btn-danger">Login as Admin</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<body style="background: white; color: black;">
+    <h1>MINIMAL TEST</h1>
+    
+    <p>Jobs passed to template: {{ jobs|length }}</p>
+    
+    <div style="border: 5px solid green; padding: 20px;">
+    {% if jobs %}
+        <h2>JOBS FOUND:</h2>
+        {% for job in jobs %}
+        <div style="border: 2px solid red; margin: 10px; padding: 10px;">
+            <h3>{{ job.title }}</h3>
+            <p>Location: {{ job.location }}</p>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div style="border: 2px solid blue; margin: 10px; padding: 10px;">
+            NO JOBS FOUND
+        </div>
+    {% endif %}
+    </div>
+</body>
+</html>

@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% block title %}Profile — KaziConnect{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-12 col-lg-8">
+    <div class="card mb-3 shadow-sm">
+      <div class="card-body d-flex justify-content-between align-items-start">
+        <div class="d-flex align-items-center gap-3">
+          {% if user.profile_picture %}
+            <img src="{{ url_for('uploaded_file', filename=user.profile_picture) }}" 
+                 alt="Profile picture" 
+                 class="rounded-circle" 
+                 width="96" 
+                 height="96"
+                 style="object-fit: cover;">
+          {% else %}
+            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" 
+                 style="width:96px; height:96px;">
+              <i class="bi bi-person-fill" style="font-size: 28px;"></i>
+            </div>
+          {% endif %}
+          <div>
+            <h5 class="mb-0">{{ user.username or user.email }}</h5>
+            <div class="small text-muted">{{ user.email }}</div>
+            {% if user.location %}
+              <div class="small text-muted mt-1">
+                <i class="bi bi-geo-alt"></i> {{ user.location }}
+              </div>
+            {% endif %}
+            {% if user.work_type %}
+              <div class="small text-muted">
+                <i class="bi bi-briefcase"></i> {{ user.work_type }}
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="text-end">
+          {% if is_own_profile %}
+            <a class="btn btn-sm btn-outline-primary mb-2" href="{{ url_for('edit_profile') }}">
+              <i class="bi bi-pencil"></i> Edit Profile
+            </a>
+          {% endif %}
+          <a class="btn btn-sm btn-primary" href="{{ url_for('messages_conversation', other_id=user.id) if not is_own_profile else url_for('messages_list') }}">
+            <i class="bi bi-chat-dots"></i> 
+            {% if is_own_profile %}Messages{% else %}Send Message{% endif %}
+            {% if is_own_profile and unread_messages > 0 %}
+              <span class="badge bg-danger">{{ unread_messages }}</span>
+            {% endif %}
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jobs Posted -->
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>
+          <i class="bi bi-briefcase-fill"></i>
+          {{ 'Jobs you posted' if is_own_profile else 'Jobs by this user' }}
+        </span>
+        {% if is_own_profile %}
+          <a href="{{ url_for('post_job') }}" class="btn btn-sm btn-success">
+            <i class="bi bi-plus-circle"></i> Post New Job
+          </a>
+        {% endif %}
+      </div>
+      <div class="list-group list-group-flush">
+        {% for j in posted_jobs %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+              <div class="flex-grow-1">
+                <h6 class="mb-1">{{ j.title }}</h6>
+                <div class="small text-muted">
+                  <i class="bi bi-geo-alt"></i> {{ j.location }} •
+                  <i class="bi bi-calendar"></i> {{ j.created_at.strftime('%b %d, %Y') }} •
+                  <span class="badge bg-{{ 'success' if j.status=='open' else 'secondary' }}">
+                    {{ j.status|capitalize }}
+                  </span>
+                </div>
+
+                {# Media gallery / thumbnails for the job #}
+                {% if j.media %}
+                  <div class="mt-2 d-flex flex-wrap gap-2">
+                    {% for m in j.media %}
+                      <div style="max-width:180px;">
+                        {% if m.media_type == 'image' %}
+                          <a href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank" class="d-block">
+                            <img src="{{ url_for('uploaded_file', filename=m.filename) }}" 
+                                 alt="Job media" 
+                                 style="width:180px; height:120px; object-fit:cover; border-radius:4px; border:1px solid #e9ecef;">
+                          </a>
+                        {% elif m.media_type == 'video' %}
+                          <video width="180" height="120" controls preload="metadata" style="border-radius:4px; border:1px solid #e9ecef; background:#000;">
+                            <source src="{{ url_for('uploaded_file', filename=m.filename) }}">
+                            Your browser does not support the video tag.
+                          </video>
+                        {% else %}
+                          <a href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank" class="small">
+                            {{ m.filename }}
+                          </a>
+                        {% endif %}
+                      </div>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+                {# End media gallery #}
+
+              </div>
+              <div class="text-end">
+                {% if is_own_profile %}
+                  <a class="btn btn-sm btn-outline-primary me-1" href="{{ url_for('edit_job', job_id=j.id) }}">
+                    <i class="bi bi-pencil"></i> Edit
+                  </a>
+                  <a class="btn btn-sm btn-outline-info me-1" href="{{ url_for('job_applications', job_id=j.id) }}">
+                    <i class="bi bi-people"></i> Applications
+                  </a>
+                  <form method="post" action="{{ url_for('delete_job', job_id=j.id) }}" class="d-inline" 
+                        onsubmit="return confirm('Delete this job?')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-danger">
+                      <i class="bi bi-trash"></i> Delete
+                    </button>
+                  </form>
+                {% else %}
+                  <form method="post" action="{{ url_for('apply_job', job_id=j.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-success">
+                      <i class="bi bi-check-circle"></i> Apply
+                    </button>
+                  </form>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="list-group-item text-center py-4 text-muted">
+            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+            <div class="mt-2">
+              {{ 'You haven\'t posted any jobs yet.' if is_own_profile else 'This user has not posted any jobs yet.' }}
+            </div>
+            {% if is_own_profile %}
+              <a href="{{ url_for('post_job') }}" class="btn btn-sm btn-primary mt-2">
+                <i class="bi bi-plus-circle"></i> Post Your First Job
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Your Applications (only for own profile) -->
+    {% if is_own_profile %}
+    <div class="card mb-3 shadow-sm">
+      <div class="card-header">
+        <i class="bi bi-file-earmark-text"></i> Your Applications
+      </div>
+      <div class="list-group list-group-flush">
+        {% for app in applications %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-1">{{ app.job.title }}</h6>
+                <div class="small text-muted">
+                  Applied on {{ app.applied_at.strftime('%b %d, %Y at %I:%M %p') }}
+                </div>
+                <span class="badge bg-{{ 'warning' if app.status=='pending' else ('success' if app.status=='accepted' else 'danger') }} mt-1">
+                  {{ app.status|capitalize }}
+                </span>
+              </div>
+              <div>
+                <a href="{{ url_for('messages_conversation', other_id=app.job.poster_id) }}" 
+                   class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-chat-dots"></i> Contact Poster
+                </a>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="list-group-item text-center py-4 text-muted">
+            <i class="bi bi-inbox" style="font-size: 2rem;"></i>
+            <div class="mt-2">You have not applied to any jobs yet.</div>
+            <a href="{{ url_for('index') }}" class="btn btn-sm btn-primary mt-2">
+              <i class="bi bi-search"></i> Browse Jobs
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div class="col-12 col-lg-4">
+    <!-- Activity Summary -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h6 class="mb-3">
+          <i class="bi bi-bar-chart"></i> 
+          {{ 'Your Activity' if is_own_profile else 'User Stats' }}
+        </h6>
+        <div class="d-flex justify-content-between mb-2">
+          <span class="text-muted">Jobs Posted:</span>
+          <strong>{{ posted_jobs|length }}</strong>
+        </div>
+        {% if is_own_profile %}
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Applications Sent:</span>
+            <strong>{{ applications|length }}</strong>
+          </div>
+          <div class="d-flex justify-content-between mb-2">
+            <span class="text-muted">Unread Notifications:</span>
+            <strong class="text-danger">{{ unread_count }}</strong>
+          </div>
+          <div class="d-flex justify-content-between">
+            <span class="text-muted">Unread Messages:</span>
+            <strong class="text-primary">{{ unread_messages }}</strong>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h6 class="mb-3"><i class="bi bi-link-45deg"></i> Quick Links</h6>
+        <div class="d-grid gap-2">
+          {% if is_own_profile %}
+            <a class="btn btn-outline-success" href="{{ url_for('post_job') }}">
+              <i class="bi bi-plus-circle"></i> Post a Job
+            </a>
+            <a class="btn btn-outline-primary" href="{{ url_for('messages_list') }}">
+              <i class="bi bi-chat-dots"></i> Messages
+              {% if unread_messages > 0 %}
+                <span class="badge bg-danger">{{ unread_messages }}</span>
+              {% endif %}
+            </a>
+            <a class="btn btn-outline-secondary" href="{{ url_for('notifications_page') }}">
+              <i class="bi bi-bell"></i> Notifications
+              {% if unread_count > 0 %}
+                <span class="badge bg-danger">{{ unread_count }}</span>
+              {% endif %}
+            </a>
+            <a class="btn btn-outline-info" href="{{ url_for('all_users') }}">
+              <i class="bi bi-people"></i> Browse Users
+            </a>
+          {% else %}
+            <a class="btn btn-primary" href="{{ url_for('messages_conversation', other_id=user.id) }}">
+              <i class="bi bi-chat-dots"></i> Send Message
+            </a>
+            <a class="btn btn-outline-secondary" href="{{ url_for('all_users') }}">
+              <i class="bi bi-arrow-left"></i> Back to Users
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Available Jobs (for own profile) -->
+    {% if is_own_profile and available_jobs %}
+    <div class="card shadow-sm">
+      <div class="card-header">
+        <i class="bi bi-briefcase"></i> Jobs You Can Apply To
+      </div>
+      <div class="list-group list-group-flush">
+        {% for job in available_jobs[:5] %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h6 class="mb-1 small">{{ job.title }}</h6>
+                <div class="small text-muted">{{ job.location }}</div>
+              </div>
+              <form method="post" action="{{ url_for('apply_job', job_id=job.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-success">Apply</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+        {% if available_jobs|length > 5 %}
+          <div class="list-group-item text-center">
+            <a href="{{ url_for('index') }}" class="btn btn-sm btn-outline-primary">
+              View All Jobs
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

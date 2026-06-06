@@ -1,0 +1,33 @@
+<!-- Replace the jobs-grid section with this -->
+<div class="jobs-grid">
+  {% if jobs %}
+    {% for job in jobs %}
+      <div class="job-card">
+        <!-- ... keep all your existing job card HTML here ... -->
+        <div class="job-card-body">
+          <div class="job-header">
+            <div style="flex: 1;">
+              <h3 class="job-title">{{ job.title }}</h3>
+              <div class="job-location">
+                <i class="bi bi-geo-alt-fill"></i>
+                {{ job.location }}
+              </div>
+            </div>
+            <span class="status-badge status-{{ job.status }}">
+              {{ job.status|capitalize }}
+            </span>
+          </div>
+          <!-- ... rest of your job card content ... -->
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="bi bi-inbox"></i>
+      </div>
+      <h2 class="empty-state-title">No open jobs yet</h2>
+      <p class="empty-state-text">Check back later or be the first to post an opportunity</p>
+    </div>
+  {% endif %}
+</div>

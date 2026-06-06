@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — KaziConnect{% endblock %}
+
+{% block content %}
+<h3 class="mb-3">Admin Dashboard</h3>
+
+<div class="row">
+  <div class="col-12 col-lg-6 mb-3">
+    <div class="card shadow-sm">
+      <div class="card-header">Users</div>
+      <div class="list-group list-group-flush">
+        {% for u in users %}
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong>{{ u.username or u.email }}</strong><br>
+              <small class="text-muted">{{ u.email }}</small>
+            </div>
+            <div class="text-end">
+              <form method="post" action="{{ url_for('admin_warn', user_id=u.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-warning">Warn</button>
+              </form>
+              <form method="post" action="{{ url_for('admin_suspend', user_id=u.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-secondary">Suspend</button>
+              </form>
+              <form method="post" action="{{ url_for('admin_burn', user_id=u.id) }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-sm btn-danger">Block</button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-6 mb-3">
+    <div class="card shadow-sm">
+      <div class="card-header">Jobs</div>
+      <div class="list-group list-group-flush">
+        {% for j in jobs %}
+          <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <strong>{{ j.title }}</strong><br>
+                <small class="text-muted">by {{ j.poster.username or j.poster.email }}</small>
+              </div>
+              <div class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="{{ url_for('edit_job', job_id=j.id) }}">Edit</a>
+                <form method="post" action="{{ url_for('delete_job', job_id=j.id) }}" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <button class="btn btn-sm btn-danger">Delete</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

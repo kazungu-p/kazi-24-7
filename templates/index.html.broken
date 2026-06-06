@@ -1,0 +1,806 @@
+{% extends 'base.html' %}
+{% block title %}Open Jobs — KaziConnect{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;900&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --accent-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --surface: #ffffff;
+    --surface-elevated: #fafbfd;
+    --border-subtle: rgba(99, 102, 241, 0.08);
+    --text-primary: #1a1d29;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 20px 40px rgba(99, 102, 241, 0.12);
+    --shadow-xl: 0 30px 60px rgba(99, 102, 241, 0.16);
+    --radius-sm: 12px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+  }
+
+  * {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  .modern-header {
+    margin-bottom: 3rem;
+    position: relative;
+  }
+
+  .modern-header::before {
+    content: '';
+    position: absolute;
+    top: -2rem;
+    left: -2rem;
+    right: -2rem;
+    height: 200px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+    border-radius: var(--radius-lg);
+    z-index: -1;
+    animation: float 8s ease-in-out infinite;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-10px) scale(1.02); }
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+    padding: 2rem 0;
+  }
+
+  .header-left h1 {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 900;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .header-subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-modern {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .btn-modern::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .btn-modern:hover::before {
+    opacity: 1;
+  }
+
+  .btn-primary-modern {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-primary-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .btn-outline-modern {
+    background: white;
+    color: var(--text-primary);
+    border: 2px solid var(--border-subtle);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .btn-outline-modern:hover {
+    border-color: rgba(102, 126, 234, 0.2);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
+  }
+
+  .badge-notification {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: var(--accent-gradient);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 0.2rem 0.5rem;
+    border-radius: 999px;
+    box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+  }
+
+  .jobs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+  }
+
+  .job-card {
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .job-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--primary-gradient);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .job-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(102, 126, 234, 0.15);
+  }
+
+  .job-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .job-card-body {
+    padding: 1.75rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+  }
+
+  .job-title {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+  }
+
+  .job-location {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  .job-location i {
+    color: var(--text-muted);
+  }
+
+  .status-badge {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .status-badge.status-open {
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+    color: #047857;
+  }
+
+  .status-badge.status-closed {
+    background: #f3f4f6;
+    color: #6b7280;
+  }
+
+  .media-preview {
+    margin: 1.25rem 0;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    position: relative;
+    height: 180px;
+    background: var(--surface-elevated);
+  }
+
+  .media-preview img,
+  .media-preview video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .job-card:hover .media-preview img,
+  .job-card:hover .media-preview video {
+    transform: scale(1.05);
+  }
+
+  .media-locked {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border: 2px dashed var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .media-locked a {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: color 0.3s;
+  }
+
+  .media-locked a:hover {
+    color: #667eea;
+  }
+
+  .job-description {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .job-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-top: auto;
+  }
+
+  .poster-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .poster-name {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .poster-name strong {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .post-date {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .job-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .action-btn {
+    padding: 0.6rem 1rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .action-btn-apply {
+    background: var(--success-gradient);
+    color: white;
+    box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+  }
+
+  .action-btn-apply:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+    color: white;
+  }
+
+  .action-btn-details {
+    background: var(--primary-gradient);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  }
+
+  .action-btn-details:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .action-btn-icon {
+    background: white;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    padding: 0.6rem;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .action-btn-icon:hover {
+    background: var(--surface-elevated);
+    border-color: rgba(102, 126, 234, 0.2);
+    transform: translateY(-2px);
+  }
+
+  .action-btn-locked {
+    background: #f3f4f6;
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .job-footer {
+    padding: 1rem 1.75rem;
+    background: var(--surface-elevated);
+    border-top: 1px solid var(--border-subtle);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .job-id {
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+
+  .footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .copy-link {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: color 0.3s;
+    padding: 0;
+  }
+
+  .copy-link:hover {
+    color: #667eea;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-lg);
+    border: 2px dashed var(--border-subtle);
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+  }
+
+  .empty-state-title {
+    font-family: 'Cabinet Grotesk', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state-text {
+    color: var(--text-secondary);
+    font-size: 1rem;
+  }
+
+  .fab-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 1000;
+  }
+
+  .fab {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: var(--primary-gradient);
+    color: white;
+    border: none;
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    text-decoration: none;
+  }
+
+  .fab:hover {
+    transform: scale(1.1) rotate(90deg);
+    box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+  }
+
+  @media (max-width: 768px) {
+    .header-left h1 {
+      font-size: 2rem;
+    }
+
+    .jobs-grid {
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .header-content {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .header-actions {
+      width: 100%;
+    }
+
+    .btn-modern {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+
+  /* Stagger animation for cards */
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .job-card {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+
+  {% for i in range(20) %}
+  .job-card:nth-child({{ i + 1 }}) {
+    animation-delay: {{ i * 0.1 }}s;
+  }
+  {% endfor %}
+</style>
+
+<div class="modern-header">
+  <div class="header-content">
+    <div class="header-left">
+      <h1>Open Jobs</h1>
+      <p class="header-subtitle">Discover opportunities and apply with a single click</p>
+    </div>
+
+    <div class="header-actions">
+      {% if current_user.is_authenticated %}
+        <a class="btn-modern btn-primary-modern" href="{{ url_for('post_job') }}">
+          <i class="bi bi-briefcase-fill"></i>
+          Post Job
+        </a>
+        <a class="btn-modern btn-outline-modern" href="{{ url_for('messages_list') }}" style="position: relative;">
+          <i class="bi bi-chat-dots"></i>
+          Messages
+          <span class="badge-notification" id="top-messages-badge" style="display:none"></span>
+        </a>
+      {% else %}
+        <a class="btn-modern btn-outline-modern" href="{{ url_for('login') }}">
+          <i class="bi bi-box-arrow-in-right"></i>
+          Login to apply
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="jobs-grid">
+  {% for job in jobs %}
+    <div class="job-card">
+      <div class="job-card-body">
+        <div class="job-header">
+          <div style="flex: 1;">
+            <h3 class="job-title">{{ job.title }}</h3>
+            <div class="job-location">
+              <i class="bi bi-geo-alt-fill"></i>
+              {{ job.location }}
+            </div>
+          </div>
+          <span class="status-badge status-{{ job.status }}">
+            {{ job.status|capitalize }}
+          </span>
+        </div>
+
+        {% set first_media = job.media|first %}
+        {% if first_media %}
+          <div class="media-preview">
+            {% if current_user.is_authenticated %}
+              {% if first_media.media_type == 'image' %}
+                <img src="{{ url_for('uploaded_file', filename=first_media.filename) }}"
+                     alt="Job media for {{ job.title }}">
+              {% elif first_media.media_type == 'video' %}
+                <video muted preload="metadata">
+                  <source src="{{ url_for('uploaded_file', filename=first_media.filename) }}">
+                  Your browser does not support the video tag.
+                </video>
+              {% else %}
+                <div class="media-locked">
+                  <a href="{{ url_for('uploaded_file', filename=first_media.filename) }}" target="_blank">
+                    <i class="bi bi-file-earmark"></i>
+                    View media
+                  </a>
+                </div>
+              {% endif %}
+            {% else %}
+              <div class="media-locked">
+                <a href="{{ url_for('login') }}">
+                  <i class="bi bi-lock-fill"></i>
+                  Login to view media
+                </a>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+
+        <p class="job-description" id="desc-{{ job.id }}">{{ job.description }}</p>
+
+        <div class="job-meta">
+          <div class="poster-info">
+            <div class="poster-name">
+              Posted by <strong>{{ job.poster.username or job.poster.email }}</strong>
+            </div>
+            <div class="post-date">{{ job.created_at.strftime('%b %d, %Y at %H:%M') }}</div>
+          </div>
+
+          <div class="job-actions">
+            {% if current_user.is_authenticated %}
+              <form action="{{ url_for('apply_job', job_id=job.id) }}" method="post" style="margin: 0;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="action-btn action-btn-apply" type="submit" title="Apply to this job">
+                  <i class="bi bi-check-circle-fill"></i>
+                  Apply
+                </button>
+              </form>
+            {% else %}
+              <a class="action-btn action-btn-locked" href="{{ url_for('login') }}" title="Login to apply">
+                <i class="bi bi-lock-fill"></i>
+                Login
+              </a>
+            {% endif %}
+
+            <a class="action-btn action-btn-details" href="{{ url_for('job_detail', job_id=job.id) }}" title="View details">
+              <i class="bi bi-info-circle-fill"></i>
+              Details
+            </a>
+
+            <button class="action-btn action-btn-icon copy-btn" 
+                    data-copy-text="{{ url_for('job_detail', job_id=job.id, _external=true) }}" 
+                    title="Copy job link">
+              <i class="bi bi-link-45deg"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="job-footer">
+        <div class="job-id">#{{ job.id }}</div>
+        <div class="footer-actions">
+          <button class="copy-link copy-desc-btn" data-target="#desc-{{ job.id }}">
+            <i class="bi bi-clipboard"></i> Copy description
+          </button>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <i class="bi bi-inbox"></i>
+      </div>
+      <h2 class="empty-state-title">No open jobs yet</h2>
+      <p class="empty-state-text">Check back later or be the first to post an opportunity</p>
+    </div>
+  {% endfor %}
+</div>
+
+{% if current_user.is_authenticated %}
+  <div class="fab-container d-md-none">
+    <a class="fab" href="{{ url_for('post_job') }}" title="Post a job">
+      <i class="bi bi-plus-lg"></i>
+    </a>
+  </div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Utility: modern copy-to-clipboard with toast-style feedback
+  async function copyText(text, btn) {
+    try {
+      await navigator.clipboard.writeText(text);
+      showModernFeedback(btn, '✓ Copied', 'success');
+    } catch (e) {
+      // Fallback for older browsers
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showModernFeedback(btn, '✓ Copied', 'success');
+      } catch (err) {
+        showModernFeedback(btn, '✗ Failed', 'error');
+      } finally {
+        document.body.removeChild(ta);
+      }
+    }
+  }
+
+  function showModernFeedback(btn, text, type) {
+    const original = btn.innerHTML;
+    const originalBg = btn.style.background;
+    
+    btn.innerHTML = text;
+    btn.style.background = type === 'success' 
+      ? 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)' 
+      : 'linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%)';
+    btn.style.color = type === 'success' ? '#047857' : '#fff';
+    btn.disabled = true;
+
+    setTimeout(() => {
+      btn.innerHTML = original;
+      btn.style.background = originalBg;
+      btn.style.color = '';
+      btn.disabled = false;
+    }, 1800);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    // Copy link buttons
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const payload = btn.getAttribute('data-copy-text') || '';
+        copyText(payload, btn);
+      });
+    });
+
+    // Copy description buttons
+    document.querySelectorAll('.copy-desc-btn').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = btn.getAttribute('data-target');
+        const el = document.querySelector(target);
+        if (!el) return;
+        copyText(el.innerText.trim(), btn);
+      });
+    });
+
+    // Update messages badge
+    async function updateTopMessagesBadge() {
+      try {
+        const res = await fetch('{{ url_for("messages_unread_count") }}', {
+          credentials: 'same-origin'
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        const badge = document.getElementById('top-messages-badge');
+        if (!badge) return;
+        
+        if (data.count && data.count > 0) {
+          badge.style.display = 'inline-block';
+          badge.textContent = data.count > 99 ? '99+' : data.count;
+        } else {
+          badge.style.display = 'none';
+        }
+      } catch (err) {
+        console.debug('Badge fetch failed', err);
+      }
+    }
+
+    {% if current_user.is_authenticated %}
+      updateTopMessagesBadge();
+      setInterval(updateTopMessagesBadge, 20000);
+    {% endif %}
+
+    // Add hover effect for video previews
+    document.querySelectorAll('.media-preview video').forEach(video => {
+      const card = video.closest('.job-card');
+      card.addEventListener('mouseenter', () => {
+        video.play().catch(() => {});
+      });
+      card.addEventListener('mouseleave', () => {
+        video.pause();
+        video.currentTime = 0;
+      });
+    });
+  });
+</script>
+{% endblock %}

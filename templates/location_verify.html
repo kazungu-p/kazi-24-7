@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Your Location - KaziConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <div class="display-1 mb-3">
+                    <i class="bi bi-geo-alt-fill" style="color: var(--color-accent-cyan);"></i>
+                </div>
+                <h1 class="display-5 fw-bold mb-3">Verify Your Location</h1>
+                <p class="lead text-secondary">
+                    We use your browser's GPS - completely free, no API keys required. 100% accurate and cannot be faked.
+                </p>
+            </div>
+
+            {% if verification %}
+            <div class="card mb-4" style="background: var(--color-bg-elevated); border-radius: var(--radius-xl); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <div class="display-6 me-3">
+                            {% if verification.trust_score >= 80 %}
+                                <i class="bi bi-shield-fill-check text-success"></i>
+                            {% elif verification.trust_score >= 50 %}
+                                <i class="bi bi-shield-check text-warning"></i>
+                            {% else %}
+                                <i class="bi bi-shield-exclamation text-danger"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h4 class="mb-1">Location Verified</h4>
+                            <div class="text-secondary">
+                                Verified on {{ verification.created_at.strftime('%B %d, %Y at %H:%M') if verification.created_at else 'Unknown date' }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <i class="bi bi-pin-map-fill me-3" style="color: var(--color-accent-cyan);"></i>
+                                <div>
+                                    <div class="text-secondary small">YOUR LOCATION</div>
+                                    <div class="fw-bold">
+                                        {% if verification.city %}
+                                            {{ verification.city }}{% if verification.region or verification.country %},{% endif %}
+                                        {% endif %}
+                                        {% if verification.region %}
+                                            {{ verification.region }}{% if verification.country %},{% endif %}
+                                        {% endif %}
+                                        {% if verification.country %}
+                                            {{ verification.country }}
+                                        {% else %}
+                                            Location detected
+                                        {% endif %}
+                                    </div>
+                                    <div class="small text-secondary">{{ verification.formatted_address or '' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <i class="bi bi-shield me-3" style="color: var(--color-accent-purple);"></i>
+                                <div>
+                                    <div class="text-secondary small">TRUST SCORE & ACCURACY</div>
+                                    <div class="fw-bold">
+                                        <span class="{% if verification.trust_score >= 80 %}text-success{% elif verification.trust_score >= 50 %}text-warning{% else %}text-danger{% endif %}">
+                                            {{ verification.trust_score }}%
+                                        </span>
+                                        {% if verification.browser_accuracy %}
+                                            <span class="text-secondary ms-2">({{ "%.0f"|format(verification.browser_accuracy) }} meters)</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if verification.real_latitude and verification.real_longitude %}
+                    <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+                        <div class="small text-secondary">
+                            <i class="bi bi-geo me-1"></i>
+                            Coordinates: {{ "%.6f"|format(verification.real_latitude) }}, {{ "%.6f"|format(verification.real_longitude) }}
+                            {% if verification.real_ip %}
+                                | IP: {{ verification.real_ip }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="card" style="background: var(--color-bg-elevated); border-radius: var(--radius-xl); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="card-body p-4 p-lg-5">
+                    <div class="text-center mb-4">
+                        <div id="locationStatus" class="mb-3">
+                            <div id="locationSpinner">
+                                <div class="spinner-border" style="color: var(--color-accent-cyan);" role="status">
+                                    <span class="visually-hidden">Detecting location...</span>
+                                </div>
+                            </div>
+                            <div id="locationSuccess" style="display: none;">
+                                <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                            </div>
+                            <div id="locationError" style="display: none;">
+                                <i class="bi bi-exclamation-circle-fill text-danger" style="font-size: 3rem;"></i>
+                            </div>
+                        </div>
+                        <h3 id="locationTitle">Detecting your location...</h3>
+                        <p id="locationDescription" class="text-secondary">
+                            Please allow browser location access. This uses your device's GPS - completely free and cannot be faked.
+                        </p>
+                    </div>
+
+                    <div id="locationDetails" style="display: none;" class="mb-4">
+                        <div class="bg-dark bg-opacity-50 rounded-3 p-4" style="border: 1px solid rgba(255,255,255,0.05);">
+                            <div class="row">
+                                <div class="col-sm-6 mb-3">
+                                    <div class="text-secondary small">ADDRESS</div>
+                                    <div id="locationAddress" class="fw-bold">-</div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <div class="text-secondary small">CITY / REGION</div>
+                                    <div id="locationCity" class="fw-bold">-</div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <div class="text-secondary small">COORDINATES</div>
+                                    <div id="locationCoords" class="fw-bold">-</div>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <div class="text-secondary small">ACCURACY</div>
+                                    <div id="locationAccuracy" class="fw-bold">-</div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <div class="text-secondary small">IP ADDRESS (for verification only)</div>
+                                    <div id="ipAddress" class="fw-bold">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex flex-wrap justify-content-center gap-3 mt-4">
+                        <button type="button" id="verifyButton" class="btn btn-lg px-5" 
+                                style="background: var(--gradient-primary); color: white; border-radius: 50px; border: none; display: none;"
+                                onclick="verifyLocation()">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Verify My Location
+                        </button>
+                        <button type="button" id="retryButton" class="btn btn-lg px-5" 
+                                style="background: rgba(255,255,255,0.1); color: white; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2); display: none;"
+                                onclick="detectLocation()">
+                            <i class="bi bi-arrow-repeat me-2"></i>
+                            Try Again
+                        </button>
+                        <a href="{{ url_for('profile') }}" class="btn btn-lg px-5" 
+                           style="background: rgba(255,255,255,0.1); color: white; border-radius: 50px; border: 1px solid rgba(255,255,255,0.2);">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Back to Profile
+                        </a>
+                    </div>
+
+                    <form id="locationForm" method="POST" style="display: none;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="latitude" id="inputLatitude">
+                        <input type="hidden" name="longitude" id="inputLongitude">
+                        <input type="hidden" name="accuracy" id="inputAccuracy">
+                        <input type="hidden" name="city" id="inputCity">
+                        <input type="hidden" name="region" id="inputRegion">
+                        <input type="hidden" name="country" id="inputCountry">
+                        <input type="hidden" name="address" id="inputAddress">
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <p class="text-secondary small">
+                    <i class="bi bi-info-circle-fill me-1"></i>
+                    Your location is encrypted and never shared publicly. Uses OpenStreetMap (free, no API key required).
+                </p>
+                <div class="d-flex justify-content-center gap-3 mt-2">
+                    <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">
+                        <i class="bi bi-check-circle me-1"></i> 100% Free
+                    </span>
+                    <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">
+                        <i class="bi bi-shield me-1"></i> Privacy Protected
+                    </span>
+                    <span class="badge bg-warning bg-opacity-10 text-warning px-3 py-2">
+                        <i class="bi bi-geo me-1"></i> GPS Accurate
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Reverse geocoding using OpenStreetMap Nominatim - COMPLETELY FREE, NO API KEY
+async function reverseGeocode(lat, lng) {
+    try {
+        const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+            {
+                headers: {
+                    'User-Agent': 'KaziConnect/1.0 (employment platform)'
+                }
+            }
+        );
+        const data = await response.json();
+        return {
+            address: data.display_name || 'Unknown location',
+            city: data.address?.city || data.address?.town || data.address?.village || '',
+            region: data.address?.state || data.address?.region || '',
+            country: data.address?.country || '',
+            postal_code: data.address?.postcode || ''
+        };
+    } catch (error) {
+        console.error('Reverse geocoding error:', error);
+        return null;
+    }
+}
+
+function detectLocation() {
+    const spinner = document.getElementById('locationSpinner');
+    const success = document.getElementById('locationSuccess');
+    const error = document.getElementById('locationError');
+    const title = document.getElementById('locationTitle');
+    const description = document.getElementById('locationDescription');
+    const details = document.getElementById('locationDetails');
+    const verifyButton = document.getElementById('verifyButton');
+    const retryButton = document.getElementById('retryButton');
+    
+    // Reset display
+    spinner.style.display = 'block';
+    success.style.display = 'none';
+    error.style.display = 'none';
+    details.style.display = 'none';
+    verifyButton.style.display = 'none';
+    retryButton.style.display = 'none';
+    
+    title.textContent = 'Detecting your location...';
+    description.textContent = 'Please allow browser location access. This uses your device\'s GPS - completely free and cannot be faked.';
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            async function(position) {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+                
+                document.getElementById('inputLatitude').value = lat;
+                document.getElementById('inputLongitude').value = lng;
+                document.getElementById('inputAccuracy').value = accuracy;
+                
+                // Get address from OpenStreetMap (FREE)
+                const address = await reverseGeocode(lat, lng);
+                
+                if (address) {
+                    document.getElementById('inputCity').value = address.city || '';
+                    document.getElementById('inputRegion').value = address.region || '';
+                    document.getElementById('inputCountry').value = address.country || '';
+                    document.getElementById('inputAddress').value = address.address || '';
+                }
+                
+                spinner.style.display = 'none';
+                success.style.display = 'block';
+                title.textContent = 'Location Detected Successfully!';
+                
+                let accuracyText = '';
+                let accuracyColor = 'text-success';
+                if (accuracy < 20) {
+                    accuracyText = 'Excellent accuracy';
+                    accuracyColor = 'text-success';
+                } else if (accuracy < 50) {
+                    accuracyText = 'Good accuracy';
+                    accuracyColor = 'text-success';
+                } else if (accuracy < 100) {
+                    accuracyText = 'Fair accuracy';
+                    accuracyColor = 'text-warning';
+                } else if (accuracy < 500) {
+                    accuracyText = 'Poor accuracy';
+                    accuracyColor = 'text-warning';
+                } else {
+                    accuracyText = 'Very poor accuracy';
+                    accuracyColor = 'text-danger';
+                }
+                
+                description.innerHTML = `Accuracy: <span class="${accuracyColor}">${accuracy.toFixed(0)} meters (${accuracyText})</span>`;
+                
+                document.getElementById('locationCoords').textContent = 
+                    `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                document.getElementById('locationAccuracy').textContent = 
+                    `${accuracy.toFixed(0)} meters - ${accuracyText}`;
+                
+                if (address) {
+                    document.getElementById('locationAddress').textContent = address.address || 'Unknown';
+                    document.getElementById('locationCity').textContent = 
+                        [address.city, address.region, address.country].filter(Boolean).join(', ') || 'Unknown';
+                } else {
+                    document.getElementById('locationAddress').textContent = 'Address lookup failed';
+                    document.getElementById('locationCity').textContent = 'Location detected but address unavailable';
+                }
+                
+                // Get IP address for verification
+                try {
+                    const ipResponse = await fetch('https://api.ipify.org?format=json');
+                    const ipData = await ipResponse.json();
+                    document.getElementById('ipAddress').textContent = ipData.ip;
+                } catch (err) {
+                    document.getElementById('ipAddress').textContent = 'Unable to detect IP';
+                }
+                
+                details.style.display = 'block';
+                verifyButton.style.display = 'inline-block';
+            },
+            function(error) {
+                spinner.style.display = 'none';
+                error.style.display = 'block';
+                retryButton.style.display = 'inline-block';
+                
+                let errorMessage = '';
+                if (error.code === 1) {
+                    title.textContent = 'Location Access Denied';
+                    errorMessage = 'You must allow location access to use this feature. Please enable location services in your browser and try again.';
+                } else if (error.code === 2) {
+                    title.textContent = 'Location Unavailable';
+                    errorMessage = 'Unable to detect your location. Please check your GPS or internet connection and try again.';
+                } else if (error.code === 3) {
+                    title.textContent = 'Location Timeout';
+                    errorMessage = 'Location detection timed out. Please ensure you have a stable connection and try again.';
+                } else {
+                    title.textContent = 'Location Error';
+                    errorMessage = 'Could not detect your location. Please try again.';
+                }
+                
+                description.textContent = errorMessage;
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    } else {
+        spinner.style.display = 'none';
+        error.style.display = 'block';
+        retryButton.style.display = 'inline-block';
+        title.textContent = 'Geolocation Not Supported';
+        description.textContent = 'Your browser does not support geolocation. Please upgrade to a modern browser like Chrome, Firefox, or Safari.';
+    }
+}
+
+function verifyLocation() {
+    document.getElementById('locationForm').submit();
+}
+
+// Auto-detect on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Small delay to ensure DOM is fully loaded
+    setTimeout(detectLocation, 500);
+});
+</script>
+{% endblock %}

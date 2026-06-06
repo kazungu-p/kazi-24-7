@@ -1,0 +1,1248 @@
+{% extends 'base.html' %}
+{% block title %}Profile — KaziConnect{% endblock %}
+
+{% block content %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Work+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --profile-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --profile-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --profile-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --profile-gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --profile-bg-card: #ffffff;
+    --profile-bg-elevated: #f8f9fa;
+    --profile-border: rgba(0, 0, 0, 0.08);
+    --profile-text-primary: #1a1d29;
+    --profile-text-secondary: #6b7280;
+    --profile-text-muted: #9ca3af;
+    --profile-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --profile-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --profile-shadow-lg: 0 12px 32px rgba(102, 126, 234, 0.15);
+    --profile-shadow-xl: 0 20px 48px rgba(102, 126, 234, 0.2);
+    --profile-radius-sm: 12px;
+    --profile-radius-md: 16px;
+    --profile-radius-lg: 20px;
+    --profile-radius-xl: 28px;
+  }
+
+  /* Location Badges */
+  .location-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+
+  .location-badge-verified {
+    background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
+    border: 1.5px solid rgba(67, 233, 123, 0.3);
+    color: #059669;
+  }
+
+  .location-badge-verified i {
+    color: #10b981;
+  }
+
+  .location-badge-discrepancy {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
+    border: 1.5px solid rgba(245, 158, 11, 0.3);
+    color: #b45309;
+  }
+
+  .location-badge-discrepancy i {
+    color: #f59e0b;
+  }
+
+  .trust-score-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+  }
+
+  .trust-score-high {
+    background: rgba(16, 185, 129, 0.15);
+    color: #047857;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .trust-score-medium {
+    background: rgba(245, 158, 11, 0.15);
+    color: #b45309;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  .trust-score-low {
+    background: rgba(239, 68, 68, 0.15);
+    color: #b91c1c;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .location-divider {
+    display: inline-block;
+    width: 4px;
+    height: 4px;
+    background: #d1d5db;
+    border-radius: 50%;
+    margin: 0 0.5rem;
+  }
+
+  /* Suspension Banner */
+  .suspension-banner {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: var(--profile-radius-md);
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid #dc2626;
+  }
+
+  .suspension-banner i {
+    font-size: 1.5rem;
+    color: #dc2626;
+  }
+
+  .suspension-banner-content {
+    flex: 1;
+  }
+
+  .suspension-banner-title {
+    font-weight: 700;
+    color: #991b1b;
+    margin-bottom: 0.25rem;
+  }
+
+  .suspension-banner-text {
+    font-size: 0.9rem;
+    color: #b91c1c;
+  }
+
+  /* [Previous styles remain the same] */
+  .profile-header {
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .profile-hero-card {
+    background: var(--profile-bg-card);
+    border-radius: var(--profile-radius-xl);
+    border: 1px solid var(--profile-border);
+    box-shadow: var(--profile-shadow-lg);
+    overflow: hidden;
+    position: relative;
+    margin-bottom: 2rem;
+    animation: fadeInScale 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  @keyframes fadeInScale {
+    from {
+      opacity: 0;
+      transform: scale(0.95) translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  .profile-hero-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 140px;
+    background: var(--profile-gradient-1);
+    z-index: 0;
+  }
+
+  .profile-hero-content {
+    position: relative;
+    z-index: 1;
+    padding: 2rem;
+    padding-top: 5rem;
+  }
+
+  .profile-avatar-wrapper {
+    position: relative;
+    width: fit-content;
+    margin-top: -80px;
+    margin-bottom: 1.5rem;
+  }
+
+  .profile-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 6px solid white;
+    box-shadow: var(--profile-shadow-xl);
+    object-fit: cover;
+    background: white;
+  }
+
+  .profile-avatar-placeholder {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 6px solid white;
+    box-shadow: var(--profile-shadow-xl);
+    background: var(--profile-gradient-1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 3.5rem;
+  }
+
+  .profile-info-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .profile-info-left {
+    flex: 1;
+    min-width: 250px;
+  }
+
+  .profile-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--profile-text-primary);
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .profile-email {
+    font-size: 1rem;
+    color: var(--profile-text-secondary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .profile-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--profile-text-secondary);
+    font-size: 0.95rem;
+  }
+
+  .profile-meta-item i {
+    font-size: 1.2rem;
+    color: var(--profile-text-muted);
+  }
+
+  .profile-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-end;
+  }
+
+  /* Modern Buttons */
+  .btn-profile-modern {
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--profile-radius-md);
+    font-weight: 600;
+    font-size: 0.95rem;
+    border: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-profile-modern::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+
+  .btn-profile-modern:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+
+  .btn-profile-primary {
+    background: var(--profile-gradient-1);
+    color: white;
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  }
+
+  .btn-profile-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .btn-profile-outline {
+    background: white;
+    color: var(--profile-text-primary);
+    border: 2px solid var(--profile-border);
+    box-shadow: var(--profile-shadow-sm);
+  }
+
+  .btn-profile-outline:hover {
+    border-color: #667eea;
+    color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: var(--profile-shadow-md);
+  }
+
+  .btn-profile-sm {
+    padding: 0.6rem 1.2rem;
+    font-size: 0.85rem;
+  }
+
+  /* Section Cards */
+  .profile-section-card {
+    background: var(--profile-bg-card);
+    border-radius: var(--profile-radius-lg);
+    border: 1px solid var(--profile-border);
+    box-shadow: var(--profile-shadow-md);
+    margin-bottom: 2rem;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) backwards;
+  }
+
+  .profile-section-card:hover {
+    box-shadow: var(--profile-shadow-lg);
+    transform: translateY(-4px);
+  }
+
+  .profile-section-card:nth-child(1) { animation-delay: 0.1s; }
+  .profile-section-card:nth-child(2) { animation-delay: 0.2s; }
+  .profile-section-card:nth-child(3) { animation-delay: 0.3s; }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .profile-section-header {
+    padding: 1.5rem 1.75rem;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border-bottom: 2px solid var(--profile-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .profile-section-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--profile-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0;
+  }
+
+  .profile-section-title i {
+    font-size: 1.4rem;
+    background: var(--profile-gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Job Items */
+  .job-item {
+    padding: 1.75rem;
+    border-bottom: 1px solid var(--profile-border);
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .job-item:last-child {
+    border-bottom: none;
+  }
+
+  .job-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--profile-gradient-1);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+  }
+
+  .job-item:hover {
+    background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, transparent 100%);
+  }
+
+  .job-item:hover::before {
+    transform: scaleY(1);
+  }
+
+  .job-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--profile-text-primary);
+    margin-bottom: 0.75rem;
+  }
+
+  .job-meta-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--profile-text-secondary);
+  }
+
+  .job-meta-info i {
+    color: var(--profile-text-muted);
+  }
+
+  .status-badge {
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .status-badge.status-open {
+    background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+    color: #047857;
+  }
+
+  .status-badge.status-closed {
+    background: #e5e7eb;
+    color: #6b7280;
+  }
+
+  .status-badge.status-pending {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    color: #b7791f;
+  }
+
+  .status-badge.status-accepted {
+    background: linear-gradient(135deg, #a8e6cf 0%, #56ab2f 100%);
+    color: #0f5132;
+  }
+
+  .status-badge.status-rejected {
+    background: linear-gradient(135deg, #ff6b9d 0%, #c44569 100%);
+    color: #fff;
+  }
+
+  /* Media Gallery */
+  .media-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+
+  .media-item {
+    position: relative;
+    border-radius: var(--profile-radius-sm);
+    overflow: hidden;
+    aspect-ratio: 4/3;
+    box-shadow: var(--profile-shadow-sm);
+    transition: all 0.3s ease;
+  }
+
+  .media-item:hover {
+    transform: scale(1.05);
+    box-shadow: var(--profile-shadow-md);
+  }
+
+  .media-item img,
+  .media-item video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .media-item::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .media-item:hover::after {
+    opacity: 1;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .empty-state-icon {
+    font-size: 4rem;
+    color: var(--profile-text-muted);
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+  }
+
+  .empty-state-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--profile-text-secondary);
+    margin-bottom: 0.75rem;
+  }
+
+  .empty-state-text {
+    color: var(--profile-text-muted);
+    margin-bottom: 1.5rem;
+  }
+
+  /* Sidebar Stats Card */
+  .stats-card {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border-radius: var(--profile-radius-lg);
+    padding: 1.75rem;
+    border: 1px solid var(--profile-border);
+    box-shadow: var(--profile-shadow-md);
+    margin-bottom: 2rem;
+  }
+
+  .stats-card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--profile-text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .stats-card-title i {
+    background: var(--profile-gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.3rem;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .stat-row:last-child {
+    border-bottom: none;
+  }
+
+  .stat-label {
+    color: var(--profile-text-secondary);
+    font-size: 0.95rem;
+  }
+
+  .stat-value {
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--profile-text-primary);
+  }
+
+  .stat-value.highlight {
+    color: #667eea;
+  }
+
+  .stat-value.danger {
+    color: #f5576c;
+  }
+
+  /* Quick Links Card */
+  .quick-links-card {
+    background: var(--profile-bg-card);
+    border-radius: var(--profile-radius-lg);
+    padding: 1.75rem;
+    border: 1px solid var(--profile-border);
+    box-shadow: var(--profile-shadow-md);
+    margin-bottom: 2rem;
+  }
+
+  .quick-links-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--profile-text-primary);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .quick-links-title i {
+    background: var(--profile-gradient-3);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-size: 1.3rem;
+  }
+
+  .quick-link-btn {
+    width: 100%;
+    padding: 0.85rem 1.25rem;
+    border-radius: var(--profile-radius-md);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border: 2px solid var(--profile-border);
+    background: white;
+    color: var(--profile-text-primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    margin-bottom: 0.75rem;
+  }
+
+  .quick-link-btn:hover {
+    transform: translateX(5px);
+    border-color: #667eea;
+    color: #667eea;
+    box-shadow: var(--profile-shadow-sm);
+  }
+
+  .quick-link-btn.primary {
+    background: var(--profile-gradient-1);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  }
+
+  .quick-link-btn.primary:hover {
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    color: white;
+  }
+
+  .quick-link-badge {
+    margin-left: auto;
+    background: var(--profile-gradient-2);
+    color: white;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  /* Job Preview Card in Sidebar */
+  .job-preview {
+    padding: 1rem;
+    border-bottom: 1px solid var(--profile-border);
+    transition: all 0.3s ease;
+  }
+
+  .job-preview:last-child {
+    border-bottom: none;
+  }
+
+  .job-preview:hover {
+    background: rgba(102, 126, 234, 0.05);
+  }
+
+  .job-preview-title {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--profile-text-primary);
+    margin-bottom: 0.4rem;
+  }
+
+  .job-preview-location {
+    font-size: 0.8rem;
+    color: var(--profile-text-muted);
+  }
+
+  /* Responsive Design */
+  @media (max-width: 992px) {
+    .profile-hero-content {
+      padding: 1.5rem;
+      padding-top: 4rem;
+    }
+
+    .profile-info-section {
+      flex-direction: column;
+    }
+
+    .profile-actions {
+      width: 100%;
+      align-items: stretch;
+    }
+
+    .btn-profile-modern {
+      width: 100%;
+      justify-content: center;
+    }
+
+    .media-gallery {
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+  }
+
+  @media (max-width: 768px) {
+    .profile-name {
+      font-size: 1.6rem;
+    }
+
+    .profile-avatar,
+    .profile-avatar-placeholder {
+      width: 110px;
+      height: 110px;
+    }
+
+    .profile-meta {
+      gap: 1rem;
+    }
+
+    .job-item {
+      padding: 1.25rem;
+    }
+  }
+</style>
+
+<div class="row">
+  <div class="col-12 col-lg-8">
+    <!-- Suspension Banner (if applicable) -->
+   {% if user|is_active_suspension %}
+    <div class="suspension-banner">
+      <i class="bi bi-shield-exclamation"></i>
+      <div class="suspension-banner-content">
+        <div class="suspension-banner-title">Account Suspended</div>
+        <div class="suspension-banner-text">
+          {{ user.suspension_reason or 'No reason provided' }}<br>
+          <strong>Suspended until:</strong> {% if user.suspension_end_date %}{{ user.suspension_end_date.strftime('%B %d, %Y at %H:%M UTC') }}{% else %}<span class="text-muted">Not specified</span>{% endif %}
+          {% if user.suspension_duration %}
+            <span class="badge bg-dark ms-2">Duration: {{ user.suspension_duration }}</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% if user.burned %}
+    <div class="suspension-banner" style="background: linear-gradient(135deg, #fecaca 0%, #fee2e2 100%);">
+      <i class="bi bi-fire"></i>
+      <div class="suspension-banner-content">
+        <div class="suspension-banner-title">Account Permanently Banned</div>
+        <div class="suspension-banner-text">
+          This account has been permanently banned from the platform.
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Profile Hero Card -->
+    <div class="profile-hero-card">
+      <div class="profile-hero-content">
+        <div class="profile-avatar-wrapper">
+          {% if user.profile_picture %}
+            <img src="{{ url_for('uploaded_file', filename=user.profile_picture) }}" 
+                 alt="Profile picture" 
+                 class="profile-avatar">
+          {% else %}
+            <div class="profile-avatar-placeholder">
+              <i class="bi bi-person-fill"></i>
+            </div>
+          {% endif %}
+          
+          <!-- Trust Score Badge (on avatar) -->
+          {% if user.location_verified_at %}
+          <div style="position: absolute; bottom: 10px; right: 10px;">
+            <span class="trust-score-badge {% if user.location_discrepancy %}trust-score-medium{% else %}trust-score-high{% endif %}">
+              <i class="bi bi-shield-check me-1"></i>
+              {% if user.location_discrepancy %}Unverified{% else %}Verified{% endif %}
+            </span>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="profile-info-section">
+          <div class="profile-info-left">
+            <h1 class="profile-name">{{ user.username or user.email }}</h1>
+            <div class="profile-email">
+              <i class="bi bi-envelope-fill"></i>
+              {{ user.email }}
+            </div>
+
+            <div class="profile-meta">
+              {% if user.location %}
+                <div class="profile-meta-item">
+                  <i class="bi bi-geo-alt-fill"></i>
+                  <span>{{ user.location }}</span>
+                </div>
+              {% endif %}
+              {% if user.work_type %}
+                <div class="profile-meta-item">
+                  <i class="bi bi-briefcase-fill"></i>
+                  <span>{{ user.work_type }}</span>
+                </div>
+              {% endif %}
+              {% if user.real_city %}
+                <div class="profile-meta-item">
+                  <i class="bi bi-pin-map-fill" style="color: #10b981;"></i>
+                  <span>{{ user.real_city }}{% if user.real_country %}, {{ user.real_country }}{% endif %}</span>
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- Location Verification Status -->
+            {% if is_own_profile %}
+              {% if user.real_city %}
+                <div class="location-badge location-badge-verified">
+                  <i class="bi bi-patch-check-fill"></i>
+                  <span>Location verified: {{ user.real_city }}, {{ user.real_country }}</span>
+                  <span class="location-divider"></span>
+                  <span>IP: {{ user.real_ip or 'N/A' }}</span>
+                </div>
+              {% else %}
+                <div class="location-badge location-badge-discrepancy">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  <span>Location not verified</span>
+                  <a href="{{ url_for('location_verify') }}" class="ms-2 text-primary">Verify now</a>
+                </div>
+              {% endif %}
+              
+              {% if user.location_discrepancy %}
+                <div class="location-badge location-badge-discrepancy mt-2">
+                  <i class="bi bi-exclamation-triangle-fill"></i>
+                  <span>Location mismatch detected: Your profile says "{{ user.location }}" but you're in {{ user.real_city }}</span>
+                </div>
+              {% endif %}
+            {% endif %}
+
+            <!-- Warning Count (admin only) -->
+            {% if current_user.is_admin and user.warnings_count > 0 %}
+            <div class="mt-2">
+              <span class="badge bg-warning">Warnings: {{ user.warnings_count }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="profile-actions">
+            {% if is_own_profile %}
+              <a class="btn-profile-modern btn-profile-outline btn-profile-sm" href="{{ url_for('edit_profile') }}">
+                <i class="bi bi-pencil-fill"></i>
+                Edit Profile
+              </a>
+              <a class="btn-profile-modern btn-profile-outline btn-profile-sm" href="{{ url_for('location_verify') }}">
+                <i class="bi bi-geo-alt-fill"></i>
+                Verify Location
+              </a>
+            {% endif %}
+            {% if not is_own_profile and not user.burned %}
+              <a class="btn-profile-modern btn-profile-primary btn-profile-sm" 
+                 href="{{ url_for('messages_conversation', other_id=user.id) }}">
+                <i class="bi bi-chat-dots-fill"></i>
+                Send Message
+              </a>
+            {% endif %}
+            {% if is_own_profile %}
+              <a class="btn-profile-modern btn-profile-primary btn-profile-sm" href="{{ url_for('messages_list') }}">
+                <i class="bi bi-chat-dots-fill"></i>
+                Messages
+                {% if unread_messages > 0 %}
+                  <span class="quick-link-badge">{{ unread_messages }}</span>
+                {% endif %}
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Jobs Posted Section -->
+    <div class="profile-section-card">
+      <div class="profile-section-header">
+        <h2 class="profile-section-title">
+          <i class="bi bi-briefcase-fill"></i>
+          {{ 'Jobs You Posted' if is_own_profile else 'Jobs by This User' }}
+        </h2>
+        {% if is_own_profile %}
+          <a href="{{ url_for('post_job') }}" class="btn-profile-modern btn-profile-primary btn-profile-sm">
+            <i class="bi bi-plus-circle-fill"></i>
+            Post New Job
+          </a>
+        {% endif %}
+      </div>
+
+      <div>
+        {% for j in posted_jobs %}
+          <div class="job-item">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div class="flex-grow-1">
+                <h3 class="job-title">{{ j.title }}</h3>
+                
+                <div class="job-meta-info">
+                  <span><i class="bi bi-briefcase"></i> Job Location: {{ j.location }}</span>
+                  <span class="location-divider"></span>
+                  <span><i class="bi bi-calendar-fill"></i> {% if j.created_at %}{{ j.created_at.strftime('%b %d, %Y') }}{% else %}<span class="text-muted">Unknown date</span>{% endif %}</span>
+                  <span class="status-badge status-{{ j.status }}">{{ j.status|capitalize }}</span>
+                </div>
+
+                <!-- POSTER'S REAL LOCATION BADGE -->
+                {% if j.poster.real_city %}
+                <div class="location-badge location-badge-verified">
+                  <i class="bi bi-pin-map-fill"></i>
+                  <span>Posted from: <strong>{{ j.poster.real_city }}{% if j.poster.real_country %}, {{ j.poster.real_country }}{% endif %}</strong></span>
+                  {% if j.poster.location and j.poster.location != j.poster.real_city %}
+                    <span class="badge bg-warning ms-2">Custom: {{ j.poster.location }}</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+
+                {# Media Gallery #}
+                {% if j.media %}
+                  <div class="media-gallery">
+                    {% for m in j.media %}
+                      {% if m.media_type == 'image' %}
+                        <a href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank" class="media-item">
+                          <img src="{{ url_for('uploaded_file', filename=m.filename) }}" alt="Job media">
+                        </a>
+                      {% elif m.media_type == 'video' %}
+                        <div class="media-item">
+                          <video muted preload="metadata">
+                            <source src="{{ url_for('uploaded_file', filename=m.filename) }}">
+                          </video>
+                        </div>
+                      {% else %}
+                        <a href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank" class="media-item" style="display:flex;align-items:center;justify-content:center;background:#f3f4f6;">
+                          <i class="bi bi-file-earmark" style="font-size:2rem;color:#9ca3af;"></i>
+                        </a>
+                      {% endif %}
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="d-flex flex-column gap-2" style="min-width: fit-content;">
+                {% if is_own_profile %}
+                  <a class="btn-profile-modern btn-profile-outline btn-profile-sm" href="{{ url_for('edit_job', job_id=j.id) }}">
+                    <i class="bi bi-pencil-fill"></i> Edit
+                  </a>
+                  <a class="btn-profile-modern btn-profile-outline btn-profile-sm" href="{{ url_for('job_applications', job_id=j.id) }}">
+                    <i class="bi bi-people-fill"></i> Applications ({{ j.applications|length }})
+                  </a>
+                  <form method="post" action="{{ url_for('delete_job', job_id=j.id) }}" 
+                        onsubmit="return confirm('Delete this job? This action cannot be undone.')">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn-profile-modern btn-profile-sm" 
+                            style="background: linear-gradient(135deg, #ff6b9d 0%, #f5576c 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);">
+                      <i class="bi bi-trash-fill"></i> Delete
+                    </button>
+                  </form>
+                {% else %}
+                  {% if j.status == 'open' and not user.burned %}
+                    <form method="post" action="{{ url_for('apply_job', job_id=j.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button class="btn-profile-modern btn-profile-primary btn-profile-sm">
+                        <i class="bi bi-check-circle-fill"></i> Apply
+                      </button>
+                    </form>
+                  {% endif %}
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="bi bi-inbox"></i>
+            </div>
+            <h3 class="empty-state-title">No Jobs Yet</h3>
+            <p class="empty-state-text">
+              {{ 'You haven\'t posted any jobs yet.' if is_own_profile else 'This user has not posted any jobs yet.' }}
+            </p>
+            {% if is_own_profile %}
+              <a href="{{ url_for('post_job') }}" class="btn-profile-modern btn-profile-primary">
+                <i class="bi bi-plus-circle-fill"></i> Post Your First Job
+              </a>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Applications Section (Own Profile Only) -->
+    {% if is_own_profile %}
+    <div class="profile-section-card">
+      <div class="profile-section-header">
+        <h2 class="profile-section-title">
+          <i class="bi bi-file-earmark-text-fill"></i>
+          Your Applications
+        </h2>
+      </div>
+
+      <div>
+        {% for app in applications %}
+          <div class="job-item">
+            <div class="d-flex justify-content-between align-items-start gap-3">
+              <div class="flex-grow-1">
+                <h3 class="job-title">{{ app.job.title }}</h3>
+                <div class="job-meta-info">
+                  <span><i class="bi bi-calendar-fill"></i> Applied on {% if app.applied_at %}{{ app.applied_at.strftime('%b %d, %Y at %I:%M %p') }}{% else %}<span class="text-muted">Unknown date</span>{% endif %}</span>
+                  <span class="status-badge status-{{ app.status }}">{{ app.status|capitalize }}</span>
+                </div>
+                <!-- Show where the job poster is located -->
+                {% if app.job.poster.real_city %}
+                <div class="location-badge location-badge-verified">
+                  <i class="bi bi-pin-map-fill"></i>
+                  <span>Posted from: <strong>{{ app.job.poster.real_city }}{% if app.job.poster.real_country %}, {{ app.job.poster.real_country }}{% endif %}</strong></span>
+                </div>
+                {% endif %}
+              </div>
+              <div>
+                <a href="{{ url_for('messages_conversation', other_id=app.job.poster_id) }}" 
+                   class="btn-profile-modern btn-profile-outline btn-profile-sm">
+                  <i class="bi bi-chat-dots-fill"></i> Contact Poster
+                </a>
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="empty-state">
+            <div class="empty-state-icon">
+              <i class="bi bi-inbox"></i>
+            </div>
+            <h3 class="empty-state-title">No Applications Yet</h3>
+            <p class="empty-state-text">You have not applied to any jobs yet.</p>
+            <a href="{{ url_for('index') }}" class="btn-profile-modern btn-profile-primary">
+              <i class="bi bi-search"></i> Browse Jobs
+            </a>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Sidebar -->
+  <div class="col-12 col-lg-4">
+    <!-- Activity Stats Card -->
+    <div class="stats-card">
+      <h3 class="stats-card-title">
+        <i class="bi bi-bar-chart-fill"></i>
+        {{ 'Your Activity' if is_own_profile else 'User Stats' }}
+      </h3>
+      <div>
+        <div class="stat-row">
+          <span class="stat-label">Jobs Posted:</span>
+          <span class="stat-value highlight">{{ posted_jobs|length }}</span>
+        </div>
+        {% if is_own_profile %}
+          <div class="stat-row">
+            <span class="stat-label">Applications Sent:</span>
+            <span class="stat-value highlight">{{ applications|length }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Unread Notifications:</span>
+            <span class="stat-value danger">{{ unread_count }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Unread Messages:</span>
+            <span class="stat-value highlight">{{ unread_messages }}</span>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Warnings:</span>
+            <span class="stat-value {% if user.warnings_count > 0 %}danger{% else %}highlight{% endif %}">
+              {{ user.warnings_count or 0 }}
+            </span>
+          </div>
+        {% else %}
+          <div class="stat-row">
+            <span class="stat-label">Member Since:</span>
+            <span class="stat-value">{% if user.created_at %}{{ user.created_at.strftime('%b %Y') }}{% else %}<span class="text-muted">Unknown</span>{% endif %}</span></span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Location Stats (if own profile) -->
+    {% if is_own_profile and user.real_city %}
+    <div class="stats-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(56, 249, 215, 0.05) 100%);">
+      <h3 class="stats-card-title">
+        <i class="bi bi-geo-alt-fill"></i>
+        Location Statistics
+      </h3>
+      <div>
+        <div class="stat-row">
+          <span class="stat-label">Verified City:</span>
+          <span class="stat-value">{{ user.real_city }}</span>
+        </div>
+        {% if user.real_country %}
+        <div class="stat-row">
+          <span class="stat-label">Country:</span>
+          <span class="stat-value">{{ user.real_country }}</span>
+        </div>
+        {% endif %}
+        {% if user.real_ip %}
+        <div class="stat-row">
+          <span class="stat-label">IP Address:</span>
+          <span class="stat-value small">{{ user.real_ip }}</span>
+        </div>
+        {% endif %}
+        {% if user.location_verified_at %}
+        <div class="stat-row">
+          <span class="stat-label">Verified:</span>
+          <span class="stat-value">{% if user.location_verified_at %}{{ user.location_verified_at.strftime('%b %d, %Y') }}{% else %}<span class="text-muted">Not verified</span>{% endif %}</span></span>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Quick Links Card -->
+    <div class="quick-links-card">
+      <h3 class="quick-links-title">
+        <i class="bi bi-link-45deg"></i>
+        Quick Links
+      </h3>
+      <div>
+        {% if is_own_profile %}
+          <a class="quick-link-btn primary" href="{{ url_for('post_job') }}">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>Post a Job</span>
+          </a>
+          <a class="quick-link-btn" href="{{ url_for('location_verify') }}">
+            <i class="bi bi-geo-alt-fill"></i>
+            <span>Verify Location</span>
+            {% if not user.real_city %}
+              <span class="quick-link-badge">!</span>
+            {% endif %}
+          </a>
+          <a class="quick-link-btn" href="{{ url_for('jobs_nearby') }}">
+            <i class="bi bi-pin-map-fill"></i>
+            <span>Jobs Near Me</span>
+          </a>
+          <a class="quick-link-btn" href="{{ url_for('messages_list') }}">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span>Messages</span>
+            {% if unread_messages > 0 %}
+              <span class="quick-link-badge">{{ unread_messages }}</span>
+            {% endif %}
+          </a>
+          <a class="quick-link-btn" href="{{ url_for('notifications_page') }}">
+            <i class="bi bi-bell-fill"></i>
+            <span>Notifications</span>
+            {% if unread_count > 0 %}
+              <span class="quick-link-badge">{{ unread_count }}</span>
+            {% endif %}
+          </a>
+          <a class="quick-link-btn" href="{{ url_for('all_users') }}">
+            <i class="bi bi-people-fill"></i>
+            <span>Browse Users</span>
+          </a>
+          {% if current_user.is_admin %}
+            <a class="quick-link-btn" href="{{ url_for('admin_dashboard') }}" style="border-color: #667eea; color: #667eea;">
+              <i class="bi bi-shield-lock-fill"></i>
+              <span>Admin Dashboard</span>
+            </a>
+          {% endif %}
+        {% else %}
+          <a class="quick-link-btn primary" href="{{ url_for('messages_conversation', other_id=user.id) }}">
+            <i class="bi bi-chat-dots-fill"></i>
+            <span>Send Message</span>
+          </a>
+          <a class="quick-link-btn" href="{{ url_for('all_users') }}">
+            <i class="bi bi-arrow-left"></i>
+            <span>Back to Users</span>
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Available Jobs (Own Profile) -->
+    {% if is_own_profile and available_jobs %}
+    <div class="profile-section-card">
+      <div class="profile-section-header" style="padding: 1.25rem;">
+        <h3 class="profile-section-title" style="font-size: 1.1rem; margin: 0;">
+          <i class="bi bi-briefcase-fill"></i>
+          Jobs You Can Apply To
+        </h3>
+      </div>
+      <div>
+        {% for job in available_jobs[:5] %}
+          <div class="job-preview">
+            <div class="d-flex justify-content-between align-items-start gap-2">
+              <div class="flex-grow-1">
+                <div class="job-preview-title">{{ job.title }}</div>
+                <div class="job-preview-location">
+                  <i class="bi bi-geo-alt"></i> {{ job.location }}
+                  {% if job.poster.real_city %}
+                    • Posted from {{ job.poster.real_city }}
+                  {% endif %}
+                </div>
+              </div>
+              <form method="post" action="{{ url_for('apply_job', job_id=job.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn-profile-modern btn-profile-primary btn-profile-sm" style="padding: 0.5rem 1rem; font-size: 0.8rem;">
+                  Apply
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+        {% if available_jobs|length > 5 %}
+          <div class="job-preview" style="text-align: center; border-bottom: none;">
+            <a href="{{ url_for('index') }}" class="btn-profile-modern btn-profile-outline btn-profile-sm">
+              View All Jobs
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

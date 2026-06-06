@@ -1,0 +1,824 @@
+"""
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# FLASK APP INITIALIZATION
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+app.config.from_object(Config)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# Initialize extensions
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+db = SQLAlchemy(app)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+migrate = Migrate(app, db)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+login_manager = LoginManager(app)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+csrf = CSRFProtect(app)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# Setup upload folder
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# Configure login
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+login_manager.login_view = 'login'
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+login_manager.login_message = 'Please log in to access this page.'
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+login_manager.login_message_category = 'info'
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# FLASK APP INITIALIZATION
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+app.config.from_object(Config)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# Initialize extensions
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+db = SQLAlchemy(app)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+migrate = Migrate(app, db)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+login_manager = LoginManager(app)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+csrf = CSRFProtect(app)
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)
+app.config.from_object(Config)
+
+# Initialize extensions
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
+login_manager = LoginManager(app)
+csrf = CSRFProtect(app)
+
+# Setup upload folder
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+
+# Configure login
+login_manager.login_view = 'login'
+login_manager.login_message = 'Please log in to access this page.'
+login_manager.login_message_category = 'info'
+
+# Setup upload folder
+
+
+# ============================================================================
+# FLASK APP INITIALIZATION
+# ============================================================================
+
+app = Flask(__name__)

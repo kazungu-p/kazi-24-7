@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+
+{% block title %}Jobs Near You - KaziConnect{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12">
+            <!-- Header Section -->
+            <div class="text-center mb-5">
+                <div class="display-1 mb-3">
+                    <i class="bi bi-pin-map-fill" style="color: var(--color-accent-cyan);"></i>
+                </div>
+                <h1 class="display-5 fw-bold mb-3">Jobs Near You</h1>
+                <p class="lead text-secondary">
+                    Discover opportunities based on your verified location
+                </p>
+            </div>
+
+            <!-- Location Info Card -->
+            <div class="card mb-4" style="background: var(--color-bg-elevated); border-radius: var(--radius-xl); border: 1px solid rgba(255,255,255,0.1);">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center">
+                        <div class="mb-3 mb-md-0">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="bg-primary bg-opacity-10 p-3 rounded-3">
+                                    <i class="bi bi-geo-alt-fill fs-3" style="color: var(--color-accent-cyan);"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">Your Verified Location</h5>
+                                    <p class="text-secondary mb-0">
+                                        {% if user_location and user_location.city %}
+                                            <span class="fw-bold">{{ user_location.city }}</span>
+                                        {% endif %}
+                                        {% if user_location and user_location.region %}
+                                            <span class="text-secondary">{{ user_location.region }}</span>
+                                        {% endif %}
+                                        {% if user_location and user_location.country %}
+                                            <span class="text-secondary">{{ user_location.country }}</span>
+                                        {% endif %}
+                                        {% if not user_location %}
+                                            <span class="text-warning">Location not verified</span>
+                                        {% endif %}
+                                        
+                                        {% if user_location and user_location.trust_score %}
+                                            <span class="ms-2 badge {% if user_location.trust_score >= 80 %}bg-success{% elif user_location.trust_score >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                                Trust Score: {{ user_location.trust_score }}%
+                                            </span>
+                                        {% endif %}
+                                    </p>
+                                    {% if user_location and user_location.accuracy %}
+                                        <small class="text-secondary">
+                                            <i class="bi bi-crosshair me-1"></i> 
+                                            Accuracy: {{ "%.0f"|format(user_location.accuracy) }} meters
+                                        </small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex gap-3">
+                            <div class="text-end">
+                                <span class="badge bg-primary bg-opacity-10 text-primary p-3 rounded-3">
+                                    <i class="bi bi-radar me-2"></i>
+                                    Radius: <strong>{{ radius }}km</strong>
+                                </span>
+                            </div>
+                            <a href="{{ url_for('location_verify') }}" class="btn btn-outline-primary px-4" style="border-radius: 50px;">
+                                <i class="bi bi-arrow-repeat me-2"></i>
+                                Update Location
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Summary -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="fw-semibold mb-0">
+                    <i class="bi bi-grid-3x3-gap-fill me-2" style="color: var(--color-accent-purple);"></i>
+                    Found {{ jobs|length }} job{% if jobs|length != 1 %}s{% endif %} near you
+                </h4>
+                
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-funnel me-2"></i>
+                        Filter by distance
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-modern">
+                        <li><a class="dropdown-item-modern" href="{{ url_for('jobs_nearby', radius=5) }}">Within 5 km</a></li>
+                        <li><a class="dropdown-item-modern" href="{{ url_for('jobs_nearby', radius=10) }}">Within 10 km</a></li>
+                        <li><a class="dropdown-item-modern" href="{{ url_for('jobs_nearby', radius=20) }}">Within 20 km</a></li>
+                        <li><a class="dropdown-item-modern" href="{{ url_for('jobs_nearby', radius=50) }}">Within 50 km</a></li>
+                        <li><a class="dropdown-item-modern" href="{{ url_for('jobs_nearby', radius=100) }}">Within 100 km</a></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Jobs Grid -->
+            <div class="row g-4">
+                {% for job_loc in jobs %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100" style="background: var(--color-bg-elevated); border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.1); transition: transform 0.3s ease;">
+                        <div class="card-body p-4">
+                            <!-- Job Title -->
+                            <h5 class="card-title fw-bold mb-3">
+                                <a href="{{ url_for('job_detail', job_id=job_loc.job.id) }}" 
+                                   style="color: var(--color-text-primary); text-decoration: none; transition: color 0.3s ease;"
+                                   onmouseover="this.style.color='var(--color-accent-cyan)'"
+                                   onmouseout="this.style.color='var(--color-text-primary)'">
+                                    {{ job_loc.job.title }}
+                                </a>
+                            </h5>
+                            
+                            <!-- Company/Poster -->
+                            <div class="mb-3 d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                                    <i class="bi bi-building" style="color: var(--color-accent-cyan);"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-secondary">Posted by</div>
+                                    <span class="fw-semibold">{{ job_loc.job.poster.display_name or job_loc.job.poster.username or job_loc.job.poster.email }}</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Job Location -->
+                            <div class="mb-3 d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                                    <i class="bi bi-geo-alt" style="color: var(--color-accent-purple);"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-secondary">Job location</div>
+                                    <span>
+                                        {% if job_loc.city %}{{ job_loc.city }}{% endif %}
+                                        {% if job_loc.region %}
+                                            {% if job_loc.city %}, {% endif %}{{ job_loc.region }}
+                                        {% endif %}
+                                        {% if not job_loc.city and not job_loc.region %}
+                                            {{ job_loc.job.location }}
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <!-- Distance Badge -->
+                            <div class="mb-3 d-flex align-items-center">
+                                <div class="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
+                                    <i class="bi bi-arrows-angle-expand" style="color: var(--color-accent-orange);"></i>
+                                </div>
+                                <div>
+                                    <div class="small text-secondary">Distance from you</div>
+                                    <span class="fw-bold fs-5">
+                                        {{ "%.1f"|format(job_loc.distance) }} km
+                                    </span>
+                                    {% if job_loc.distance < 5 %}
+                                        <span class="badge bg-success ms-2">Very close</span>
+                                    {% elif job_loc.distance < 10 %}
+                                        <span class="badge bg-info ms-2">Nearby</span>
+                                    {% elif job_loc.distance < 20 %}
+                                        <span class="badge bg-warning ms-2">Moderate</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary ms-2">Far</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Trust Score -->
+                            <div class="mb-3 small">
+                                <i class="bi bi-shield-check me-1" style="color: var(--color-accent-green);"></i>
+                                <span class="text-secondary">Location verified</span>
+                                {% if job_loc.accuracy %}
+                                    <span class="ms-2 text-secondary">({{ "%.0f"|format(job_loc.accuracy) }}m accuracy)</span>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- View Job Button -->
+                            <a href="{{ url_for('job_detail', job_id=job_loc.job.id) }}" 
+                               class="btn w-100 mt-3" 
+                               style="background: var(--gradient-primary); color: white; border-radius: 50px; border: none; padding: 0.75rem;">
+                                <i class="bi bi-eye me-2"></i>
+                                View Job Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <!-- No Jobs Found -->
+                <div class="col-12">
+                    <div class="text-center py-5">
+                        <div class="bg-primary bg-opacity-10 p-4 rounded-circle d-inline-flex mb-4">
+                            <i class="bi bi-geo-alt display-1" style="color: var(--color-accent-cyan);"></i>
+                        </div>
+                        <h3 class="mt-4">No Jobs Found Nearby</h3>
+                        <p class="text-secondary mb-4">We couldn't find any jobs within {{ radius }}km of your location.</p>
+                        
+                        <div class="d-flex justify-content-center gap-3">
+                            <a href="{{ url_for('jobs_nearby', radius=radius*2) }}" class="btn btn-outline-primary px-4" style="border-radius: 50px;">
+                                <i class="bi bi-arrow-repeat me-2"></i>
+                                Double radius ({{ radius*2 }}km)
+                            </a>
+                            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary px-4" style="border-radius: 50px;">
+                                <i class="bi bi-briefcase me-2"></i>
+                                Browse All Jobs
+                            </a>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <a href="{{ url_for('location_verify') }}" class="text-primary text-decoration-none">
+                                <i class="bi bi-pencil me-1"></i>
+                                Update your location
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if jobs %}
+            <!-- Pagination (if needed) -->
+            <div class="d-flex justify-content-center mt-5">
+                <nav aria-label="Page navigation">
+                    <ul class="pagination">
+                        <li class="page-item disabled">
+                            <a class="page-link" href="#" style="background: var(--color-bg-elevated); border-color: rgba(255,255,255,0.1); color: var(--color-text-secondary);">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        </li>
+                        <li class="page-item active">
+                            <a class="page-link" href="#" style="background: var(--gradient-primary); border-color: transparent;">1</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#" style="background: var(--color-bg-elevated); border-color: rgba(255,255,255,0.1); color: var(--color-text-secondary);">2</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#" style="background: var(--color-bg-elevated); border-color: rgba(255,255,255,0.1); color: var(--color-text-secondary);">3</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="#" style="background: var(--color-bg-elevated); border-color: rgba(255,255,255,0.1); color: var(--color-text-secondary);">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+            {% endif %}
+
+            <!-- Location Tips -->
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="card" style="background: var(--color-bg-elevated); border-radius: var(--radius-lg); border: 1px solid rgba(255,255,255,0.1);">
+                        <div class="card-body p-4">
+                            <h6 class="fw-semibold mb-3">
+                                <i class="bi bi-lightbulb me-2" style="color: var(--color-accent-cyan);"></i>
+                                Tips for better results
+                            </h6>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-1-circle-fill me-2" style="color: var(--color-accent-purple);"></i>
+                                        <span class="small text-secondary">Verify your location for accurate results</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-2-circle-fill me-2" style="color: var(--color-accent-purple);"></i>
+                                        <span class="small text-secondary">Increase search radius to see more jobs</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-3-circle-fill me-2" style="color: var(--color-accent-purple);"></i>
+                                        <span class="small text-secondary">Check back regularly for new opportunities</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.pagination .page-link {
+    border-radius: 50%;
+    margin: 0 5px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pagination .page-link:hover {
+    background: var(--gradient-primary) !important;
+    color: white !important;
+    border-color: transparent !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add hover effects for cards
+    const cards = document.querySelectorAll('.card[style*="transition"]');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-5px)';
+            this.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'none';
+        });
+    });
+});
+</script>
+{% endblock %}
