@@ -35,7 +35,34 @@
         
         <form method="post" enctype="multipart/form-data" id="registerForm">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          
+          <input type="hidden" name="role" id="roleInput" value="">
+
+          <!-- Role Selection -->
+          <div class="bg-light p-4 rounded-4 mb-4">
+            <h5 class="text-primary mb-3">
+              <i class="bi bi-signpost-split me-2"></i>I'm joining as a...
+            </h5>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="role-card" data-role="worker">
+                  <i class="bi bi-person-workspace role-icon"></i>
+                  <div class="role-title">Worker / Freelancer</div>
+                  <div class="role-desc">I'm looking for jobs and gigs near me</div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="role-card" data-role="recruiter">
+                  <i class="bi bi-briefcase role-icon"></i>
+                  <div class="role-title">Recruiter / Employer</div>
+                  <div class="role-desc">I want to post jobs and hire workers</div>
+                </div>
+              </div>
+            </div>
+            <div class="form-text mt-2" id="roleError" style="display:none; color:var(--danger-fg);">
+              <i class="bi bi-exclamation-circle me-1"></i> Please choose how you'd like to use KaziConnect
+            </div>
+          </div>
+
           <!-- Account Information Section -->
           <div class="bg-light p-4 rounded-4 mb-4">
             <h5 class="text-primary mb-3">
@@ -271,11 +298,60 @@
   background-color: rgba(13, 110, 253, 0.05);
   border-color: var(--bs-primary) !important;
 }
+
+/* Role selection cards */
+.role-card {
+  border: 2px solid var(--dust, #C4B8B0);
+  border-radius: var(--r-lg, 16px);
+  background: var(--white, #fff);
+  padding: 1.25rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s ease, background .2s ease, transform .15s ease;
+  height: 100%;
+}
+.role-card:hover {
+  border-color: var(--clay, #C4552A);
+  transform: translateY(-2px);
+}
+.role-card.selected {
+  border-color: var(--clay, #C4552A);
+  background: var(--clay-light, #F4E8E2);
+}
+.role-card .role-icon {
+  font-size: 2rem;
+  color: var(--clay, #C4552A);
+  margin-bottom: .5rem;
+  display: block;
+}
+.role-card .role-title {
+  font-weight: 700;
+  color: var(--ink, #1C1917);
+  margin-bottom: .25rem;
+}
+.role-card .role-desc {
+  font-size: .85rem;
+  color: var(--stone, #7A6F69);
+}
 </style>
 
 <script>
 // Geolocation and form handling
 document.addEventListener('DOMContentLoaded', function() {
+  // Role card selection
+  const roleCards = document.querySelectorAll('.role-card');
+  const roleInput = document.getElementById('roleInput');
+  const roleError = document.getElementById('roleError');
+
+  roleCards.forEach(card => {
+    card.addEventListener('click', function() {
+      roleCards.forEach(c => c.classList.remove('selected'));
+      this.classList.add('selected');
+      roleInput.value = this.getAttribute('data-role');
+      roleError.style.display = 'none';
+    });
+  });
+
   const locationStatus = document.getElementById('locationStatus');
   const locationSpinner = document.getElementById('locationSpinner');
   const locationMessage = document.getElementById('locationMessage');
@@ -410,6 +486,13 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Form validation
   document.getElementById('registerForm').addEventListener('submit', function(e) {
+    if (!roleInput.value) {
+      e.preventDefault();
+      roleError.style.display = 'block';
+      roleError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return false;
+    }
+
     const checkboxes = document.querySelectorAll('input[type="checkbox"][required]');
     let allChecked = true;
     

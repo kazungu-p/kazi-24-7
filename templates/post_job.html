@@ -34,6 +34,10 @@
         <form method="post" enctype="multipart/form-data" id="post-job-form">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           
+          <!-- Hidden fields for job location coordinates -->
+          <input type="hidden" name="latitude" id="jobLatitude" value="">
+          <input type="hidden" name="longitude" id="jobLongitude" value="">
+
           <!-- Job Details Section -->
           <div class="bg-light p-4 rounded-4 mb-4">
             <h5 class="text-primary mb-3">
@@ -53,13 +57,19 @@
                 <label class="form-label fw-semibold">Location <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                  <input class="form-control" name="location" placeholder="Nairobi, Mombasa, Remote" required>
+                  <input class="form-control" name="location" id="jobLocationText" placeholder="Nairobi, Mombasa, Remote" required>
+                  <button type="button" class="btn btn-outline-secondary" id="useMyLocationBtn" title="Use my current location">
+                    <i class="bi bi-crosshair"></i>
+                  </button>
                 </div>
+                <small class="text-muted" id="jobLocationStatus">
+                  <i class="bi bi-info-circle me-1"></i>Tap the target to pin your exact location for nearby worker matching
+                </small>
               </div>
             </div>
 
             <div class="row">
-              <div class="col-md-6 mb-3">
+              <div class="col-md-4 mb-3">
                 <label class="form-label fw-semibold">Employment Type</label>
                 <select class="form-select" name="employment_type">
                   <option value="full-time">Full-time</option>
@@ -70,16 +80,37 @@
                   <option value="volunteer">Volunteer</option>
                 </select>
               </div>
-              
-              <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Salary Range (Optional)</label>
+
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">Pay <span class="text-danger">*</span></label>
                 <div class="input-group">
-                  <span class="input-group-text bg-white"><i class="bi bi-currency-dollar"></i></span>
-                  <input class="form-control" name="salary" placeholder="e.g., 50,000 - 80,000 KES">
+                  <span class="input-group-text bg-white">KES</span>
+                  <input class="form-control" type="number" min="0" step="1" name="pay_amount" placeholder="e.g., 800" required>
                 </div>
+              </div>
+
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-semibold">Pay Type</label>
+                <select class="form-select" name="pay_type">
+                  <option value="fixed">Fixed (total for the job)</option>
+                  <option value="per_hour">Per hour</option>
+                  <option value="per_day">Per day</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">Workers Needed <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <span class="input-group-text bg-white"><i class="bi bi-people"></i></span>
+                  <input class="form-control" type="number" min="1" max="100" step="1" name="slots_total" value="1" required>
+                </div>
+                <small class="text-muted">e.g., enter 10 if you need 10 people to offload a truck</small>
               </div>
             </div>
           </div>
+
 
           <!-- Requirements & Description Section -->
           <div class="bg-light p-4 rounded-4 mb-4">
@@ -290,6 +321,47 @@
   border-color: var(--bs-primary) !important;
 }
 </style>
+
+<script>
+(function(){
+  const useMyLocationBtn = document.getElementById('useMyLocationBtn');
+  const jobLatitude = document.getElementById('jobLatitude');
+  const jobLongitude = document.getElementById('jobLongitude');
+  const jobLocationText = document.getElementById('jobLocationText');
+  const jobLocationStatus = document.getElementById('jobLocationStatus');
+
+  useMyLocationBtn.addEventListener('click', function(){
+    if (!navigator.geolocation) {
+      jobLocationStatus.innerHTML = '<i class="bi bi-exclamation-triangle text-warning me-1"></i>Location services not supported on this device';
+      return;
+    }
+
+    jobLocationStatus.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Detecting location...';
+
+    navigator.geolocation.getCurrentPosition(function(position){
+      const lat = position.coords.latitude;
+      const lng = position.coords.longitude;
+      jobLatitude.value = lat;
+      jobLongitude.value = lng;
+
+      fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+        .then(r => r.json())
+        .then(data => {
+          const city = (data.address && (data.address.city || data.address.town || data.address.village || data.address.suburb)) || 'Unknown';
+          const country = (data.address && data.address.country) || '';
+          const display = country ? `${city}, ${country}` : city;
+          if (!jobLocationText.value) jobLocationText.value = display;
+          jobLocationStatus.innerHTML = `<i class="bi bi-check-circle text-success me-1"></i>Pinned: ${display} (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        })
+        .catch(() => {
+          jobLocationStatus.innerHTML = `<i class="bi bi-check-circle text-success me-1"></i>Pinned at (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+        });
+    }, function(){
+      jobLocationStatus.innerHTML = '<i class="bi bi-exclamation-triangle text-warning me-1"></i>Could not get your location — please enable location access';
+    }, { enableHighAccuracy: true, timeout: 10000 });
+  });
+})();
+</script>
 
 <script>
 (function(){

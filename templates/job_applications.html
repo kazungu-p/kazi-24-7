@@ -1,36 +1,105 @@
 {% extends 'base.html' %}
 {% block title %}Applications — KaziConnect{% endblock %}
 
+{% block head %}
+<style>
+  .applicant-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--dust);
+    flex-wrap: wrap;
+  }
+  .applicant-row:last-child { border-bottom: none; }
+  .applicant-name { font-weight: 700; color: var(--ink); }
+  .applicant-meta { font-size: .8rem; color: var(--stone); margin-top: .2rem; }
+  .eta-pill {
+    display: inline-flex; align-items: center; gap: .3rem;
+    font-size: .7rem; font-weight: 700;
+    padding: .2em .6em; border-radius: var(--r-pill);
+    background: var(--ochre-light); color: var(--ochre);
+    margin-left: .4rem;
+  }
+  .status-select { width: 130px; }
+  .slots-summary {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .85rem; color: var(--stone);
+  }
+  .slots-bar {
+    flex: 1; max-width: 200px; height: 8px; border-radius: var(--r-pill);
+    background: var(--dust); overflow: hidden;
+  }
+  .slots-bar-fill {
+    height: 100%; background: var(--sage); border-radius: var(--r-pill);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
 <div class="row justify-content-center">
   <div class="col-12 col-md-10">
-    <div class="card shadow-sm">
-      <div class="card-header d-flex justify-content-between">
-        <div><strong>Applications for:</strong> {{ job.title }}</div>
-        <div class="small text-muted">{{ job.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-      </div>
-      <div class="list-group list-group-flush">
-        {% for a in applications %}
-          <div class="list-group-item d-flex justify-content-between align-items-start">
-            <div>
-              <strong>{{ a.applicant.username or a.applicant.email }}</strong>
-              <div class="small text-muted">Applied: {{ a.applied_at.strftime('%Y-%m-%d %H:%M') }}</div>
+    <div class="card">
+      <div class="card-header">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+          <div>
+            <div style="font-family:var(--font-display); font-size:1.25rem; color:var(--ink);">
+              Applicants for: {{ job.title }}
             </div>
-            <div class="text-end">
-              <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}" class="d-inline">
+            <div class="small" style="color:var(--stone);">
+              Posted {{ job.created_at.strftime('%b %d, %Y') }} &middot; {{ job.location }}
+            </div>
+          </div>
+          <div class="slots-summary">
+            <i class="bi bi-people"></i>
+            <span>{{ job.slots_filled }} / {{ job.slots_total }} filled</span>
+            <div class="slots-bar">
+              <div class="slots-bar-fill" style="width: {{ (job.slots_filled / job.slots_total * 100) if job.slots_total else 0 }}%;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        {% for a in applications %}
+          <div class="applicant-row">
+            <div>
+              <div class="applicant-name">
+                {{ a.applicant.username or a.applicant.email }}
+                {% if a.distance_km is not none %}
+                  <span class="eta-pill">
+                    <i class="bi bi-signpost-split"></i>
+                    {{ "%.1f"|format(a.distance_km) }} km &middot; ~{{ estimate_travel_minutes(a.distance_km) }} min
+                  </span>
+                {% endif %}
+              </div>
+              <div class="applicant-meta">
+                Applied {{ a.applied_at.strftime('%b %d, %Y %H:%M') }}
+                &middot; Status:
+                <span class="badge {% if a.status == 'accepted' %}bg-success{% elif a.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                  {{ a.status }}
+                </span>
+              </div>
+            </div>
+            <div class="d-flex gap-2 align-items-center flex-wrap">
+              <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}" class="d-flex gap-2">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <select class="form-select form-select-sm d-inline-block" name="status" style="width:120px;">
+                <select class="form-select form-select-sm status-select" name="status">
                   <option value="pending" {% if a.status=='pending' %}selected{% endif %}>Pending</option>
                   <option value="accepted" {% if a.status=='accepted' %}selected{% endif %}>Accepted</option>
                   <option value="rejected" {% if a.status=='rejected' %}selected{% endif %}>Rejected</option>
                 </select>
-                <button class="btn btn-sm btn-primary">Update</button>
+                <button class="btn btn-primary btn-sm">Update</button>
               </form>
-              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('messages_conversation', other_id=a.applicant.id) }}">Message</a>
+              <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('messages_conversation', other_id=a.applicant.id) }}">
+                <i class="bi bi-chat-dots"></i> Message
+              </a>
             </div>
           </div>
         {% else %}
-          <div class="list-group-item">No applications yet.</div>
+          <div class="applicant-row">
+            <span style="color:var(--stone);">No applications yet.</span>
+          </div>
         {% endfor %}
       </div>
     </div>

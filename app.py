@@ -192,6 +192,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(80), unique=True, nullable=True, index=True)
     email = db.Column(db.String(120), unique=True, nullable=False, index=True)
     password_hash = db.Column(db.String(255), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='worker', index=True)  # 'worker' or 'recruiter'
     
     # Profile Information
     phone_number = db.Column(db.String(30))
@@ -260,6 +261,14 @@ class User(UserMixin, db.Model):
         minutes = (remaining.total_seconds() % 3600) // 60
         return f"{int(hours)}h {int(minutes)}m"
     
+    def is_recruiter(self):
+        """Check if user registered as a recruiter (job poster)"""
+        return self.role == 'recruiter'
+
+    def is_worker(self):
+        """Check if user registered as a worker (freelancer/recruit)"""
+        return self.role == 'worker'
+
     def __repr__(self):
         return f'<User {self.username or self.email}>'
 
@@ -272,16 +281,36 @@ class Job(db.Model):
     title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(120), nullable=False)
+    latitude = db.Column(db.Float, nullable=True)
+    longitude = db.Column(db.Float, nullable=True)
     requirements = db.Column(db.Text, nullable=False)
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    status = db.Column(db.String(20), default='open')  # open, closed, filled
+    status = db.Column(db.String(20), default='open')  # open, filled, closed
+
+    # Pay & staffing
+    pay_amount = db.Column(db.Float, nullable=True)
+    pay_type = db.Column(db.String(20), default='fixed')  # fixed, per_hour, per_day
+    slots_total = db.Column(db.Integer, default=1, nullable=False)
+    slots_filled = db.Column(db.Integer, default=0, nullable=False)
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
     # Relationships
     applications = db.relationship('JobApplication', backref='job', lazy=True, cascade='all, delete-orphan')
     media = db.relationship('JobMedia', backref='job', lazy=True, cascade='all, delete-orphan')
-    
+
+    def slots_remaining(self):
+        """How many worker slots are still open"""
+        return max(0, (self.slots_total or 1) - (self.slots_filled or 0))
+
+    def pay_label(self):
+        """Human-friendly pay description, e.g. 'KES 800 / day'"""
+        if not self.pay_amount:
+            return 'Pay not specified'
+        suffix = {'per_hour': ' / hour', 'per_day': ' / day', 'fixed': ' total'}.get(self.pay_type, '')
+        return f'KES {self.pay_amount:,.0f}{suffix}'
+
     def __repr__(self):
         return f'<Job {self.title}>'
 
@@ -312,6 +341,7 @@ class JobApplication(db.Model):
     job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
     applicant_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(20), default='pending')  # pending, accepted, rejected
+    distance_km = db.Column(db.Float, nullable=True)  # distance from applicant to job at time of application
     applied_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     
     def __repr__(self):
@@ -399,6 +429,25 @@ def sanitize_html(content):
     allowed_attributes = {}
     
     return bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes, strip=True)
+
+
+def haversine_km(lat1, lon1, lat2, lon2):
+    """Great-circle distance between two points in kilometers, or None if any coord is missing"""
+    if None in (lat1, lon1, lat2, lon2):
+        return None
+    from math import radians, sin, cos, sqrt, atan2
+    R = 6371.0  # Earth radius in km
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return R * 2 * atan2(sqrt(a), sqrt(1 - a))
+
+
+def estimate_travel_minutes(distance_km, avg_speed_kmh=25):
+    """Rough ETA estimate assuming average urban travel speed (default ~25km/h, mixed walk/matatu/boda)"""
+    if distance_km is None:
+        return None
+    return max(1, round((distance_km / avg_speed_kmh) * 60))
 
 
 def get_location_from_ip(ip_address):
@@ -629,7 +678,18 @@ def internal_error(error):
 def index():
     """Homepage with job listings"""
     jobs = Job.query.filter_by(status='open').order_by(Job.created_at.desc()).limit(50).all()
-    return render_template('index.html', jobs=jobs)
+
+    # Compute distance/ETA from the current user's location to each job (if available)
+    job_distances = {}
+    if current_user.is_authenticated:
+        worker_lat = current_user.latitude or current_user.real_latitude
+        worker_lng = current_user.longitude or current_user.real_longitude
+        for job in jobs:
+            dist = haversine_km(worker_lat, worker_lng, job.latitude, job.longitude)
+            if dist is not None:
+                job_distances[job.id] = {'distance_km': dist, 'eta_min': estimate_travel_minutes(dist)}
+
+    return render_template('index.html', jobs=jobs, job_distances=job_distances)
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -644,6 +704,7 @@ def register():
         national_id = request.form.get('national_id', '').strip()
         location = request.form.get('location', '').strip()
         work_type = request.form.get('work_type', '').strip()
+        role = request.form.get('role', '').strip().lower()
         
         # Get geolocation data from browser
         latitude = request.form.get('latitude', '').strip()
@@ -660,6 +721,10 @@ def register():
         # Validation
         if not email or not password:
             flash('Email and password are required', 'danger')
+            return redirect(url_for('register'))
+
+        if role not in ('worker', 'recruiter'):
+            flash('Please select whether you are looking for work or posting jobs', 'danger')
             return redirect(url_for('register'))
         
         if not validate_email(email):
@@ -690,6 +755,7 @@ def register():
             latitude=latitude,
             longitude=longitude,
             work_type=work_type,
+            role=role,
             profile_completed=True
         )
         user.set_password(password)
@@ -738,8 +804,11 @@ def register():
             db.session.add(user)
             db.session.commit()
             login_user(user)
-            flash('Registration successful! Welcome to the platform.', 'success')
-            return redirect(url_for('profile'))
+            if user.is_recruiter():
+                flash('Registration successful! Welcome to KaziConnect — post your first job to get started.', 'success')
+                return redirect(url_for('post_job'))
+            flash('Registration successful! Welcome to KaziConnect — browse jobs near you.', 'success')
+            return redirect(url_for('index'))
         except Exception as e:
             db.session.rollback()
             app.logger.error(f'Registration error: {e}')
@@ -979,6 +1048,35 @@ def post_job():
         description = request.form.get('description', '').strip()
         location = request.form.get('location', '').strip()
         requirements = request.form.get('requirements', '').strip()
+
+        # Pay & staffing
+        pay_amount_raw = request.form.get('pay_amount', '').strip()
+        pay_type = request.form.get('pay_type', 'fixed').strip()
+        slots_total_raw = request.form.get('slots_total', '1').strip()
+        latitude_raw = request.form.get('latitude', '').strip()
+        longitude_raw = request.form.get('longitude', '').strip()
+
+        try:
+            pay_amount = float(pay_amount_raw) if pay_amount_raw else None
+            if pay_amount is not None and pay_amount < 0:
+                pay_amount = None
+        except ValueError:
+            pay_amount = None
+
+        if pay_type not in ('fixed', 'per_hour', 'per_day'):
+            pay_type = 'fixed'
+
+        try:
+            slots_total = max(1, min(100, int(slots_total_raw)))
+        except ValueError:
+            slots_total = 1
+
+        try:
+            latitude = float(latitude_raw) if latitude_raw else None
+            longitude = float(longitude_raw) if longitude_raw else None
+        except ValueError:
+            latitude = None
+            longitude = None
         
         # Validation
         if not all([title, description, location, requirements]):
@@ -993,8 +1091,14 @@ def post_job():
             title=title,
             description=description,
             location=location,
+            latitude=latitude,
+            longitude=longitude,
             requirements=requirements,
-            poster_id=current_user.id
+            poster_id=current_user.id,
+            pay_amount=pay_amount,
+            pay_type=pay_type,
+            slots_total=slots_total,
+            slots_filled=0
         )
         
         # Handle media uploads
@@ -1253,14 +1357,30 @@ def apply_job(job_id):
     if job.poster_id == current_user.id:
         flash('You cannot apply to your own job', 'warning')
         return redirect(url_for('index'))
-    
-    application = JobApplication(job_id=job_id, applicant_id=current_user.id)
-    
+
+    # Check slots availability
+    if job.status != 'open' or job.slots_remaining() <= 0:
+        flash('This job is no longer accepting applicants — all positions are filled', 'warning')
+        return redirect(url_for('index'))
+
+    # Compute distance from worker to job (if both have coordinates)
+    worker_lat = current_user.latitude or current_user.real_latitude
+    worker_lng = current_user.longitude or current_user.real_longitude
+    distance_km = haversine_km(worker_lat, worker_lng, job.latitude, job.longitude)
+
+    application = JobApplication(job_id=job_id, applicant_id=current_user.id, distance_km=distance_km)
+
     try:
         db.session.add(application)
+
+        notif_message = f'New application for "{job.title}" from {current_user.username or current_user.email}'
+        if distance_km is not None:
+            eta = estimate_travel_minutes(distance_km)
+            notif_message += f' — {distance_km:.1f} km away, ~{eta} min'
+
         create_notification(
             job.poster_id,
-            f'New application for "{job.title}" from {current_user.email}',
+            notif_message,
             'new_application',
             target_url=url_for('job_applications', job_id=job.id)
         )
@@ -1285,9 +1405,17 @@ def job_applications(job_id):
     
     applications = JobApplication.query.filter_by(
         job_id=job_id
-    ).order_by(JobApplication.applied_at.desc()).all()
-    
-    return render_template('job_applications.html', job=job, applications=applications)
+    ).order_by(
+        JobApplication.distance_km.asc().nullslast(),
+        JobApplication.applied_at.desc()
+    ).all()
+
+    return render_template(
+        'job_applications.html',
+        job=job,
+        applications=applications,
+        estimate_travel_minutes=estimate_travel_minutes
+    )
 
 
 @app.route('/update-application-status/<int:application_id>', methods=['POST'])
@@ -1303,9 +1431,30 @@ def update_application_status(application_id):
     if new_status not in ('pending', 'accepted', 'rejected'):
         flash('Invalid status', 'danger')
         return redirect(url_for('job_applications', job_id=application.job_id))
+
+    job = application.job
+    old_status = application.status
+
+    # Guard: don't accept beyond available slots
+    if new_status == 'accepted' and old_status != 'accepted' and job.slots_remaining() <= 0:
+        flash('Cannot accept — all slots for this job are already filled', 'warning')
+        return redirect(url_for('job_applications', job_id=application.job_id))
     
     try:
         application.status = new_status
+
+        # Adjust slots_filled based on transition
+        if new_status == 'accepted' and old_status != 'accepted':
+            job.slots_filled = (job.slots_filled or 0) + 1
+        elif old_status == 'accepted' and new_status != 'accepted':
+            job.slots_filled = max(0, (job.slots_filled or 0) - 1)
+
+        # Update job status based on staffing level
+        if job.slots_filled >= job.slots_total:
+            job.status = 'filled'
+        elif job.status == 'filled' and job.slots_filled < job.slots_total:
+            job.status = 'open'
+
         db.session.commit()
         
         create_notification(

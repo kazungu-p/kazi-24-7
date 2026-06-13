@@ -8,977 +8,206 @@
     <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <!-- Google Fonts - Unique Typography -->
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-
-    <style>
-      /* ========================================
-         MODERN DESIGN SYSTEM - DARK ELEGANCE
-         ======================================== */
-      
-      :root {
-        /* Color Palette - Sophisticated Dark Theme */
-        --color-bg-primary: #0a0e27;
-        --color-bg-secondary: #151b38;
-        --color-bg-elevated: #1a2142;
-        --color-bg-glass: rgba(26, 33, 66, 0.6);
-        
-        --color-accent-cyan: #00d9ff;
-        --color-accent-purple: #b794f6;
-        --color-accent-pink: #ff6b9d;
-        --color-accent-orange: #ff8c42;
-        --color-accent-green: #00ff88;
-        
-        --color-text-primary: #ffffff;
-        --color-text-secondary: #a8b3cf;
-        --color-text-muted: #6b7a99;
-        
-        --gradient-primary: linear-gradient(135deg, #00d9ff 0%, #b794f6 100%);
-        --gradient-accent: linear-gradient(135deg, #ff6b9d 0%, #ff8c42 100%);
-        --gradient-success: linear-gradient(135deg, #00ff88 0%, #00d9ff 100%);
-        --gradient-glow: radial-gradient(circle at 50% 50%, rgba(0, 217, 255, 0.15) 0%, transparent 70%);
-        
-        /* Shadows & Effects */
-        --shadow-glow-cyan: 0 0 30px rgba(0, 217, 255, 0.3);
-        --shadow-glow-purple: 0 0 30px rgba(183, 148, 246, 0.3);
-        --shadow-glow-pink: 0 0 30px rgba(255, 107, 157, 0.3);
-        --shadow-elevated: 0 10px 40px rgba(0, 0, 0, 0.4);
-        --shadow-deep: 0 20px 60px rgba(0, 0, 0, 0.6);
-        
-        /* Typography */
-        --font-display: 'Syne', sans-serif;
-        --font-body: 'DM Sans', sans-serif;
-        
-        /* Spacing & Sizing */
-        --radius-sm: 8px;
-        --radius-md: 12px;
-        --radius-lg: 16px;
-        --radius-xl: 24px;
-      }
-
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: var(--font-body);
-        background: var(--color-bg-primary);
-        color: var(--color-text-primary);
-        overflow-x: hidden;
-        position: relative;
-      }
-
-      /* Animated Background with Particles */
-      body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: 
-          radial-gradient(circle at 20% 30%, rgba(0, 217, 255, 0.1) 0%, transparent 50%),
-          radial-gradient(circle at 80% 70%, rgba(183, 148, 246, 0.08) 0%, transparent 50%),
-          radial-gradient(circle at 50% 50%, rgba(255, 107, 157, 0.05) 0%, transparent 50%);
-        z-index: -1;
-        animation: bgPulse 15s ease-in-out infinite;
-      }
-
-      @keyframes bgPulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.8; transform: scale(1.05); }
-      }
-
-      /* Floating Orbs Background Effect */
-      .orb {
-        position: fixed;
-        border-radius: 50%;
-        filter: blur(80px);
-        opacity: 0.4;
-        pointer-events: none;
-        z-index: -1;
-        animation: float 20s ease-in-out infinite;
-      }
-
-      .orb-1 {
-        width: 400px;
-        height: 400px;
-        background: radial-gradient(circle, rgba(0, 217, 255, 0.3) 0%, transparent 70%);
-        top: -10%;
-        left: -5%;
-        animation-delay: 0s;
-      }
-
-      .orb-2 {
-        width: 350px;
-        height: 350px;
-        background: radial-gradient(circle, rgba(183, 148, 246, 0.25) 0%, transparent 70%);
-        bottom: -10%;
-        right: -5%;
-        animation-delay: 5s;
-      }
-
-      .orb-3 {
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(255, 107, 157, 0.2) 0%, transparent 70%);
-        top: 50%;
-        left: 50%;
-        animation-delay: 10s;
-      }
-
-      @keyframes float {
-        0%, 100% { transform: translate(0, 0) scale(1); }
-        25% { transform: translate(50px, -50px) scale(1.1); }
-        50% { transform: translate(-30px, 30px) scale(0.9); }
-        75% { transform: translate(30px, 50px) scale(1.05); }
-      }
-
-      /* ========================================
-         NAVIGATION BAR - GLASSMORPHISM DESIGN
-         ======================================== */
-      
-      .navbar-modern {
-        background: var(--color-bg-glass);
-        backdrop-filter: blur(20px) saturate(180%);
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-        padding: 1rem 0;
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-        transition: all 0.3s ease;
-      }
-
-      .navbar-modern.scrolled {
-        background: rgba(15, 23, 42, 0.95);
-        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.5);
-      }
-
-      .navbar-brand-modern {
-        font-family: var(--font-display);
-        font-weight: 800;
-        font-size: 1.2rem;
-        background: var(--gradient-primary);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        text-decoration: none;
-        letter-spacing: -0.02em;
-        transition: all 0.3s ease;
-      }
-
-      .navbar-brand-modern:hover {
-        transform: translateY(-2px);
-        filter: brightness(1.2);
-      }
-
-      .navbar-brand-modern i {
-        background: var(--gradient-primary);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 1.6rem;
-      }
-
-      .nav-link-modern {
-        color: var(--color-text-secondary);
-        font-weight: 500;
-        font-size: 0.85rem;
-        padding: 0.4rem 0.7rem;
-        border-radius: var(--radius-sm);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        display: flex;
-        align-items: center;
-        gap: 0.3rem;
-        text-decoration: none;
-        position: relative;
-        overflow: hidden;
-      }
-
-      .nav-link-modern::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: var(--gradient-primary);
-        opacity: 0;
-        transition: opacity 0.3s;
-        z-index: -1;
-      }
-
-      .nav-link-modern:hover {
-        color: var(--color-text-primary);
-        transform: translateY(-2px);
-      }
-
-      .nav-link-modern:hover::before {
-        opacity: 0.15;
-      }
-
-      .nav-link-modern.active {
-        color: var(--color-accent-cyan);
-        background: rgba(0, 217, 255, 0.1);
-      }
-
-      /* Navigation Buttons */
-      .btn-nav-modern {
-        padding: 0.6rem 1.2rem;
-        border-radius: var(--radius-lg);
-        font-weight: 600;
-        font-size: 0.9rem;
-        border: none;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.3rem;
-        text-decoration: none;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .btn-nav-modern::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 0;
-        height: 0;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
-        transform: translate(-50%, -50%);
-        transition: width 0.6s, height 0.6s;
-      }
-
-      .btn-nav-modern:hover::before {
-        width: 300px;
-        height: 300px;
-      }
-
-      .btn-nav-primary {
-        background: var(--gradient-primary);
-        color: white;
-        box-shadow: var(--shadow-glow-cyan);
-      }
-
-      .btn-nav-primary:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 0 40px rgba(0, 217, 255, 0.5);
-        color: white;
-      }
-
-      .btn-nav-outline {
-        background: transparent;
-        color: var(--color-text-secondary);
-        border: 2px solid rgba(255, 255, 255, 0.15);
-      }
-
-      .btn-nav-outline:hover {
-        border-color: var(--color-accent-cyan);
-        color: var(--color-accent-cyan);
-        box-shadow: var(--shadow-glow-cyan);
-      }
-
-      /* Badge Notifications with Glow */
-      .nav-badge-modern {
-        position: absolute;
-        top: -6px;
-        right: -6px;
-        background: var(--gradient-accent);
-        color: white;
-        font-size: 0.65rem;
-        font-weight: 700;
-        padding: 0.25rem 0.5rem;
-        border-radius: 999px;
-        min-width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: var(--shadow-glow-pink);
-        animation: badgePulse 2s ease-in-out infinite;
-        z-index: 10;
-      }
-
-      @keyframes badgePulse {
-        0%, 100% { transform: scale(1); box-shadow: var(--shadow-glow-pink); }
-        50% { transform: scale(1.15); box-shadow: 0 0 40px rgba(255, 107, 157, 0.6); }
-      }
-
-      /* User Dropdown Profile */
-      .user-profile-btn {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        padding: 0.4rem 0.7rem;
-        background: rgba(255, 255, 255, 0.05);
-        border-radius: var(--radius-lg);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        color: var(--color-text-primary);
-        transition: all 0.3s ease;
-        text-decoration: none;
-      }
-
-      .user-profile-btn:hover {
-        background: rgba(255, 255, 255, 0.1);
-        border-color: var(--color-accent-cyan);
-        box-shadow: var(--shadow-glow-cyan);
-        color: var(--color-text-primary);
-      }
-
-      .user-avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        border: 2px solid var(--color-accent-cyan);
-        object-fit: cover;
-        box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
-      }
-
-      .user-avatar-placeholder {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        background: var(--gradient-primary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.2rem;
-        box-shadow: 0 0 15px rgba(0, 217, 255, 0.4);
-      }
-
-      /* Dropdown Menu */
-      .dropdown-menu-modern {
-        background: var(--color-bg-elevated);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: var(--radius-lg);
-        box-shadow: var(--shadow-deep);
-        padding: 0.5rem;
-        margin-top: 0.5rem;
-        min-width: 240px;
-      }
-
-      .dropdown-item-modern {
-        color: var(--color-text-secondary);
-        padding: 0.75rem 1rem;
-        border-radius: var(--radius-sm);
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        font-weight: 500;
-        transition: all 0.3s ease;
-        text-decoration: none;
-      }
-
-      .dropdown-item-modern:hover {
-        background: rgba(0, 217, 255, 0.1);
-        color: var(--color-accent-cyan);
-        transform: translateX(5px);
-      }
-
-      .dropdown-item-modern i {
-        font-size: 1.1rem;
-        width: 20px;
-        text-align: center;
-      }
-
-      .dropdown-divider-modern {
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        margin: 0.5rem 0;
-      }
-
-      .dropdown-item-danger {
-        color: var(--color-accent-pink);
-      }
-
-      .dropdown-item-danger:hover {
-        background: rgba(255, 107, 157, 0.1);
-        color: var(--color-accent-pink);
-      }
-
-      /* ========================================
-         FLASH MESSAGES - MODERN ALERTS
-         ======================================== */
-      
-      .alert-modern {
-        background: var(--color-bg-elevated);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-left: 4px solid;
-        border-radius: var(--radius-md);
-        padding: 1rem 1.5rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        box-shadow: var(--shadow-elevated);
-        animation: slideInDown 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-        margin-bottom: 1rem;
-      }
-
-      @keyframes slideInDown {
-        from {
-          opacity: 0;
-          transform: translateY(-20px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .alert-modern.alert-success {
-        border-left-color: var(--color-accent-green);
-        background: linear-gradient(90deg, rgba(0, 255, 136, 0.1) 0%, transparent 100%);
-      }
-
-      .alert-modern.alert-danger {
-        border-left-color: var(--color-accent-pink);
-        background: linear-gradient(90deg, rgba(255, 107, 157, 0.1) 0%, transparent 100%);
-      }
-
-      .alert-modern.alert-warning {
-        border-left-color: var(--color-accent-orange);
-        background: linear-gradient(90deg, rgba(255, 140, 66, 0.1) 0%, transparent 100%);
-      }
-
-      .alert-modern.alert-info {
-        border-left-color: var(--color-accent-cyan);
-        background: linear-gradient(90deg, rgba(0, 217, 255, 0.1) 0%, transparent 100%);
-      }
-
-      .alert-modern i {
-        font-size: 1.5rem;
-      }
-
-      .alert-success i { color: var(--color-accent-green); }
-      .alert-danger i { color: var(--color-accent-pink); }
-      .alert-warning i { color: var(--color-accent-orange); }
-      .alert-info i { color: var(--color-accent-cyan); }
-
-      .alert-modern .btn-close {
-        filter: invert(1);
-        opacity: 0.5;
-      }
-
-      /* ========================================
-         MAIN CONTENT AREA
-         ======================================== */
-      
-      .main-content {
-        min-height: calc(100vh - 200px);
-        padding: 2rem 0;
-      }
-
-      /* ========================================
-         MEDIA MODAL - MODERN DESIGN
-         ======================================== */
-      
-      .modal-modern .modal-content {
-        background: var(--color-bg-elevated);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: var(--radius-xl);
-        box-shadow: var(--shadow-deep);
-        backdrop-filter: blur(20px);
-      }
-
-      .modal-modern .modal-header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 1.5rem;
-      }
-
-      .modal-modern .modal-title {
-        font-family: var(--font-display);
-        font-weight: 700;
-        color: var(--color-text-primary);
-      }
-
-      .modal-modern .modal-body {
-        padding: 2rem;
-      }
-
-      .modal-modern .btn-close {
-        filter: invert(1);
-        opacity: 0.7;
-      }
-
-      .modal-modern .btn-close:hover {
-        opacity: 1;
-      }
-
-      /* ========================================
-         FOOTER - ELEGANT DESIGN
-         ======================================== */
-      
-      .footer-modern {
-        background: var(--color-bg-secondary);
-        border-top: 1px solid rgba(255, 255, 255, 0.08);
-        padding: 2rem 0;
-        margin-top: 4rem;
-      }
-
-      .footer-link {
-        color: var(--color-text-muted);
-        text-decoration: none;
-        transition: all 0.3s ease;
-        position: relative;
-      }
-
-      .footer-link::after {
-        content: '';
-        position: absolute;
-        bottom: -2px;
-        left: 0;
-        width: 0;
-        height: 2px;
-        background: var(--gradient-primary);
-        transition: width 0.3s ease;
-      }
-
-      .footer-link:hover {
-        color: var(--color-accent-cyan);
-      }
-
-      .footer-link:hover::after {
-        width: 100%;
-      }
-
-      /* ========================================
-         MESSAGE BUBBLES
-         ======================================== */
-      
-      .message-bubble { 
-        border-radius: var(--radius-lg);
-        padding: 0.75rem 1rem;
-        max-width: 78%;
-        word-wrap: break-word;
-        box-shadow: var(--shadow-elevated);
-        animation: messageSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      @keyframes messageSlideIn {
-        from {
-          opacity: 0;
-          transform: translateY(10px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-
-      .message-sent { 
-        background: var(--gradient-primary);
-        color: white;
-        margin-left: auto;
-        box-shadow: var(--shadow-glow-cyan);
-      }
-
-      .message-recv { 
-        background: var(--color-bg-elevated);
-        color: var(--color-text-primary);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      /* ========================================
-         UTILITY CLASSES
-         ======================================== */
-      
-      .glass-effect {
-        background: var(--color-bg-glass);
-        backdrop-filter: blur(20px) saturate(180%);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-      }
-
-      .glow-cyan { box-shadow: var(--shadow-glow-cyan); }
-      .glow-purple { box-shadow: var(--shadow-glow-purple); }
-      .glow-pink { box-shadow: var(--shadow-glow-pink); }
-
-      /* ========================================
-         RESPONSIVE DESIGN
-         ======================================== */
-      
-      @media (max-width: 992px) {
-  @media (max-width: 1200px) {
-    .nav-link-modern span, .btn-nav-modern span, .user-profile-btn span {
-      display: none !important;
-    }
-    .nav-link-modern i, .btn-nav-modern i {
-      font-size: 1.2rem !important;
-      margin-right: 0 !important;
-    }
-    .navbar-brand-modern {
-      font-size: 1rem !important;
-    }
-    .navbar-brand-modern span {
-      display: none !important;
-    }
-    .navbar-brand-modern i {
-      font-size: 1.5rem !important;
-    }
-  }
-  @media (max-width: 1200px) {
-    .nav-link-modern {
-      padding: 0.4rem 0.5rem !important;
-      font-size: 0.8rem !important;
-    }
-    .navbar-brand-modern {
-      font-size: 1rem !important;
-    }
-    .btn-nav-modern {
-      padding: 0.4rem 0.8rem !important;
-      font-size: 0.8rem !important;
-    }
-  }
-        .navbar-brand-modern {
-          font-size: 1.2rem;
-        }
-
-        .orb {
-          display: none;
-        }
-      }
-
-      @media (max-width: 768px) {
-        .navbar-modern {
-          padding: 0.75rem 0;
-        }
-
-        .nav-link-modern {
-          padding: 0.75rem 1rem;
-          margin: 0.25rem 0;
-        }
-
-        .btn-nav-modern {
-          width: 100%;
-          justify-content: center;
-          margin: 0.5rem 0;
-        }
-      }
-
-      /* ========================================
-         SCROLLBAR STYLING
-         ======================================== */
-      
-      ::-webkit-scrollbar {
-        width: 10px;
-      }
-
-      ::-webkit-scrollbar-track {
-        background: var(--color-bg-secondary);
-      }
-
-      ::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, var(--color-accent-cyan) 0%, var(--color-accent-purple) 100%);
-        border-radius: 10px;
-      }
-
-      ::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, var(--color-accent-purple) 0%, var(--color-accent-cyan) 100%);
-      }
-
-      /* ========================================
-         LOADING SPINNER
-         ======================================== */
-      
-      .loading-spinner {
-        display: inline-block;
-        width: 1.2rem;
-        height: 1.2rem;
-        border: 3px solid rgba(0, 217, 255, 0.2);
-        border-top: 3px solid var(--color-accent-cyan);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-      }
-
-      @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-      }
-    </style>
-
     {% block head %}{% endblock %}
   </head>
   <body class="d-flex flex-column min-vh-100">
-    <!-- Floating Orb Effects -->
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
 
-    <!-- Modern Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-modern">
+    <!-- ===================== NAVBAR ===================== -->
+    <nav class="navbar navbar-expand-lg">
       <div class="container">
-        <a class="navbar-brand-modern" href="{{ url_for('index') }}">
-          <i class="bi bi-briefcase-fill"></i>
-          <span>BISCONNECT24/7</span>
+        <!-- Brand -->
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+          <span class="brand-dot"></span>
+          Kazi<span>Connect</span>
         </a>
-        
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain" 
-        aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation"
-        style="border-color: rgba(255,255,255,0.2);">
-    <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
-</button>
 
-<div class="collapse navbar-collapse" id="navMain">
-    <!-- Main Navigation Links -->
-    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-        <li class="nav-item">
-            <a class="nav-link-modern {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
-                <i class="bi bi-house-door-fill"></i>
-                <span>Home</span>
-            </a>
-        </li>
-        
-        <li class="nav-item">
-            <a class="nav-link-modern {% if request.endpoint == 'jobs' %}active{% endif %}" href="{{ url_for('jobs') if 'jobs' in url_for('jobs', _external=True) else url_for('index') }}">
-                <i class="bi bi-briefcase-fill"></i>
-                <span>Browse Jobs</span>
-            </a>
-        </li>
-        
-        {% if current_user.is_authenticated %}
-            <!-- Job Seeker Links -->
+        <button class="navbar-toggler border-0 p-1" type="button"
+                data-bs-toggle="collapse" data-bs-target="#navMain"
+                aria-controls="navMain" aria-expanded="false" aria-label="Toggle navigation">
+          <i class="bi bi-list" style="font-size:1.4rem; color:var(--ink);"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMain">
+          <!-- Left links -->
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0 gap-1">
             <li class="nav-item">
-                <a class="nav-link-modern {% if request.endpoint == 'post_job' %}active{% endif %}" href="{{ url_for('post_job') }}">
-                    <i class="bi bi-plus-circle-fill"></i>
-                    <span>Post Job</span>
-                </a>
+              <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}"
+                 href="{{ url_for('index') }}">
+                <i class="bi bi-house"></i> Home
+              </a>
             </li>
-            
-            <li class="nav-item">
-                <a class="nav-link-modern {% if request.endpoint == 'all_users' %}active{% endif %}" href="{{ url_for('all_users') }}">
-                    <i class="bi bi-people-fill"></i>
-                    <span>Find Talent</span>
-                </a>
-            </li>
-            
-            <!-- Location-Based Features Dropdown -->
-            <li class="nav-item dropdown">
-                <a class="nav-link-modern dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i class="bi bi-geo-alt-fill"></i>
-                    <span>Location</span>
-                </a>
-                <ul class="dropdown-menu dropdown-menu-modern">
-                    <li>
-                        <a class="dropdown-item-modern" href="{{ url_for('location_verify') }}">
-                            <i class="bi bi-check-circle"></i>
-                            <span>Verify Location</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item-modern" href="{{ url_for('jobs_nearby') }}">
-                            <i class="bi bi-pin-map-fill"></i>
-                            <span>Jobs Near Me</span>
-                        </a>
-                    </li>
-                </ul>
-            </li>
-        {% endif %}
-    </ul>
-</div>        
-              <!-- Program Impact -->
+
+            {% if current_user.is_authenticated %}
               <li class="nav-item">
-                <a class="nav-link-modern {% if request.endpoint == 'program_impact' %}active{% endif %}" href="{{ url_for('program_impact') }}">
-                  <i class="bi bi-bar-chart-fill"></i>
-                  <span>Impact</span>
+                <a class="nav-link {% if request.endpoint == 'post_job' %}active{% endif %}"
+                   href="{{ url_for('post_job') }}">
+                  <i class="bi bi-plus-circle"></i> Post Job
                 </a>
               </li>
-              
-              <!-- Admin Links -->
-              {% if current_user.is_admin %}
-                <li class="nav-item dropdown">
-                  <a class="nav-link-modern dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color: var(--color-accent-pink);">
-                    <i class="bi bi-shield-lock-fill"></i>
-                    <span>Admin</span>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-modern">
-                    <li>
-                      <a class="dropdown-item-modern" href="{{ url_for('admin_dashboard') }}">
-                        <i class="bi bi-speedometer2"></i>
-                        <span>Dashboard</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item-modern" href="{{ url_for('admin_locations') }}">
-                        <i class="bi bi-geo-alt-fill"></i>
-                        <span>Location Monitor</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item-modern" href="{{ url_for('admin_settings') }}">
-                        <i class="bi bi-gear-fill"></i>
-                        <span>Settings</span>
-                      </a>
-                    </li>
-                  </ul>
-                </li>
-              {% endif %}
+              <li class="nav-item">
+                <a class="nav-link {% if request.endpoint == 'all_users' %}active{% endif %}"
+                   href="{{ url_for('all_users') }}">
+                  <i class="bi bi-people"></i> Talent
+                </a>
+              </li>
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="bi bi-geo-alt"></i> Nearby
+                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('location_verify') }}">
+                      <i class="bi bi-check-circle"></i> Verify Location
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('jobs_nearby') }}">
+                      <i class="bi bi-pin-map"></i> Jobs Near Me
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            {% endif %}
+
+            {% if current_user.is_authenticated and current_user.is_admin %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false"
+                   style="color:var(--clay) !important;">
+                  <i class="bi bi-shield-lock"></i> Admin
+                </a>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
+                      <i class="bi bi-speedometer2"></i> Dashboard
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('admin_locations') }}">
+                      <i class="bi bi-geo-alt"></i> Location Monitor
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="{{ url_for('admin_settings') }}">
+                      <i class="bi bi-gear"></i> Settings
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            {% endif %}
           </ul>
 
-          <!-- Right Side Navigation -->
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center gap-2">
+          <!-- Right side -->
+          <ul class="navbar-nav mb-2 mb-lg-0 align-items-center gap-2">
             {% if current_user.is_authenticated %}
-              <!-- Messages Button -->
+              <!-- Messages -->
               <li class="nav-item">
-                <a class="btn-nav-modern btn-nav-outline position-relative" href="{{ url_for('messages_list') }}" title="Messages">
-                  <i class="bi bi-chat-dots-fill"></i>
-                  <span class="d-none d-md-inline">Messages</span>
-                  <span id="messages-badge" class="nav-badge-modern" style="display:none;"></span>
+                <a class="icon-btn" href="{{ url_for('messages_list') }}" title="Messages">
+                  <i class="bi bi-chat-dots"></i>
+                  <span id="messages-badge" class="nav-badge-kazi" style="display:none;"></span>
                 </a>
               </li>
-              
-              <!-- Notifications Button -->
+
+              <!-- Notifications -->
               <li class="nav-item">
-                <a class="btn-nav-modern btn-nav-outline position-relative" href="{{ url_for('notifications_page') }}" title="Notifications">
-                  <i class="bi bi-bell-fill"></i>
-                  <span class="d-none d-md-inline">Notifications</span>
-                  <span id="notifications-badge" class="nav-badge-modern" style="display:none;"></span>
+                <a class="icon-btn" href="{{ url_for('notifications_page') }}" title="Notifications">
+                  <i class="bi bi-bell"></i>
+                  <span id="notifications-badge" class="nav-badge-kazi" style="display:none;"></span>
                 </a>
               </li>
-              
-              <!-- User Profile Dropdown -->
+
+              <!-- Profile dropdown -->
               <li class="nav-item dropdown">
-                <a class="user-profile-btn dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <a class="user-profile-pill dropdown-toggle" href="#" role="button"
+                   data-bs-toggle="dropdown" aria-expanded="false">
                   {% if current_user.profile_picture %}
-                    <img src="{{ url_for('uploaded_file', filename=current_user.profile_picture) }}" 
-                         alt="Profile" 
-                         class="user-avatar">
+                    <img src="{{ url_for('uploaded_file', filename=current_user.profile_picture) }}"
+                         alt="Profile" class="user-avatar">
                   {% else %}
                     <div class="user-avatar-placeholder">
-                      <i class="bi bi-person-fill"></i>
+                      {{ (current_user.username or current_user.email)[0].upper() }}
                     </div>
                   {% endif %}
-                  <span class="d-none d-md-inline">{{ current_user.username or current_user.email.split('@')[0] }}</span>
+                  <span class="d-none d-sm-inline">
+                    {{ current_user.username or current_user.email.split('@')[0] }}
+                  </span>
                 </a>
-                
-                <ul class="dropdown-menu dropdown-menu-end dropdown-menu-modern">
-                  <!-- Profile Section -->
+                <ul class="dropdown-menu dropdown-menu-end">
                   <li>
-                    <a class="dropdown-item-modern" href="{{ url_for('profile') }}">
-                      <i class="bi bi-person-fill"></i>
-                      <span>My Profile</span>
+                    <a class="dropdown-item" href="{{ url_for('profile') }}">
+                      <i class="bi bi-person"></i> My Profile
                     </a>
                   </li>
                   <li>
-                    <a class="dropdown-item-modern" href="{{ url_for('edit_profile') }}">
-                      <i class="bi bi-pencil-fill"></i>
-                      <span>Edit Profile</span>
+                    <a class="dropdown-item" href="{{ url_for('edit_profile') }}">
+                      <i class="bi bi-pencil"></i> Edit Profile
                     </a>
                   </li>
-                  
-                  <li><div class="dropdown-divider-modern"></div></li>
-                  
-                  <!-- Job Activity -->
+                  <li><hr class="dropdown-divider"></li>
                   <li>
-                    <a class="dropdown-item-modern" href="{{ url_for('post_job') }}">
-                      <i class="bi bi-plus-circle-fill"></i>
-                      <span>Post a Job</span>
+                    <a class="dropdown-item" href="{{ url_for('post_job') }}">
+                      <i class="bi bi-plus-circle"></i> Post a Job
                     </a>
                   </li>
                   <li>
-                    <a class="dropdown-item-modern" href="{{ url_for('profile') }}#applications">
-                      <i class="bi bi-file-text-fill"></i>
-                      <span>My Applications</span>
+                    <a class="dropdown-item" href="{{ url_for('profile') }}#applications">
+                      <i class="bi bi-file-text"></i> My Applications
                     </a>
                   </li>
-                  
-                  <li><div class="dropdown-divider-modern"></div></li>
-                  
-                  <!-- Communication -->
+                  <li><hr class="dropdown-divider"></li>
                   <li>
-                    <a class="dropdown-item-modern" href="{{ url_for('messages_list') }}">
-                      <i class="bi bi-chat-dots-fill"></i>
-                      <span>Messages</span>
-                      <span id="dropdown-messages-badge" class="badge bg-danger ms-2" style="display:none;"></span>
+                    <a class="dropdown-item" href="{{ url_for('messages_list') }}">
+                      <i class="bi bi-chat-dots"></i> Messages
+                      <span id="dropdown-messages-badge" class="badge bg-danger ms-auto" style="display:none;"></span>
                     </a>
                   </li>
                   <li>
-                    <a class="dropdown-item-modern" href="{{ url_for('notifications_page') }}">
-                      <i class="bi bi-bell-fill"></i>
-                      <span>Notifications</span>
-                      <span id="dropdown-notifications-badge" class="badge bg-danger ms-2" style="display:none;"></span>
+                    <a class="dropdown-item" href="{{ url_for('notifications_page') }}">
+                      <i class="bi bi-bell"></i> Notifications
+                      <span id="dropdown-notifications-badge" class="badge bg-danger ms-auto" style="display:none;"></span>
                     </a>
                   </li>
-                  
-                  <li><div class="dropdown-divider-modern"></div></li>
-                  
-                  <!-- Location Features -->
+                  <li><hr class="dropdown-divider"></li>
                   <li>
-                    <a class="dropdown-item-modern" href="#">
-                      <i class="bi bi-check-circle"></i>
-                      <span>Verify Location</span>
+                    <a class="dropdown-item" href="{{ url_for('jobs_nearby') }}">
+                      <i class="bi bi-pin-map"></i> Jobs Near Me
                     </a>
                   </li>
-                  <li>
-                    <a class="dropdown-item-modern" href="{{ url_for('jobs_nearby') if 'jobs_nearby' in url_for('jobs_nearby', _external=True) else '#' }}">
-                      <i class="bi bi-pin-map-fill"></i>
-                      <span>Jobs Near Me</span>
-                    </a>
-                  </li>
-                  
-                  <li><div class="dropdown-divider-modern"></div></li>
-                  
-                  <!-- Admin Links (if admin) -->
                   {% if current_user.is_admin %}
+                    <li><hr class="dropdown-divider"></li>
                     <li>
-                      <a class="dropdown-item-modern" href="{{ url_for('admin_dashboard') }}">
-                        <i class="bi bi-shield-lock-fill"></i>
-                        <span>Admin Dashboard</span>
+                      <a class="dropdown-item" href="{{ url_for('admin_dashboard') }}">
+                        <i class="bi bi-shield-lock"></i> Admin Dashboard
                       </a>
                     </li>
-                    <li>
-                      <a class="dropdown-item-modern" href="{{ url_for('admin_locations') }}">
-                        <i class="bi bi-geo-alt-fill"></i>
-                        <span>Location Monitor</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item-modern" href="{{ url_for('admin_settings') }}">
-                        <i class="bi bi-gear-fill"></i>
-                        <span>Admin Settings</span>
-                      </a>
-                    </li>
-                    <li><div class="dropdown-divider-modern"></div></li>
                   {% endif %}
-                  
-                  <!-- Logout -->
+                  <li><hr class="dropdown-divider"></li>
                   <li>
-                    <a class="dropdown-item-modern dropdown-item-danger" href="{{ url_for('logout') }}">
-                      <i class="bi bi-box-arrow-right"></i>
-                      <span>Logout</span>
+                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
+                      <i class="bi bi-box-arrow-right"></i> Logout
                     </a>
                   </li>
                 </ul>
               </li>
+
             {% else %}
-              <!-- Guest Navigation -->
+              <!-- Guest -->
               <li class="nav-item">
-                <a class="nav-link-modern" href="{{ url_for('program_impact') }}">
-                  <i class="bi bi-bar-chart-fill"></i>
-                  <span>Impact</span>
+                <a class="btn-nav-outline" href="{{ url_for('login') }}">
+                  <i class="bi bi-box-arrow-in-right"></i> Login
                 </a>
               </li>
               <li class="nav-item">
-                <a class="btn-nav-modern btn-nav-outline" href="{{ url_for('login') }}">
-                  <i class="bi bi-box-arrow-in-right"></i>
-                  <span>Login</span>
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="btn-nav-modern btn-nav-primary" href="{{ url_for('register') }}">
-                  <i class="bi bi-person-plus-fill"></i>
-                  <span>Register</span>
+                <a class="btn-nav-primary" href="{{ url_for('register') }}">
+                  <i class="bi bi-person-plus"></i> Join Free
                 </a>
               </li>
             {% endif %}
@@ -986,26 +215,22 @@
         </div>
       </div>
     </nav>
+    <!-- ===================== END NAVBAR ===================== -->
 
     <!-- Flash Messages -->
-    <main class="container main-content flex-grow-1">
+    <main class="container flex-grow-1 py-4">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
           <div class="mb-4">
             {% for cat, msg in messages %}
-              {% set alert_class = 'success' if cat=='success' else ('danger' if cat=='danger' else ('warning' if cat=='warning' else 'info')) %}
-              <div class="alert-modern alert-{{ alert_class }} alert-dismissible fade show" role="alert">
-                {% if cat == 'success' %}
-                  <i class="bi bi-check-circle-fill"></i>
-                {% elif cat == 'danger' %}
-                  <i class="bi bi-exclamation-triangle-fill"></i>
-                {% elif cat == 'warning' %}
-                  <i class="bi bi-exclamation-circle-fill"></i>
-                {% else %}
-                  <i class="bi bi-info-circle-fill"></i>
-                {% endif %}
-                <div style="flex: 1;">{{ msg|safe }}</div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              {% set ac = 'success' if cat=='success' else ('danger' if cat=='danger' else ('warning' if cat=='warning' else 'info')) %}
+              <div class="alert alert-{{ ac }} alert-dismissible fade show" role="alert">
+                {% if cat == 'success' %}<i class="bi bi-check-circle-fill"></i>
+                {% elif cat == 'danger' %}<i class="bi bi-exclamation-triangle-fill"></i>
+                {% elif cat == 'warning' %}<i class="bi bi-exclamation-circle-fill"></i>
+                {% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+                <div class="alert-text flex-grow-1">{{ msg|safe }}</div>
+                <button type="button" class="btn-close ms-2" data-bs-dismiss="alert" aria-label="Close"></button>
               </div>
             {% endfor %}
           </div>
@@ -1015,276 +240,172 @@
       {% block content %}{% endblock %}
     </main>
 
+    <!-- Floating "Post a Job" button -->
+    {% if current_user.is_authenticated and request.endpoint != 'post_job' %}
+      <a href="{{ url_for('post_job') }}" class="fab-post-job" title="Post a Job">
+        <i class="bi bi-plus-lg"></i>
+      </a>
+    {% endif %}
+
     <!-- Media Preview Modal -->
-    <div class="modal fade modal-modern" id="mediaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="mediaModal" tabindex="-1" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header">
             <h5 class="modal-title">Media Preview</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
-          <div class="modal-body media-modal-content text-center">
-            <!-- injected image/video -->
-          </div>
+          <div class="modal-body media-modal-content text-center p-3"></div>
         </div>
       </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer-modern">
+    <!-- ===================== FOOTER ===================== -->
+    <footer class="mt-auto py-4">
       <div class="container">
-        <div class="row align-items-center">
-          <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
-            <span style="color: var(--color-text-muted); font-size: 0.85rem;">
-              &copy; {{ now().year }} <span style="background: var(--gradient-primary); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; font-weight: 600;">KaziConnect</span>
-            </span>
+        <div class="row align-items-center g-3">
+          <div class="col-md-4">
+            <div class="footer-brand">Kazi<span>Connect</span></div>
+            <p class="mt-1 mb-0" style="font-size:.8rem; color:var(--stone);">
+              Kenya's trusted job platform
+            </p>
           </div>
-          
-          <div class="col-md-4 text-center mb-3 mb-md-0">
-            <span style="font-size: 0.9rem;">
-              <a href="{{ url_for('index') }}" class="footer-link">Home</a>
-              <span style="color: var(--color-text-muted); margin: 0 0.5rem;">|</span>
-              <a href="{{ url_for('program_impact') }}" class="footer-link">Impact</a>
+          <div class="col-md-4 text-center">
+            <div style="display:flex; justify-content:center; gap:1.5rem; font-size:.85rem;">
+              <a href="{{ url_for('index') }}">Home</a>
+              <a href="{{ url_for('program_impact') }}">Impact</a>
               {% if current_user.is_authenticated %}
-                <span style="color: var(--color-text-muted); margin: 0 0.5rem;">|</span>
-                <a href="{{ url_for('all_users') }}" class="footer-link">Community</a>
-              {% endif %}
-            </span>
-          </div>
-          
-          <div class="col-md-4 text-center text-md-end">
-            <span style="font-size: 0.9rem;">
-              {% if current_user.is_authenticated %}
-                <a href="{{ url_for('profile') }}" class="footer-link">Profile</a>
-                <span style="color: var(--color-text-muted); margin: 0 0.5rem;">|</span>
-                <a href="{{ url_for('logout') }}" class="footer-link">Logout</a>
+                <a href="{{ url_for('all_users') }}">Community</a>
+                <a href="{{ url_for('profile') }}">Profile</a>
               {% else %}
-                <a href="{{ url_for('login') }}" class="footer-link">Login</a>
-                <span style="color: var(--color-text-muted); margin: 0 0.5rem;">|</span>
-                <a href="{{ url_for('register') }}" class="footer-link">Register</a>
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
               {% endif %}
-            </span>
+            </div>
+          </div>
+          <div class="col-md-4 text-md-end" style="font-size:.8rem; color:var(--stone);">
+            &copy; {{ now().year }} KaziConnect &mdash;
+            {% if current_user.is_authenticated %}
+              <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+              All rights reserved
+            {% endif %}
           </div>
         </div>
-        
-        <!-- Bottom Links -->
-        <div class="row mt-3">
-          <div class="col-12 text-center">
-            <small style="color: var(--color-text-muted); font-size: 0.8rem;">
-              <i class="bi bi-shield-check me-1"></i>
-              Verified Platform | 
-              <i class="bi bi-geo-alt ms-2 me-1"></i>
-              Location Integrity | 
-              <i class="bi bi-people ms-2 me-1"></i>
-              1000+ Users
-            </small>
-          </div>
+        <hr style="border-color:rgba(255,255,255,.1); margin:1.25rem 0 1rem;">
+        <div class="text-center" style="font-size:.75rem; color:var(--stone);">
+          <i class="bi bi-shield-check me-1" style="color:var(--clay);"></i>Verified Platform &nbsp;·&nbsp;
+          <i class="bi bi-geo-alt me-1" style="color:var(--clay);"></i>Location Integrity &nbsp;·&nbsp;
+          <i class="bi bi-people me-1" style="color:var(--clay);"></i>Growing Community
         </div>
       </div>
     </footer>
+    <!-- ===================== END FOOTER ===================== -->
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-      // ========================================
-      // NAVBAR SCROLL EFFECT
-      // ========================================
-      window.addEventListener('scroll', function() {
-        const navbar = document.querySelector('.navbar-modern');
-        if (window.scrollY > 50) {
-          navbar.classList.add('scrolled');
-        } else {
-          navbar.classList.remove('scrolled');
-        }
+      // Navbar scroll effect
+      window.addEventListener('scroll', function () {
+        document.querySelector('.navbar').classList.toggle('scrolled', window.scrollY > 40);
       });
 
-      // ========================================
-      // FETCH AND UPDATE BADGES
-      // ========================================
+      // Badge polling
       async function fetchAndUpdateBadges() {
         try {
-          // Fetch unread messages count
-          {% if current_user.is_authenticated and 'messages_unread_count' in url_for('messages_unread_count', _external=True) %}
-          const messagesRes = await fetch('{{ url_for("messages_unread_count") }}', {
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-          });
-          
-          if (messagesRes.ok) {
-            const messagesData = await messagesRes.json();
-            const messagesBadge = document.getElementById('messages-badge');
-            const dropdownMessagesBadge = document.getElementById('dropdown-messages-badge');
-            
-            if (messagesBadge) {
-              if (messagesData.count && messagesData.count > 0) {
-                messagesBadge.style.display = 'flex';
-                messagesBadge.textContent = messagesData.count > 99 ? '99+' : messagesData.count;
-                if (dropdownMessagesBadge) {
-                  dropdownMessagesBadge.style.display = 'inline-block';
-                  dropdownMessagesBadge.textContent = messagesData.count > 99 ? '99+' : messagesData.count;
-                }
-              } else {
-                messagesBadge.style.display = 'none';
-                if (dropdownMessagesBadge) dropdownMessagesBadge.style.display = 'none';
-              }
-            }
-          }
-          {% endif %}
+          {% if current_user.is_authenticated %}
+          const [mRes, nRes] = await Promise.all([
+            fetch('{{ url_for("messages_unread_count") }}', { credentials: 'same-origin' }),
+            fetch('{{ url_for("notifications_count") }}', { credentials: 'same-origin' })
+          ]);
 
-          // Fetch unread notifications count
-          {% if current_user.is_authenticated and 'notifications_count' in url_for('notifications_count', _external=True) %}
-          const notificationsRes = await fetch('{{ url_for("notifications_count") }}', {
-            credentials: 'same-origin',
-            headers: { 'Accept': 'application/json' }
-          });
-          
-          if (notificationsRes.ok) {
-            const notificationsData = await notificationsRes.json();
-            const notificationsBadge = document.getElementById('notifications-badge');
-            const dropdownNotificationsBadge = document.getElementById('dropdown-notifications-badge');
-            
-            if (notificationsBadge) {
-              if (notificationsData.count && notificationsData.count > 0) {
-                notificationsBadge.style.display = 'flex';
-                notificationsBadge.textContent = notificationsData.count > 99 ? '99+' : notificationsData.count;
-                if (dropdownNotificationsBadge) {
-                  dropdownNotificationsBadge.style.display = 'inline-block';
-                  dropdownNotificationsBadge.textContent = notificationsData.count > 99 ? '99+' : notificationsData.count;
-                }
-              } else {
-                notificationsBadge.style.display = 'none';
-                if (dropdownNotificationsBadge) dropdownNotificationsBadge.style.display = 'none';
-              }
-            }
+          if (mRes.ok) {
+            const d = await mRes.json();
+            const cnt = d.count || 0;
+            const b = document.getElementById('messages-badge');
+            const db = document.getElementById('dropdown-messages-badge');
+            if (b) { b.style.display = cnt > 0 ? 'flex' : 'none'; b.textContent = cnt > 99 ? '99+' : cnt; }
+            if (db) { db.style.display = cnt > 0 ? 'inline-block' : 'none'; db.textContent = cnt > 99 ? '99+' : cnt; }
+          }
+
+          if (nRes.ok) {
+            const d = await nRes.json();
+            const cnt = d.count || 0;
+            const b = document.getElementById('notifications-badge');
+            const db = document.getElementById('dropdown-notifications-badge');
+            if (b) { b.style.display = cnt > 0 ? 'flex' : 'none'; b.textContent = cnt > 99 ? '99+' : cnt; }
+            if (db) { db.style.display = cnt > 0 ? 'inline-block' : 'none'; db.textContent = cnt > 99 ? '99+' : cnt; }
           }
           {% endif %}
-        } catch (err) {
-          console.debug('Badge update failed:', err);
-        }
+        } catch (e) { /* silent */ }
       }
 
-      // ========================================
-      // PAGE INITIALIZATION
-      // ========================================
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener('DOMContentLoaded', function () {
         {% if current_user.is_authenticated %}
-          // Initial fetch and polling for badges
           fetchAndUpdateBadges();
           setInterval(fetchAndUpdateBadges, 20000);
         {% endif %}
 
-        // Auto-dismiss alerts after 6 seconds
-        const alerts = document.querySelectorAll('.alert-modern:not(.alert-permanent)');
-        alerts.forEach(function(alert) {
-          setTimeout(function() {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
+        // Auto-dismiss alerts after 6 s
+        document.querySelectorAll('.alert').forEach(function (a) {
+          setTimeout(function () {
+            try { new bootstrap.Alert(a).close(); } catch (e) {}
           }, 6000);
         });
 
-        // Media preview click handler (delegated)
-        document.body.addEventListener('click', function(e) {
-          const target = e.target.closest('.job-media-thumb');
-          if (!target) return;
+        // Media modal
+        document.body.addEventListener('click', function (e) {
+          const t = e.target.closest('.job-media-thumb');
+          if (!t) return;
           e.preventDefault();
-
-          const url = target.getAttribute('data-media-url');
-          const type = target.getAttribute('data-media-type') || 'image';
-          const modalEl = document.getElementById('mediaModal');
-          const modalBody = modalEl.querySelector('.media-modal-content');
-          modalBody.innerHTML = '';
-
-          if (!url) {
-            modalBody.innerHTML = '<div style="color: var(--color-text-muted);">Media not available</div>';
-          } else if (type === 'video') {
-            const video = document.createElement('video');
-            video.setAttribute('controls', '');
-            video.setAttribute('preload', 'metadata');
-            video.src = url;
-            video.style.maxHeight = '70vh';
-            video.style.borderRadius = 'var(--radius-md)';
-            modalBody.appendChild(video);
+          const url = t.getAttribute('data-media-url');
+          const type = t.getAttribute('data-media-type') || 'image';
+          const body = document.querySelector('#mediaModal .media-modal-content');
+          body.innerHTML = '';
+          if (!url) { body.innerHTML = '<p style="color:var(--stone)">Media not available</p>'; }
+          else if (type === 'video') {
+            const v = document.createElement('video');
+            v.setAttribute('controls', ''); v.setAttribute('preload', 'metadata');
+            v.src = url; v.style.maxHeight = '70vh'; v.style.borderRadius = 'var(--r-md)';
+            body.appendChild(v);
           } else {
             const img = document.createElement('img');
-            img.src = url;
-            img.alt = 'Media';
-            img.style.maxHeight = '80vh';
-            img.style.borderRadius = 'var(--radius-md)';
-            modalBody.appendChild(img);
+            img.src = url; img.alt = 'Media';
+            img.style.maxHeight = '80vh'; img.style.borderRadius = 'var(--r-md)';
+            body.appendChild(img);
           }
-
-          const bsModal = new bootstrap.Modal(modalEl);
-          bsModal.show();
+          new bootstrap.Modal(document.getElementById('mediaModal')).show();
         });
 
-        // Clean up modal on close
-        const mediaModalEl = document.getElementById('mediaModal');
-        if (mediaModalEl) {
-          mediaModalEl.addEventListener('hidden.bs.modal', function () {
-            const modalBody = mediaModalEl.querySelector('.media-modal-content');
-            modalBody.innerHTML = '';
-          });
-        }
+        document.getElementById('mediaModal')?.addEventListener('hidden.bs.modal', function () {
+          this.querySelector('.media-modal-content').innerHTML = '';
+        });
+
+        // Active nav link
+        const path = window.location.pathname;
+        document.querySelectorAll('.nav-link').forEach(function (l) {
+          if (l.getAttribute('href') === path) l.classList.add('active');
+        });
       });
 
-      // ========================================
-      // CSRF TOKEN HELPER
-      // ========================================
-      function getCSRFToken() {
-        return '{{ csrf_token() }}';
-      }
-
-      // Add CSRF token to non-GET fetch requests automatically
-      (function() {
-        const originalFetch = window.fetch;
-        window.fetch = function(resource, init) {
+      // CSRF helper
+      function getCSRFToken() { return '{{ csrf_token() }}'; }
+      (function () {
+        const orig = window.fetch;
+        window.fetch = function (resource, init) {
           init = init || {};
           const method = (init.method || 'GET').toUpperCase();
           if (method !== 'GET' && method !== 'HEAD') {
             init.headers = init.headers || {};
             if (typeof init.headers.append === 'function') {
               init.headers.append('X-CSRFToken', getCSRFToken());
-            } else {
-              init.headers['X-CSRFToken'] = getCSRFToken();
-            }
+            } else { init.headers['X-CSRFToken'] = getCSRFToken(); }
             init.credentials = init.credentials || 'same-origin';
           }
-          return originalFetch(resource, init);
+          return orig(resource, init);
         };
       })();
-
-      // ========================================
-      // SMOOTH REVEAL ANIMATIONS
-      // ========================================
-      const observerOptions = {
-        threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
-      };
-
-      const observer = new IntersectionObserver(function(entries) {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.style.animation = 'fadeInUp 0.6s ease forwards';
-            observer.unobserve(entry.target);
-          }
-        });
-      }, observerOptions);
-
-      // Observe elements that should animate in
-      document.querySelectorAll('.animate-on-scroll').forEach(el => {
-        observer.observe(el);
-      });
-
-      // ========================================
-      // ACTIVE NAV LINK DETECTION
-      // ========================================
-      const currentPath = window.location.pathname;
-      document.querySelectorAll('.nav-link-modern').forEach(link => {
-        if (link.getAttribute('href') === currentPath) {
-          link.classList.add('active');
-        }
-      });
     </script>
 
     {% block scripts %}{% endblock %}
