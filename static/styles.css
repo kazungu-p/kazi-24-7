@@ -504,6 +504,15 @@ img { max-width: 100%; }
   gap: .75rem;
   font-size: .9rem;
   animation: slideDown .35s var(--ease);
+  transition: opacity .3s ease, transform .3s ease;
+}
+
+/* Avoid double-animating with Bootstrap's .fade.show transitions */
+.alert.fade {
+  transition: opacity .3s linear;
+}
+.alert.fade:not(.show) {
+  opacity: 0;
 }
 
 @keyframes slideDown {
@@ -733,6 +742,70 @@ footer a:hover { color: var(--white) !important; }
   to   { opacity: 1; transform: translateY(0); }
 }
 .fade-up { animation: fadeUp .45s var(--ease) both; }
+
+/* ============================================================
+   NOTIFICATION PANEL (dropdown)
+   ============================================================ */
+.notif-panel {
+  width: 340px;
+  max-width: 90vw;
+  padding: 0;
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.notif-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--dust);
+  font-weight: 700;
+  font-size: .85rem;
+  color: var(--ink);
+}
+.notif-mark-all {
+  background: none;
+  border: none;
+  color: var(--clay);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: .2rem .4rem;
+}
+.notif-mark-all:hover { color: var(--clay-dark); text-decoration: underline; }
+
+.notif-panel-body {
+  max-height: 360px;
+  overflow-y: auto;
+}
+.notif-item {
+  display: flex;
+  gap: .65rem;
+  align-items: flex-start;
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--dust);
+  text-decoration: none;
+  color: var(--charcoal);
+  transition: background .15s var(--ease);
+}
+.notif-item:last-child { border-bottom: none; }
+.notif-item:hover { background: var(--clay-light); color: var(--charcoal); }
+.notif-item.unread { background: var(--cream); }
+.notif-item .notif-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--clay); flex-shrink: 0; margin-top: .4rem;
+}
+.notif-item.read .notif-dot { background: transparent; }
+.notif-item .notif-text { font-size: .82rem; line-height: 1.4; }
+.notif-item .notif-time { font-size: .7rem; color: var(--stone); margin-top: .2rem; }
+.notif-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--stone);
+  font-size: .85rem;
+}
 
 /* ============================================================
    FLOATING "POST A JOB" BUTTON

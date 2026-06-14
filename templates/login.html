@@ -6,20 +6,20 @@
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap');
 
   :root {
-    --login-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --login-gradient-1: linear-gradient(135deg, #C8861B 0%, #A66B0F 100%);
     --login-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --login-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
     --login-bg-card: #ffffff;
     --login-bg-page: #fafbfd;
-    --login-border: rgba(99, 102, 241, 0.12);
+    --login-border: rgba(200, 134, 27, 0.12);
     --login-text-primary: #1a1d29;
     --login-text-secondary: #6b7280;
     --login-text-muted: #9ca3af;
     --login-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
     --login-shadow-md: 0 8px 24px rgba(0, 0, 0, 0.08);
-    --login-shadow-lg: 0 20px 48px rgba(102, 126, 234, 0.15);
-    --login-shadow-xl: 0 30px 64px rgba(102, 126, 234, 0.2);
-    --login-shadow-glow: 0 0 50px rgba(102, 126, 234, 0.4);
+    --login-shadow-lg: 0 20px 48px rgba(200, 134, 27, 0.15);
+    --login-shadow-xl: 0 30px 64px rgba(200, 134, 27, 0.2);
+    --login-shadow-glow: 0 0 50px rgba(200, 134, 27, 0.4);
     --login-radius-sm: 12px;
     --login-radius-md: 16px;
     --login-radius-lg: 20px;
@@ -49,7 +49,7 @@
   .login-bg-orb-1 {
     width: 500px;
     height: 500px;
-    background: radial-gradient(circle, rgba(102, 126, 234, 0.4) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(200, 134, 27, 0.4) 0%, transparent 70%);
     top: -10%;
     right: -10%;
     animation-delay: 0s;
@@ -124,18 +124,18 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 8px 24px rgba(200, 134, 27, 0.3);
     animation: pulse 3s ease-in-out infinite;
   }
 
   @keyframes pulse {
     0%, 100% {
       transform: scale(1);
-      box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+      box-shadow: 0 8px 24px rgba(200, 134, 27, 0.3);
     }
     50% {
       transform: scale(1.05);
-      box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
+      box-shadow: 0 12px 32px rgba(200, 134, 27, 0.5);
     }
   }
 
@@ -273,12 +273,12 @@
   }
 
   .form-input-modern:focus {
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: #C8861B;
+    box-shadow: 0 0 0 4px rgba(200, 134, 27, 0.1);
   }
 
   .form-input-modern:focus + .form-input-icon {
-    color: #667eea;
+    color: #C8861B;
   }
 
   /* Password Toggle */
@@ -297,7 +297,7 @@
   }
 
   .password-toggle:hover {
-    color: #667eea;
+    color: #C8861B;
   }
 
   /* Submit Button */
@@ -311,7 +311,7 @@
     border: none;
     background: var(--login-gradient-1);
     color: white;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
+    box-shadow: 0 6px 20px rgba(200, 134, 27, 0.35);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     position: relative;
@@ -339,7 +339,7 @@
 
   .btn-login-submit:hover {
     transform: translateY(-3px);
-    box-shadow: 0 10px 32px rgba(102, 126, 234, 0.45);
+    box-shadow: 0 10px 32px rgba(200, 134, 27, 0.45);
   }
 
   .btn-login-submit:active {
@@ -361,7 +361,7 @@
   }
 
   .login-footer-link {
-    color: #667eea;
+    color: #C8861B;
     font-weight: 600;
     text-decoration: none;
     position: relative;
@@ -380,7 +380,7 @@
   }
 
   .login-footer-link:hover {
-    color: #764ba2;
+    color: #A66B0F;
   }
 
   .login-footer-link:hover::after {
@@ -424,7 +424,7 @@
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.3s ease;
-    accent-color: #667eea;
+    accent-color: #C8861B;
   }
 
   .checkbox-label {
@@ -443,14 +443,14 @@
 
   .forgot-password-link {
     font-size: 0.85rem;
-    color: #667eea;
+    color: #C8861B;
     text-decoration: none;
     font-weight: 500;
     transition: all 0.3s ease;
   }
 
   .forgot-password-link:hover {
-    color: #764ba2;
+    color: #A66B0F;
     text-decoration: underline;
   }
 
@@ -481,7 +481,7 @@
 
   /* Location Notice */
   .location-notice {
-    background: rgba(102, 126, 234, 0.05);
+    background: rgba(200, 134, 27, 0.05);
     border-radius: var(--login-radius-sm);
     padding: 0.75rem 1rem;
     margin-top: 1rem;
@@ -494,7 +494,7 @@
   }
 
   .location-notice i {
-    color: #667eea;
+    color: #C8861B;
     font-size: 1rem;
   }
 
@@ -562,12 +562,12 @@
 
   /* Accessibility */
   .form-input-modern:focus-visible {
-    outline: 3px solid rgba(102, 126, 234, 0.3);
+    outline: 3px solid rgba(200, 134, 27, 0.3);
     outline-offset: 2px;
   }
 
   .btn-login-submit:focus-visible {
-    outline: 3px solid rgba(102, 126, 234, 0.5);
+    outline: 3px solid rgba(200, 134, 27, 0.5);
     outline-offset: 2px;
   }
 </style>

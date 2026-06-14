@@ -3,25 +3,24 @@
 
 {% block content %}
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap');
 
   :root {
-    --users-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --users-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --users-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --users-gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    --users-gradient-5: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    --users-gradient-1: linear-gradient(135deg, #C8861B 0%, #A66B0F 100%);
+    --users-gradient-2: linear-gradient(135deg, #E0A93E 0%, #9E2F1A 100%);
+    --users-gradient-3: linear-gradient(135deg, #C8861B 0%, #E0A93E 100%);
+    --users-gradient-4: linear-gradient(135deg, #1F7A4D 0%, #2FA86A 100%);
+    --users-gradient-5: linear-gradient(135deg, #9E2F1A 0%, #E0A93E 100%);
     --users-bg-card: #ffffff;
-    --users-bg-elevated: #fafbfd;
-    --users-border: rgba(99, 102, 241, 0.1);
-    --users-text-primary: #1a1d29;
-    --users-text-secondary: #6b7280;
-    --users-text-muted: #9ca3af;
+    --users-bg-elevated: #FBFAF8;
+    --users-border: rgba(200, 134, 27, 0.1);
+    --users-text-primary: #1A1A1A;
+    --users-text-secondary: #756F6A;
+    --users-text-muted: #C9C2BC;
     --users-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
     --users-shadow-md: 0 6px 20px rgba(0, 0, 0, 0.08);
-    --users-shadow-lg: 0 16px 40px rgba(102, 126, 234, 0.12);
-    --users-shadow-xl: 0 24px 56px rgba(102, 126, 234, 0.16);
-    --users-shadow-glow: 0 0 40px rgba(102, 126, 234, 0.3);
+    --users-shadow-lg: 0 16px 40px rgba(200, 134, 27, 0.12);
+    --users-shadow-xl: 0 24px 56px rgba(200, 134, 27, 0.16);
+    --users-shadow-glow: 0 0 40px rgba(200, 134, 27, 0.3);
     --users-radius-sm: 10px;
     --users-radius-md: 14px;
     --users-radius-lg: 18px;
@@ -54,7 +53,7 @@
   }
 
   .header-left h1 {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 2.5rem;
     font-weight: 800;
     background: var(--users-gradient-1);
@@ -99,8 +98,8 @@
 
   .btn-header-action:hover {
     transform: translateY(-3px);
-    border-color: #667eea;
-    color: #667eea;
+    border-color: #C8861B;
+    color: #C8861B;
     box-shadow: var(--users-shadow-md);
   }
 
@@ -150,8 +149,8 @@
   }
 
   .search-wrapper:focus-within {
-    border-color: #667eea;
-    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    border-color: #C8861B;
+    box-shadow: 0 0 0 4px rgba(200, 134, 27, 0.1);
   }
 
   .search-icon {
@@ -197,7 +196,7 @@
   .user-card-modern:hover {
     transform: translateY(-12px);
     box-shadow: var(--users-shadow-xl);
-    border-color: rgba(102, 126, 234, 0.3);
+    border-color: rgba(200, 134, 27, 0.3);
   }
 
   /* Stagger animation for cards */
@@ -236,13 +235,13 @@
     position: relative;
   }
 
-  .user-avatar-wrapper {
+  .card-avatar-wrapper {
     display: inline-block;
     position: relative;
     margin-bottom: 1.25rem;
   }
 
-  .user-avatar {
+  .card-avatar {
     width: 100px;
     height: 100px;
     border-radius: 50%;
@@ -253,12 +252,12 @@
     transition: all 0.3s ease;
   }
 
-  .user-card-modern:hover .user-avatar {
+  .user-card-modern:hover .card-avatar {
     transform: scale(1.08);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
   }
 
-  .user-avatar-placeholder {
+  .card-avatar-placeholder {
     width: 100px;
     height: 100px;
     border-radius: 50%;
@@ -273,7 +272,7 @@
     transition: all 0.3s ease;
   }
 
-  .user-card-modern:hover .user-avatar-placeholder {
+  .user-card-modern:hover .card-avatar-placeholder {
     transform: scale(1.08);
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
   }
@@ -284,10 +283,10 @@
     right: 5px;
     width: 18px;
     height: 18px;
-    background: #00ff88;
+    background: #1F7A4D;
     border: 3px solid white;
     border-radius: 50%;
-    box-shadow: 0 2px 8px rgba(0, 255, 136, 0.5);
+    box-shadow: 0 2px 8px rgba(31, 122, 77, 0.5);
     animation: pulse 2s infinite;
   }
 
@@ -303,7 +302,7 @@
   }
 
   .user-name {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--users-text-primary);
@@ -357,24 +356,28 @@
   /* Action Buttons */
   .user-actions {
     display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    justify-content: center;
   }
 
   .btn-user-action {
-    padding: 0.75rem 1.25rem;
+    padding: 0.4rem 0.85rem;
     border-radius: var(--users-radius-md);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.75rem;
+    letter-spacing: .03em;
     border: none;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 0.6rem;
+    gap: 0.4rem;
     text-decoration: none;
     position: relative;
     overflow: hidden;
+    white-space: nowrap;
   }
 
   .btn-user-action::before {
@@ -398,12 +401,12 @@
   .btn-user-primary {
     background: var(--users-gradient-1);
     color: white;
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 14px rgba(200, 134, 27, 0.3);
   }
 
   .btn-user-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 24px rgba(200, 134, 27, 0.4);
     color: white;
   }
 
@@ -461,7 +464,7 @@
   }
 
   .empty-state-title {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.75rem;
     font-weight: 700;
     color: var(--users-text-primary);
@@ -489,7 +492,7 @@
   }
 
   .no-results-title {
-    font-family: 'Poppins', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.5rem;
     font-weight: 600;
     color: var(--users-text-secondary);
@@ -526,8 +529,8 @@
   }
 
   .page-btn:hover:not(.disabled):not(.active) {
-    border-color: #667eea;
-    color: #667eea;
+    border-color: #C8861B;
+    color: #C8861B;
     transform: translateY(-2px);
   }
 
@@ -535,7 +538,7 @@
     background: var(--users-gradient-1);
     border-color: transparent;
     color: white;
-    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 14px rgba(200, 134, 27, 0.3);
   }
 
   .page-btn.disabled {
@@ -591,8 +594,8 @@
       height: 80px;
     }
 
-    .user-avatar,
-    .user-avatar-placeholder {
+    .card-avatar,
+    .card-avatar-placeholder {
       width: 80px;
       height: 80px;
     }
@@ -640,13 +643,13 @@
     <div class="user-card-gradient"></div>
     
     <div class="user-card-body">
-      <div class="user-avatar-wrapper">
+      <div class="card-avatar-wrapper">
         {% if user.profile_picture %}
           <img src="{{ url_for('uploaded_file', filename=user.profile_picture) }}" 
                alt="{{ user.username }}" 
-               class="user-avatar">
+               class="card-avatar">
         {% else %}
-          <div class="user-avatar-placeholder">
+          <div class="card-avatar-placeholder">
             <i class="bi bi-person-fill"></i>
           </div>
         {% endif %}
@@ -716,6 +719,12 @@
     <i class="bi bi-chevron-right"></i>
   </a>
 </nav>
+{% endif %}
+
+{% if current_user.is_authenticated and current_user.is_recruiter() %}
+  <a href="{{ url_for('post_job') }}" class="fab-post-job" title="Post a Job">
+    <i class="bi bi-plus-lg"></i>
+  </a>
 {% endif %}
 
 {% endblock %}
@@ -869,10 +878,10 @@ async function searchUsersAPI(query) {
           <div class="user-card-gradient" style="background: ${gradient};"></div>
           
           <div class="user-card-body">
-            <div class="user-avatar-wrapper">
+            <div class="card-avatar-wrapper">
               ${user.profile_picture 
-                ? `<img src="/uploads/${user.profile_picture}" alt="${user.username}" class="user-avatar">`
-                : `<div class="user-avatar-placeholder" style="background: ${gradient};">
+                ? `<img src="/uploads/${user.profile_picture}" alt="${user.username}" class="card-avatar">`
+                : `<div class="card-avatar-placeholder" style="background: ${gradient};">
                      <i class="bi bi-person-fill"></i>
                    </div>`
               }

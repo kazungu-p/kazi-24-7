@@ -14,12 +14,11 @@
     <!-- Animate.css -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: linear-gradient(135deg, #C8861B 0%, #A66B0F 100%);
             color: #333;
             overflow-x: hidden;
         }
@@ -34,7 +33,7 @@
         }
         
         .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #C8861B 0%, #A66B0F 100%);
             color: white;
             padding: 80px 20px;
             text-align: center;
@@ -97,13 +96,13 @@
             left: 0;
             width: 100%;
             height: 5px;
-            background: linear-gradient(90deg, #667eea, #764ba2);
+            background: linear-gradient(90deg, #C8861B, #A66B0F);
         }
         
         .stat-number {
             font-size: 3rem;
             font-weight: 800;
-            color: #667eea;
+            color: #C8861B;
             line-height: 1;
             margin-bottom: 10px;
         }
@@ -143,7 +142,7 @@
         }
         
         .program-badge {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #C8861B, #A66B0F);
             color: white;
             padding: 8px 20px;
             border-radius: 50px;
@@ -166,10 +165,10 @@
         }
         
         .comparison-card {
-            background: linear-gradient(135deg, #667eea15, #764ba215);
+            background: linear-gradient(135deg, #C8861B15, #A66B0F15);
             border-radius: 20px;
             padding: 30px;
-            border: 2px solid rgba(102, 126, 234, 0.3);
+            border: 2px solid rgba(200, 134, 27, 0.3);
         }
         
         .success-story {
@@ -177,7 +176,7 @@
             border-radius: 20px;
             padding: 30px;
             margin-bottom: 20px;
-            border-left: 5px solid #667eea;
+            border-left: 5px solid #C8861B;
             transition: all 0.3s ease;
         }
         
@@ -189,7 +188,7 @@
         .story-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #C8861B, #A66B0F);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -202,12 +201,12 @@
         .counter {
             font-size: 2.5rem;
             font-weight: 800;
-            color: #667eea;
+            color: #C8861B;
             display: inline-block;
         }
         
         .btn-gradient {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #C8861B, #A66B0F);
             color: white;
             border: none;
             padding: 12px 30px;
@@ -218,7 +217,7 @@
         
         .btn-gradient:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 30px rgba(200, 134, 27, 0.4);
             color: white;
         }
         
@@ -237,9 +236,9 @@
         }
         
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(200, 134, 27, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(200, 134, 27, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(200, 134, 27, 0); }
         }
     </style>
 </head>
@@ -355,7 +354,7 @@
                 <div class="col-lg-6 mb-4">
                     <div class="chart-container">
                         <h3 class="mb-4">
-                            <i class="fas fa-user-graduate me-2" style="color: #667eea;"></i>
+                            <i class="fas fa-user-graduate me-2" style="color: #C8861B;"></i>
                             Unemployment & Idleness Rate
                         </h3>
                         <canvas id="unemploymentChart" style="height: 300px; width: 100%;"></canvas>
@@ -368,7 +367,7 @@
                 <div class="col-lg-6 mb-4">
                     <div class="chart-container">
                         <h3 class="mb-4">
-                            <i class="fas fa-chart-pie me-2" style="color: #764ba2;"></i>
+                            <i class="fas fa-chart-pie me-2" style="color: #A66B0F;"></i>
                             Financial Stability Index
                         </h3>
                         <canvas id="financialChart" style="height: 300px; width: 100%;"></canvas>
@@ -486,7 +485,7 @@
             <!-- Call to Action -->
             <div class="row mt-5">
                 <div class="col-12 text-center">
-                    <div class="stat-card" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #C8861B, #A66B0F); color: white;">
                         <h2 class="mb-4">Be Part of the Solution</h2>
                         <p class="lead mb-4">Every job created, every life transformed - you can make a difference</p>
                         <a href="{{ url_for('post_job') }}" class="btn btn-light btn-lg me-3">
@@ -603,8 +602,8 @@
                     datasets: [{
                         label: 'Financial Stability Index',
                         data: {{ financial_stability|safe }},
-                        backgroundColor: 'rgba(102, 126, 234, 0.7)',
-                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(200, 134, 27, 0.7)',
+                        borderColor: '#C8861B',
                         borderWidth: 2,
                         borderRadius: 8,
                         barPercentage: 0.7

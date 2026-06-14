@@ -457,7 +457,7 @@
 <style>
   /* Quantum Tabs */
   .nav-quantum {
-    border-bottom: 2px solid rgba(102, 126, 234, 0.1);
+    border-bottom: 2px solid rgba(31, 122, 77, 0.1);
     gap: 1rem;
   }
   
@@ -473,14 +473,14 @@
   }
   
   .nav-quantum .nav-link:hover {
-    color: #667eea;
+    color: #C8861B;
     transform: translateY(-2px);
   }
   
   .nav-quantum .nav-link.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), transparent);
+    color: #C8861B;
+    border-bottom-color: #C8861B;
+    background: linear-gradient(135deg, rgba(31, 122, 77, 0.1), transparent);
   }
   
   .nav-quantum .nav-link.active::after {
@@ -490,7 +490,7 @@
     left: 0;
     right: 0;
     height: 3px;
-    background: linear-gradient(90deg, #667eea, #764ba2);
+    background: linear-gradient(90deg, #C8861B, #A66B0F);
     border-radius: 3px;
   }
   
@@ -560,7 +560,7 @@
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #f5f7fa, #e4e8f0);
-    color: #667eea;
+    color: #C8861B;
   }
   
   .media-actions {
@@ -591,16 +591,16 @@
   
   /* Upload Zone for Edit */
   .quantum-upload-zone {
-    border: 2px dashed rgba(102, 126, 234, 0.3);
+    border: 2px dashed rgba(200, 134, 27, 0.3);
     border-radius: 16px;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+    background: linear-gradient(135deg, rgba(31, 122, 77, 0.05), rgba(200, 134, 27, 0.05));
     transition: all 0.3s ease;
     cursor: pointer;
   }
   
   .quantum-upload-zone:hover {
-    border-color: rgba(102, 126, 234, 0.5);
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+    border-color: rgba(200, 134, 27, 0.5);
+    background: linear-gradient(135deg, rgba(31, 122, 77, 0.1), rgba(200, 134, 27, 0.1));
   }
   
   /* New Media Preview */
@@ -608,12 +608,12 @@
     position: relative;
     border-radius: 12px;
     overflow: hidden;
-    border: 2px solid rgba(102, 126, 234, 0.2);
+    border: 2px solid rgba(200, 134, 27, 0.2);
     transition: all 0.3s ease;
   }
   
   .new-media-card:hover {
-    border-color: rgba(102, 126, 234, 0.5);
+    border-color: rgba(200, 134, 27, 0.5);
     transform: translateY(-3px);
   }
   
@@ -772,8 +772,8 @@
     
     ['dragenter', 'dragover'].forEach(eventName => {
       uploadZone.addEventListener(eventName, () => {
-        uploadZone.style.borderColor = '#667eea';
-        uploadZone.style.background = 'linear-gradient(135deg, rgba(102, 126, 234, 0.15), rgba(118, 75, 162, 0.15))';
+        uploadZone.style.borderColor = '#C8861B';
+        uploadZone.style.background = 'linear-gradient(135deg, rgba(31, 122, 77, 0.15), rgba(200, 134, 27, 0.15))';
       }, false);
     });
     

@@ -1358,6 +1358,11 @@ def apply_job(job_id):
         flash('You cannot apply to your own job', 'warning')
         return redirect(url_for('index'))
 
+    # Recruiters post jobs, they don't apply to them
+    if current_user.is_recruiter():
+        flash('Recruiter accounts cannot apply to jobs. Switch to a worker account to apply.', 'warning')
+        return redirect(url_for('index'))
+
     # Check slots availability
     if job.status != 'open' or job.slots_remaining() <= 0:
         flash('This job is no longer accepting applicants — all positions are filled', 'warning')

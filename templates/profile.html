@@ -3,23 +3,22 @@
 
 {% block content %}
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Work+Sans:wght@300;400;500;600&display=swap');
 
   :root {
-    --profile-gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    --profile-gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    --profile-gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --profile-gradient-4: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    --profile-gradient-1: linear-gradient(135deg, #C8861B 0%, #A66B0F 100%);
+    --profile-gradient-2: linear-gradient(135deg, #E0A93E 0%, #9E2F1A 100%);
+    --profile-gradient-3: linear-gradient(135deg, #C8861B 0%, #E0A93E 100%);
+    --profile-gradient-4: linear-gradient(135deg, #1F7A4D 0%, #2FA86A 100%);
     --profile-bg-card: #ffffff;
-    --profile-bg-elevated: #f8f9fa;
+    --profile-bg-elevated: #FBFAF8;
     --profile-border: rgba(0, 0, 0, 0.08);
-    --profile-text-primary: #1a1d29;
-    --profile-text-secondary: #6b7280;
-    --profile-text-muted: #9ca3af;
+    --profile-text-primary: #1A1A1A;
+    --profile-text-secondary: #756F6A;
+    --profile-text-muted: #C9C2BC;
     --profile-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
     --profile-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-    --profile-shadow-lg: 0 12px 32px rgba(102, 126, 234, 0.15);
-    --profile-shadow-xl: 0 20px 48px rgba(102, 126, 234, 0.2);
+    --profile-shadow-lg: 0 12px 32px rgba(200, 134, 27, 0.15);
+    --profile-shadow-xl: 0 20px 48px rgba(200, 134, 27, 0.2);
     --profile-radius-sm: 12px;
     --profile-radius-md: 16px;
     --profile-radius-lg: 20px;
@@ -41,21 +40,21 @@
   .location-badge-verified {
     background: linear-gradient(135deg, rgba(67, 233, 123, 0.1) 0%, rgba(56, 249, 215, 0.1) 100%);
     border: 1.5px solid rgba(67, 233, 123, 0.3);
-    color: #059669;
+    color: #1F7A4D;
   }
 
   .location-badge-verified i {
-    color: #10b981;
+    color: #1F7A4D;
   }
 
   .location-badge-discrepancy {
     background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 87, 108, 0.1) 100%);
     border: 1.5px solid rgba(245, 158, 11, 0.3);
-    color: #b45309;
+    color: #A66B0F;
   }
 
   .location-badge-discrepancy i {
-    color: #f59e0b;
+    color: #C8861B;
   }
 
   .trust-score-badge {
@@ -64,33 +63,34 @@
     padding: 0.35rem 0.9rem;
     border-radius: 999px;
     font-size: 0.75rem;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
 
   .trust-score-high {
-    background: rgba(16, 185, 129, 0.15);
-    color: #047857;
-    border: 1px solid rgba(16, 185, 129, 0.3);
+    background: #E3F3EA;
+    color: #15603A;
+    border: 1px solid rgba(16, 185, 129, 0.35);
   }
 
   .trust-score-medium {
-    background: rgba(245, 158, 11, 0.15);
-    color: #b45309;
-    border: 1px solid rgba(245, 158, 11, 0.3);
+    background: #FBF1DD;
+    color: #8A5A0E;
+    border: 1px solid rgba(200, 134, 27, 0.4);
   }
 
   .trust-score-low {
-    background: rgba(239, 68, 68, 0.15);
-    color: #b91c1c;
-    border: 1px solid rgba(239, 68, 68, 0.3);
+    background: #FCEEE9;
+    color: #7A1F0F;
+    border: 1px solid rgba(239, 68, 68, 0.35);
   }
 
   .location-divider {
     display: inline-block;
     width: 4px;
     height: 4px;
-    background: #d1d5db;
+    background: #C9C2BC;
     border-radius: 50%;
     margin: 0 0.5rem;
   }
@@ -104,12 +104,12 @@
     display: flex;
     align-items: center;
     gap: 1rem;
-    border-left: 4px solid #dc2626;
+    border-left: 4px solid #9E2F1A;
   }
 
   .suspension-banner i {
     font-size: 1.5rem;
-    color: #dc2626;
+    color: #9E2F1A;
   }
 
   .suspension-banner-content {
@@ -118,18 +118,18 @@
 
   .suspension-banner-title {
     font-weight: 700;
-    color: #991b1b;
+    color: #7A1F0F;
     margin-bottom: 0.25rem;
   }
 
   .suspension-banner-text {
     font-size: 0.9rem;
-    color: #b91c1c;
+    color: #7A1F0F;
   }
 
   /* [Previous styles remain the same] */
   .profile-header {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
   }
 
   .profile-hero-card {
@@ -217,7 +217,7 @@
   }
 
   .profile-name {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 2rem;
     font-weight: 700;
     color: var(--profile-text-primary);
@@ -298,12 +298,12 @@
   .btn-profile-primary {
     background: var(--profile-gradient-1);
     color: white;
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 16px rgba(200, 134, 27, 0.3);
   }
 
   .btn-profile-primary:hover {
     transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 8px 24px rgba(200, 134, 27, 0.4);
     color: white;
   }
 
@@ -315,8 +315,8 @@
   }
 
   .btn-profile-outline:hover {
-    border-color: #667eea;
-    color: #667eea;
+    border-color: #C8861B;
+    color: #C8861B;
     transform: translateY(-2px);
     box-shadow: var(--profile-shadow-md);
   }
@@ -360,7 +360,7 @@
 
   .profile-section-header {
     padding: 1.5rem 1.75rem;
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(200, 134, 27, 0.05) 0%, rgba(200, 134, 27, 0.05) 100%);
     border-bottom: 2px solid var(--profile-border);
     display: flex;
     justify-content: space-between;
@@ -368,7 +368,7 @@
   }
 
   .profile-section-title {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.25rem;
     font-weight: 700;
     color: var(--profile-text-primary);
@@ -411,7 +411,7 @@
   }
 
   .job-item:hover {
-    background: linear-gradient(90deg, rgba(102, 126, 234, 0.03) 0%, transparent 100%);
+    background: linear-gradient(90deg, rgba(200, 134, 27, 0.03) 0%, transparent 100%);
   }
 
   .job-item:hover::before {
@@ -419,7 +419,7 @@
   }
 
   .job-title {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.2rem;
     font-weight: 600;
     color: var(--profile-text-primary);
@@ -451,22 +451,22 @@
 
   .status-badge.status-open {
     background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
-    color: #047857;
+    color: #15603A;
   }
 
   .status-badge.status-closed {
-    background: #e5e7eb;
-    color: #6b7280;
+    background: #C9C2BC;
+    color: #756F6A;
   }
 
   .status-badge.status-pending {
     background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
-    color: #b7791f;
+    color: #A66B0F;
   }
 
   .status-badge.status-accepted {
     background: linear-gradient(135deg, #a8e6cf 0%, #56ab2f 100%);
-    color: #0f5132;
+    color: #15603A;
   }
 
   .status-badge.status-rejected {
@@ -530,7 +530,7 @@
   }
 
   .empty-state-title {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.3rem;
     font-weight: 600;
     color: var(--profile-text-secondary);
@@ -544,7 +544,7 @@
 
   /* Sidebar Stats Card */
   .stats-card {
-    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    background: linear-gradient(135deg, rgba(200, 134, 27, 0.05) 0%, rgba(200, 134, 27, 0.05) 100%);
     border-radius: var(--profile-radius-lg);
     padding: 1.75rem;
     border: 1px solid var(--profile-border);
@@ -553,7 +553,7 @@
   }
 
   .stats-card-title {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--profile-text-primary);
@@ -595,11 +595,11 @@
   }
 
   .stat-value.highlight {
-    color: #667eea;
+    color: #C8861B;
   }
 
   .stat-value.danger {
-    color: #f5576c;
+    color: #9E2F1A;
   }
 
   /* Quick Links Card */
@@ -613,7 +613,7 @@
   }
 
   .quick-links-title {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Plus Jakarta Sans', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     color: var(--profile-text-primary);
@@ -651,8 +651,8 @@
 
   .quick-link-btn:hover {
     transform: translateX(5px);
-    border-color: #667eea;
-    color: #667eea;
+    border-color: #C8861B;
+    color: #C8861B;
     box-shadow: var(--profile-shadow-sm);
   }
 
@@ -660,11 +660,11 @@
     background: var(--profile-gradient-1);
     color: white;
     border: none;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 4px 12px rgba(200, 134, 27, 0.3);
   }
 
   .quick-link-btn.primary:hover {
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 6px 20px rgba(200, 134, 27, 0.4);
     color: white;
   }
 
@@ -690,7 +690,7 @@
   }
 
   .job-preview:hover {
-    background: rgba(102, 126, 234, 0.05);
+    background: rgba(200, 134, 27, 0.05);
   }
 
   .job-preview-title {
@@ -831,7 +831,7 @@
               {% endif %}
               {% if user.real_city %}
                 <div class="profile-meta-item">
-                  <i class="bi bi-pin-map-fill" style="color: #10b981;"></i>
+                  <i class="bi bi-pin-map-fill" style="color: #1F7A4D;"></i>
                   <span>{{ user.real_city }}{% if user.real_country %}, {{ user.real_country }}{% endif %}</span>
                 </div>
               {% endif %}
@@ -957,8 +957,8 @@
                           </video>
                         </div>
                       {% else %}
-                        <a href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank" class="media-item" style="display:flex;align-items:center;justify-content:center;background:#f3f4f6;">
-                          <i class="bi bi-file-earmark" style="font-size:2rem;color:#9ca3af;"></i>
+                        <a href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank" class="media-item" style="display:flex;align-items:center;justify-content:center;background:#FBFAF8;">
+                          <i class="bi bi-file-earmark" style="font-size:2rem;color:#C9C2BC;"></i>
                         </a>
                       {% endif %}
                     {% endfor %}
@@ -978,7 +978,7 @@
                         onsubmit="return confirm('Delete this job? This action cannot be undone.')">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button class="btn-profile-modern btn-profile-sm" 
-                            style="background: linear-gradient(135deg, #ff6b9d 0%, #f5576c 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);">
+                            style="background: linear-gradient(135deg, #ff6b9d 0%, #9E2F1A 100%); color: white; border: none; box-shadow: 0 4px 12px rgba(245, 87, 108, 0.3);">
                       <i class="bi bi-trash-fill"></i> Delete
                     </button>
                   </form>
@@ -1014,8 +1014,8 @@
       </div>
     </div>
 
-    <!-- Applications Section (Own Profile Only) -->
-    {% if is_own_profile %}
+    <!-- Applications Section (Workers only, own profile) -->
+    {% if is_own_profile and current_user.is_worker() %}
     <div class="profile-section-card">
       <div class="profile-section-header">
         <h2 class="profile-section-title">
@@ -1150,41 +1150,21 @@
       </h3>
       <div>
         {% if is_own_profile %}
-          <a class="quick-link-btn primary" href="{{ url_for('post_job') }}">
-            <i class="bi bi-plus-circle-fill"></i>
-            <span>Post a Job</span>
-          </a>
-          <a class="quick-link-btn" href="{{ url_for('location_verify') }}">
+          {% if current_user.is_recruiter() %}
+            <a class="quick-link-btn primary" href="{{ url_for('post_job') }}">
+              <i class="bi bi-plus-circle-fill"></i>
+              <span>Post a Job</span>
+            </a>
+          {% endif %}
+          <a class="quick-link-btn {% if not current_user.is_recruiter() %}primary{% endif %}" href="{{ url_for('location_verify') }}">
             <i class="bi bi-geo-alt-fill"></i>
             <span>Verify Location</span>
             {% if not user.real_city %}
               <span class="quick-link-badge">!</span>
             {% endif %}
           </a>
-          <a class="quick-link-btn" href="{{ url_for('jobs_nearby') }}">
-            <i class="bi bi-pin-map-fill"></i>
-            <span>Jobs Near Me</span>
-          </a>
-          <a class="quick-link-btn" href="{{ url_for('messages_list') }}">
-            <i class="bi bi-chat-dots-fill"></i>
-            <span>Messages</span>
-            {% if unread_messages > 0 %}
-              <span class="quick-link-badge">{{ unread_messages }}</span>
-            {% endif %}
-          </a>
-          <a class="quick-link-btn" href="{{ url_for('notifications_page') }}">
-            <i class="bi bi-bell-fill"></i>
-            <span>Notifications</span>
-            {% if unread_count > 0 %}
-              <span class="quick-link-badge">{{ unread_count }}</span>
-            {% endif %}
-          </a>
-          <a class="quick-link-btn" href="{{ url_for('all_users') }}">
-            <i class="bi bi-people-fill"></i>
-            <span>Browse Users</span>
-          </a>
           {% if current_user.is_admin %}
-            <a class="quick-link-btn" href="{{ url_for('admin_dashboard') }}" style="border-color: #667eea; color: #667eea;">
+            <a class="quick-link-btn" href="{{ url_for('admin_dashboard') }}" style="border-color: #C8861B; color: #C8861B;">
               <i class="bi bi-shield-lock-fill"></i>
               <span>Admin Dashboard</span>
             </a>

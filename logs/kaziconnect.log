@@ -1,3 +1,2 @@
-2026-06-13 20:48:00,754 INFO: KaziConnect production startup [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:2383]
-2026-06-13 20:50:33,712 INFO: KaziConnect production startup [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:2383]
-2026-06-13 20:50:33,969 INFO: DEFAULT_ADMIN_EMAIL/PASSWORD not set; skipping default admin creation [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:568]
+2026-06-14 08:34:02,852 INFO: KaziConnect production startup [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:2388]
+2026-06-14 08:34:02,856 INFO: DEFAULT_ADMIN_EMAIL/PASSWORD not set; skipping default admin creation [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:568]

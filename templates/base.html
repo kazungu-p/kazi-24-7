@@ -117,11 +117,23 @@
               </li>
 
               <!-- Notifications -->
-              <li class="nav-item">
-                <a class="icon-btn" href="{{ url_for('notifications_page') }}" title="Notifications">
+              <li class="nav-item dropdown">
+                <a class="icon-btn" href="#" role="button" id="notifBellToggle"
+                   data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
                   <i class="bi bi-bell"></i>
                   <span id="notifications-badge" class="nav-badge-kazi" style="display:none;"></span>
                 </a>
+                <div class="dropdown-menu dropdown-menu-end notif-panel" id="notifPanel">
+                  <div class="notif-panel-header">
+                    <span>Notifications</span>
+                    <button type="button" class="notif-mark-all" id="notifMarkAll">Mark all read</button>
+                  </div>
+                  <div class="notif-panel-body" id="notifPanelBody">
+                    <div class="notif-empty">
+                      <span class="loading-spinner"></span>
+                    </div>
+                  </div>
+                </div>
               </li>
 
               <!-- Profile dropdown -->
@@ -151,36 +163,21 @@
                       <i class="bi bi-pencil"></i> Edit Profile
                     </a>
                   </li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li>
-                    <a class="dropdown-item" href="{{ url_for('post_job') }}">
-                      <i class="bi bi-plus-circle"></i> Post a Job
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="{{ url_for('profile') }}#applications">
-                      <i class="bi bi-file-text"></i> My Applications
-                    </a>
-                  </li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li>
-                    <a class="dropdown-item" href="{{ url_for('messages_list') }}">
-                      <i class="bi bi-chat-dots"></i> Messages
-                      <span id="dropdown-messages-badge" class="badge bg-danger ms-auto" style="display:none;"></span>
-                    </a>
-                  </li>
-                  <li>
-                    <a class="dropdown-item" href="{{ url_for('notifications_page') }}">
-                      <i class="bi bi-bell"></i> Notifications
-                      <span id="dropdown-notifications-badge" class="badge bg-danger ms-auto" style="display:none;"></span>
-                    </a>
-                  </li>
-                  <li><hr class="dropdown-divider"></li>
-                  <li>
-                    <a class="dropdown-item" href="{{ url_for('jobs_nearby') }}">
-                      <i class="bi bi-pin-map"></i> Jobs Near Me
-                    </a>
-                  </li>
+                  {% if current_user.is_recruiter() %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item" href="{{ url_for('post_job') }}">
+                        <i class="bi bi-plus-circle"></i> Post a Job
+                      </a>
+                    </li>
+                  {% else %}
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                      <a class="dropdown-item" href="{{ url_for('profile') }}#applications">
+                        <i class="bi bi-file-text"></i> My Applications
+                      </a>
+                    </li>
+                  {% endif %}
                   {% if current_user.is_admin %}
                     <li><hr class="dropdown-divider"></li>
                     <li>
@@ -239,13 +236,6 @@
 
       {% block content %}{% endblock %}
     </main>
-
-    <!-- Floating "Post a Job" button -->
-    {% if current_user.is_authenticated and request.endpoint != 'post_job' %}
-      <a href="{{ url_for('post_job') }}" class="fab-post-job" title="Post a Job">
-        <i class="bi bi-plus-lg"></i>
-      </a>
-    {% endif %}
 
     <!-- Media Preview Modal -->
     <div class="modal fade" id="mediaModal" tabindex="-1" aria-hidden="true">
@@ -324,18 +314,14 @@
             const d = await mRes.json();
             const cnt = d.count || 0;
             const b = document.getElementById('messages-badge');
-            const db = document.getElementById('dropdown-messages-badge');
             if (b) { b.style.display = cnt > 0 ? 'flex' : 'none'; b.textContent = cnt > 99 ? '99+' : cnt; }
-            if (db) { db.style.display = cnt > 0 ? 'inline-block' : 'none'; db.textContent = cnt > 99 ? '99+' : cnt; }
           }
 
           if (nRes.ok) {
             const d = await nRes.json();
             const cnt = d.count || 0;
             const b = document.getElementById('notifications-badge');
-            const db = document.getElementById('dropdown-notifications-badge');
             if (b) { b.style.display = cnt > 0 ? 'flex' : 'none'; b.textContent = cnt > 99 ? '99+' : cnt; }
-            if (db) { db.style.display = cnt > 0 ? 'inline-block' : 'none'; db.textContent = cnt > 99 ? '99+' : cnt; }
           }
           {% endif %}
         } catch (e) { /* silent */ }
@@ -345,6 +331,68 @@
         {% if current_user.is_authenticated %}
           fetchAndUpdateBadges();
           setInterval(fetchAndUpdateBadges, 20000);
+
+          // Notification dropdown panel
+          const notifBell = document.getElementById('notifBellToggle');
+          const notifBody = document.getElementById('notifPanelBody');
+          const notifMarkAll = document.getElementById('notifMarkAll');
+
+          function timeAgo(iso) {
+            const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            return Math.floor(diff / 86400) + 'd ago';
+          }
+
+          function renderNotifications(notifs) {
+            if (!notifs.length) {
+              notifBody.innerHTML = '<div class="notif-empty"><i class="bi bi-bell-slash" style="font-size:1.5rem;"></i><div class="mt-2">No notifications yet</div></div>';
+              return;
+            }
+            notifBody.innerHTML = notifs.map(function (n) {
+              const href = n.target_url || '#';
+              return '<a href="' + href + '" class="notif-item ' + (n.read ? 'read' : 'unread') + '">' +
+                '<span class="notif-dot"></span>' +
+                '<div>' +
+                  '<div class="notif-text">' + n.message + '</div>' +
+                  '<div class="notif-time">' + timeAgo(n.created_at) + '</div>' +
+                '</div>' +
+              '</a>';
+            }).join('');
+          }
+
+          function loadNotifications() {
+            fetch('{{ url_for("notifications_list") }}', { credentials: 'same-origin' })
+              .then(r => r.ok ? r.json() : [])
+              .then(renderNotifications)
+              .catch(() => { notifBody.innerHTML = '<div class="notif-empty">Could not load notifications</div>'; });
+          }
+
+          if (notifBell) {
+            notifBell.addEventListener('show.bs.dropdown', loadNotifications);
+            notifBell.addEventListener('hidden.bs.dropdown', function () {
+              // Mark all as read once the panel is closed, then refresh badge
+              fetch('{{ url_for("notifications_mark_read") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({})
+              }).then(() => fetchAndUpdateBadges()).catch(() => {});
+            });
+          }
+
+          if (notifMarkAll) {
+            notifMarkAll.addEventListener('click', function (e) {
+              e.preventDefault();
+              fetch('{{ url_for("notifications_mark_read") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify({})
+              }).then(() => { loadNotifications(); fetchAndUpdateBadges(); }).catch(() => {});
+            });
+          }
         {% endif %}
 
         // Auto-dismiss alerts after 6 s

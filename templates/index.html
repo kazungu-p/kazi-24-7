@@ -271,7 +271,7 @@
             </div>
             <div class="d-flex gap-2 align-items-center">
               {% if current_user.is_authenticated %}
-                {% if job.slots_remaining() > 0 %}
+                {% if current_user.is_worker() and job.slots_remaining() > 0 %}
                 <form action="{{ url_for('apply_job', job_id=job.id) }}" method="post" style="margin:0;">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <button class="btn btn-success btn-sm" type="submit">
