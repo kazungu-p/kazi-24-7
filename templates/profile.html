@@ -394,6 +394,84 @@
     position: relative;
   }
 
+  /* Queue visibility panel */
+  .queue-panel {
+    margin-top: .75rem;
+    padding: .75rem 1rem;
+    background: var(--cream, #FBFAF8);
+    border: 1px solid var(--dust, #C9C2BC);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+  }
+  .queue-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: .8rem;
+  }
+  .queue-label { color: var(--stone, #756F6A); }
+  .queue-value { font-weight: 700; color: var(--ink, #1A1A1A); }
+  .text-success { color: var(--sage, #1F7A4D) !important; }
+  .text-danger  { color: var(--danger-fg, #9E2F1A) !important; }
+
+  .queue-bar-wrap { margin-top: .25rem; }
+  .queue-bar {
+    position: relative;
+    height: 8px;
+    background: var(--dust, #C9C2BC);
+    border-radius: 999px;
+    overflow: visible;
+    margin-bottom: .3rem;
+  }
+  .queue-bar-fill {
+    height: 100%;
+    background: var(--sage, #1F7A4D);
+    border-radius: 999px;
+    transition: width .4s ease;
+  }
+  .queue-marker {
+    position: absolute;
+    top: -4px;
+    width: 16px;
+    height: 16px;
+    background: var(--clay, #C8861B);
+    border: 2px solid #fff;
+    border-radius: 50%;
+    transform: translateX(-50%);
+    box-shadow: 0 2px 6px rgba(0,0,0,.2);
+  }
+  .queue-bar-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: .7rem;
+    color: var(--stone, #756F6A);
+  }
+
+  .queue-alert {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .5rem;
+    padding: .5rem .75rem;
+    border-radius: 8px;
+    font-size: .8rem;
+    font-weight: 600;
+    border-left: 3px solid;
+  }
+  .queue-alert-good {
+    background: var(--sage-light, #E3F3EA);
+    color: var(--sage, #1F7A4D);
+    border-color: var(--sage, #1F7A4D);
+  }
+  .queue-alert-warn {
+    background: var(--clay-light, #FBF1DD);
+    color: var(--clay-dark, #A66B0F);
+    border-color: var(--clay, #C8861B);
+  }
+
+
   .job-item:last-child {
     border-bottom: none;
   }
@@ -452,6 +530,26 @@
   .status-badge.status-open {
     background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
     color: #15603A;
+  }
+
+  .status-badge.status-filled {
+    background: var(--clay-light, #FBF1DD);
+    color: var(--clay-dark, #A66B0F);
+  }
+
+  .status-badge.status-in_progress {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    color: #A66B0F;
+  }
+
+  .status-badge.status-completed {
+    background: linear-gradient(135deg, #a8e6cf 0%, #56ab2f 100%);
+    color: #15603A;
+  }
+
+  .status-badge.status-cancelled {
+    background: #FCEEE9;
+    color: #7A1F0F;
   }
 
   .status-badge.status-closed {
@@ -928,7 +1026,7 @@
                   <span><i class="bi bi-briefcase"></i> Job Location: {{ j.location }}</span>
                   <span class="location-divider"></span>
                   <span><i class="bi bi-calendar-fill"></i> {% if j.created_at %}{{ j.created_at.strftime('%b %d, %Y') }}{% else %}<span class="text-muted">Unknown date</span>{% endif %}</span>
-                  <span class="status-badge status-{{ j.status }}">{{ j.status|capitalize }}</span>
+                  <span class="status-badge status-{{ j.status }}">{{ j.status_label() }}</span>
                 </div>
 
                 <!-- POSTER'S REAL LOCATION BADGE -->
@@ -983,7 +1081,7 @@
                     </button>
                   </form>
                 {% else %}
-                  {% if j.status == 'open' and not user.burned %}
+                  {% if j.status == 'open' and not user.burned and current_user.is_worker() %}
                     <form method="post" action="{{ url_for('apply_job', job_id=j.id) }}">
                       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                       <button class="btn-profile-modern btn-profile-primary btn-profile-sm">
@@ -1022,39 +1120,127 @@
           <i class="bi bi-file-earmark-text-fill"></i>
           Your Applications
         </h2>
+        <span class="text-muted small">{{ applications|length }} total</span>
       </div>
 
       <div>
         {% for app in applications %}
-          <div class="job-item">
-            <div class="d-flex justify-content-between align-items-start gap-3">
+          {% set meta = application_meta.get(app.id, {}) %}
+          {% set total = meta.get('total_applicants', 0) %}
+          {% set position = meta.get('queue_position', 0) %}
+          {% set accepted = meta.get('accepted_count', 0) %}
+          {% set slots = app.job.slots_total or 1 %}
+          {% set remaining = [slots - accepted, 0]|max %}
+
+          <div class="job-item" style="border-left: 3px solid
+            {% if app.status == 'accepted' %}var(--sage)
+            {% elif app.status == 'rejected' %}var(--danger-fg)
+            {% elif app.job.status in ('completed','cancelled') %}var(--dust)
+            {% else %}var(--clay){% endif %};">
+
+            <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
               <div class="flex-grow-1">
-                <h3 class="job-title">{{ app.job.title }}</h3>
-                <div class="job-meta-info">
-                  <span><i class="bi bi-calendar-fill"></i> Applied on {% if app.applied_at %}{{ app.applied_at.strftime('%b %d, %Y at %I:%M %p') }}{% else %}<span class="text-muted">Unknown date</span>{% endif %}</span>
+                <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                  <h3 class="job-title mb-0">{{ app.job.title }}</h3>
                   <span class="status-badge status-{{ app.status }}">{{ app.status|capitalize }}</span>
+                  <span class="status-badge status-{{ app.job.status }}" style="font-size:.65rem;">
+                    Job: {{ app.job.status_label() }}
+                  </span>
                 </div>
-                <!-- Show where the job poster is located -->
-                {% if app.job.poster.real_city %}
-                <div class="location-badge location-badge-verified">
-                  <i class="bi bi-pin-map-fill"></i>
-                  <span>Posted from: <strong>{{ app.job.poster.real_city }}{% if app.job.poster.real_country %}, {{ app.job.poster.real_country }}{% endif %}</strong></span>
+
+                <div class="job-meta-info mb-2">
+                  <span><i class="bi bi-geo-alt"></i> {{ app.job.location }}</span>
+                  <span><i class="bi bi-cash-stack"></i> {{ app.job.pay_label() }}</span>
+                  <span><i class="bi bi-calendar"></i> Applied {{ app.applied_at.strftime('%b %d, %Y') if app.applied_at }}</span>
                 </div>
+
+                <!-- Queue visibility panel -->
+                {% if app.status == 'pending' and app.job.status in ('open', 'filled') %}
+                  <div class="queue-panel">
+                    <div class="queue-stat">
+                      <span class="queue-label">Your position</span>
+                      <span class="queue-value">#{{ position }} of {{ total }}</span>
+                    </div>
+                    <div class="queue-stat">
+                      <span class="queue-label">Slots</span>
+                      <span class="queue-value">{{ accepted }} / {{ slots }} filled</span>
+                    </div>
+                    <div class="queue-stat">
+                      <span class="queue-label">Still open</span>
+                      <span class="queue-value {% if remaining == 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ remaining }} slot{{ 's' if remaining != 1 else '' }}
+                      </span>
+                    </div>
+                    <!-- Progress bar: slots filled -->
+                    <div class="queue-bar-wrap">
+                      <div class="queue-bar">
+                        <div class="queue-bar-fill" style="width:{{ [(accepted / slots * 100), 100]|min }}%"></div>
+                        {% if total > 0 %}
+                          <!-- Your position marker -->
+                          <div class="queue-marker" style="left:{{ [(position / total * 100), 98]|min }}%"
+                               title="Your position: #{{ position }}"></div>
+                        {% endif %}
+                      </div>
+                      <div class="queue-bar-labels">
+                        <span>{{ accepted }} accepted</span>
+                        <span>{{ total }} applicant{{ 's' if total != 1 else '' }}</span>
+                      </div>
+                    </div>
+                    {% if remaining == 0 %}
+                      <div class="queue-alert queue-alert-warn">
+                        <i class="bi bi-exclamation-circle"></i>
+                        All slots are filled — you may still be accepted if someone withdraws
+                      </div>
+                    {% elif position <= slots %}
+                      <div class="queue-alert queue-alert-good">
+                        <i class="bi bi-check-circle"></i>
+                        You're within the first {{ slots }} position{{ 's' if slots != 1 else '' }} — looking good!
+                      </div>
+                    {% endif %}
+                  </div>
+
+                {% elif app.status == 'accepted' %}
+                  <div class="queue-alert queue-alert-good">
+                    <i class="bi bi-check-circle-fill"></i>
+                    You're hired for this job — check messages for details from the recruiter
+                  </div>
+
+                {% elif app.status == 'rejected' %}
+                  <div class="queue-alert queue-alert-warn">
+                    <i class="bi bi-x-circle"></i>
+                    Not selected for this one — browse open jobs for new opportunities
+                  </div>
+
+                {% elif app.job.status == 'in_progress' and app.status == 'accepted' %}
+                  <div class="queue-alert queue-alert-good">
+                    <i class="bi bi-play-circle-fill"></i>
+                    This job is currently in progress
+                  </div>
+
+                {% elif app.job.status == 'completed' %}
+                  <div class="queue-alert" style="background:var(--sage-light); color:var(--sage); border-color:var(--sage);">
+                    <i class="bi bi-flag-fill"></i>
+                    Job completed on {{ app.job.completed_at.strftime('%b %d, %Y') if app.job.completed_at }}
+                  </div>
                 {% endif %}
+
               </div>
-              <div>
-                <a href="{{ url_for('messages_conversation', other_id=app.job.poster_id) }}" 
+
+              <div class="d-flex flex-column gap-2">
+                <a href="{{ url_for('messages_conversation', other_id=app.job.poster_id) }}"
                    class="btn-profile-modern btn-profile-outline btn-profile-sm">
                   <i class="bi bi-chat-dots-fill"></i> Contact Poster
+                </a>
+                <a href="{{ url_for('job_detail', job_id=app.job.id) }}"
+                   class="btn-profile-modern btn-profile-outline btn-profile-sm">
+                  <i class="bi bi-eye"></i> View Job
                 </a>
               </div>
             </div>
           </div>
         {% else %}
           <div class="empty-state">
-            <div class="empty-state-icon">
-              <i class="bi bi-inbox"></i>
-            </div>
+            <div class="empty-state-icon"><i class="bi bi-inbox"></i></div>
             <h3 class="empty-state-title">No Applications Yet</h3>
             <p class="empty-state-text">You have not applied to any jobs yet.</p>
             <a href="{{ url_for('index') }}" class="btn-profile-modern btn-profile-primary">

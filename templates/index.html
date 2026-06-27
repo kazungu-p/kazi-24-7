@@ -172,17 +172,24 @@
   <div class="d-flex justify-content-between align-items-end flex-wrap gap-3">
     <div>
       <p class="section-label mb-1">KaziConnect</p>
-      <h1>Open <em>Opportunities</em></h1>
-      <p class="mt-1 mb-0" style="color:var(--stone); font-size:.95rem;">
-        Discover jobs and apply in one click
-      </p>
+      {% if view == 'recruiter' %}
+        <h1>Your <em>Opportunities</em></h1>
+        <p class="mt-1 mb-0" style="color:var(--stone); font-size:.95rem;">Jobs and opportunities you&#39;ve posted</p>
+      {% else %}
+        <h1>Open <em>Opportunities</em></h1>
+        <p class="mt-1 mb-0" style="color:var(--stone); font-size:.95rem;">
+          {% if current_user.is_authenticated and job_distances %}Sorted by distance from your location{% else %}Discover jobs and apply in one click{% endif %}
+        </p>
+      {% endif %}
     </div>
     <div class="d-flex gap-2 flex-wrap">
       {% if current_user.is_authenticated %}
-        <a class="btn btn-primary" href="{{ url_for('post_job') }}">
-          <i class="bi bi-plus-lg"></i> Post a Job
-        </a>
-        <a class="btn btn-outline-secondary" href="{{ url_for('messages_list') }}" style="position:relative;">
+        {% if current_user.is_recruiter() %}
+          <a class="btn btn-primary" href="{{ url_for('post_job') }}">
+            <i class="bi bi-plus-lg"></i> Post a Job
+          </a>
+        {% endif %}
+        <a class="btn btn-outline-secondary" href="{{ url_for('messages_list') }}">
           <i class="bi bi-chat-dots"></i> Messages
         </a>
       {% else %}
@@ -270,7 +277,15 @@
               </div>
             </div>
             <div class="d-flex gap-2 align-items-center">
-              {% if current_user.is_authenticated %}
+              {% if view == 'recruiter' %}
+                <a class="btn btn-primary btn-sm" href="{{ url_for('job_applications', job_id=job.id) }}">
+                  <i class="bi bi-people"></i> Applicants
+                  {% if job.slots_filled > 0 %}<span class="badge bg-light text-dark ms-1">{{ job.slots_filled }}/{{ job.slots_total }}</span>{% endif %}
+                </a>
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('edit_job', job_id=job.id) }}">
+                  <i class="bi bi-pencil"></i>
+                </a>
+              {% elif current_user.is_authenticated %}
                 {% if current_user.is_worker() and job.slots_remaining() > 0 %}
                 <form action="{{ url_for('apply_job', job_id=job.id) }}" method="post" style="margin:0;">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -283,14 +298,17 @@
                     <i class="bi bi-x-circle"></i> Full
                   </button>
                 {% endif %}
+                <a class="btn btn-primary btn-sm" href="{{ url_for('job_detail', job_id=job.id) }}">
+                  Details
+                </a>
               {% else %}
                 <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('login') }}">
                   <i class="bi bi-lock"></i> Login
                 </a>
+                <a class="btn btn-primary btn-sm" href="{{ url_for('job_detail', job_id=job.id) }}">
+                  Details
+                </a>
               {% endif %}
-              <a class="btn btn-primary btn-sm" href="{{ url_for('job_detail', job_id=job.id) }}">
-                Details
-              </a>
               <button class="btn btn-outline-secondary btn-sm copy-btn"
                       data-copy-text="{{ url_for('job_detail', job_id=job.id, _external=true) }}"
                       title="Copy link">
@@ -301,7 +319,9 @@
         </div>
 
         <div class="job-footer-bar">
-          <span style="font-weight:600;">#{{ job.id }}</span>
+          <span style="font-weight:600; font-size:.75rem; color:var(--stone);">
+            {{ job.job_ref or ('#' ~ job.id) }}
+          </span>
           <button class="btn btn-outline-secondary btn-sm copy-desc-btn" data-target="#desc-{{ job.id }}">
             <i class="bi bi-clipboard"></i> Copy desc
           </button>
@@ -311,12 +331,15 @@
   {% else %}
     <div class="empty-state">
       <i class="bi bi-inbox"></i>
-      <h2>No open jobs yet</h2>
-      <p>Be the first to post an opportunity for the community</p>
-      {% if current_user.is_authenticated %}
+      {% if view == 'recruiter' %}
+        <h2>No jobs posted yet</h2>
+        <p>Create your first job posting to start hiring</p>
         <a class="btn btn-primary mt-3" href="{{ url_for('post_job') }}">
-          <i class="bi bi-plus-lg"></i> Post a Job
+          <i class="bi bi-plus-lg"></i> Post Your First Job
         </a>
+      {% else %}
+        <h2>No open jobs yet</h2>
+        <p>Check back soon or expand your search area</p>
       {% endif %}
     </div>
   {% endif %}

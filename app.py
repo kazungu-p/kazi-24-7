@@ -17,6 +17,8 @@ Setup Instructions:
 
 import os
 import re
+import secrets
+import string
 import requests
 import bleach
 from datetime import datetime, timezone, timedelta
@@ -278,6 +280,7 @@ class Job(db.Model):
     __tablename__ = 'job'
     
     id = db.Column(db.Integer, primary_key=True)
+    job_ref = db.Column(db.String(12), unique=True, nullable=True, index=True)  # e.g. KZJ-A3F9X2
     title = db.Column(db.String(120), nullable=False)
     description = db.Column(db.Text, nullable=False)
     location = db.Column(db.String(120), nullable=False)
@@ -285,7 +288,7 @@ class Job(db.Model):
     longitude = db.Column(db.Float, nullable=True)
     requirements = db.Column(db.Text, nullable=False)
     poster_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    status = db.Column(db.String(20), default='open')  # open, filled, closed
+    status = db.Column(db.String(20), default='open')  # open, filled, in_progress, completed, cancelled
 
     # Pay & staffing
     pay_amount = db.Column(db.Float, nullable=True)
@@ -295,6 +298,8 @@ class Job(db.Model):
 
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    started_at = db.Column(db.DateTime, nullable=True)
+    completed_at = db.Column(db.DateTime, nullable=True)
     
     # Relationships
     applications = db.relationship('JobApplication', backref='job', lazy=True, cascade='all, delete-orphan')
@@ -310,6 +315,24 @@ class Job(db.Model):
             return 'Pay not specified'
         suffix = {'per_hour': ' / hour', 'per_day': ' / day', 'fixed': ' total'}.get(self.pay_type, '')
         return f'KES {self.pay_amount:,.0f}{suffix}'
+
+    def status_label(self):
+        """Human-friendly status text"""
+        return {
+            'open': 'Open',
+            'filled': 'Filled',
+            'in_progress': 'In Progress',
+            'completed': 'Completed',
+            'cancelled': 'Cancelled',
+        }.get(self.status, self.status.title())
+
+    def can_start(self):
+        """Recruiter can move job to in_progress once at least one worker is accepted"""
+        return self.status in ('open', 'filled') and self.slots_filled > 0
+
+    def can_complete(self):
+        """Recruiter can mark job completed once it's in progress"""
+        return self.status == 'in_progress'
 
     def __repr__(self):
         return f'<Job {self.title}>'
@@ -429,6 +452,16 @@ def sanitize_html(content):
     allowed_attributes = {}
     
     return bleach.clean(content, tags=allowed_tags, attributes=allowed_attributes, strip=True)
+
+
+def generate_job_ref():
+    """Generate a unique 6-char alphanumeric job reference, e.g. KZJ-A3F9X2"""
+    chars = string.ascii_uppercase + string.digits
+    while True:
+        code = ''.join(secrets.choice(chars) for _ in range(6))
+        ref = f'KZJ-{code}'
+        if not Job.query.filter_by(job_ref=ref).first():
+            return ref
 
 
 def haversine_km(lat1, lon1, lat2, lon2):
@@ -676,10 +709,21 @@ def internal_error(error):
 
 @app.route('/')
 def index():
-    """Homepage with job listings"""
-    jobs = Job.query.filter_by(status='open').order_by(Job.created_at.desc()).limit(50).all()
+    """Homepage — recruiters see their posted jobs, workers see open jobs sorted by distance"""
 
-    # Compute distance/ETA from the current user's location to each job (if available)
+    if current_user.is_authenticated and current_user.is_recruiter():
+        # Recruiters see their own posted jobs
+        jobs = Job.query.filter_by(
+            poster_id=current_user.id
+        ).order_by(Job.created_at.desc()).limit(50).all()
+        job_distances = {}
+        return render_template('index.html', jobs=jobs, job_distances=job_distances, view='recruiter')
+
+    # Workers (and guests): open jobs within a broad range, sorted by distance
+    jobs = Job.query.filter(
+        Job.status.in_(['open', 'filled'])
+    ).order_by(Job.created_at.desc()).limit(100).all()
+
     job_distances = {}
     if current_user.is_authenticated:
         worker_lat = current_user.latitude or current_user.real_latitude
@@ -689,7 +733,11 @@ def index():
             if dist is not None:
                 job_distances[job.id] = {'distance_km': dist, 'eta_min': estimate_travel_minutes(dist)}
 
-    return render_template('index.html', jobs=jobs, job_distances=job_distances)
+        # Sort by distance if we have location, otherwise by date
+        if job_distances:
+            jobs = sorted(jobs, key=lambda j: job_distances.get(j.id, {}).get('distance_km', float('inf')))
+
+    return render_template('index.html', jobs=jobs, job_distances=job_distances, view='worker')
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -725,6 +773,17 @@ def register():
 
         if role not in ('worker', 'recruiter'):
             flash('Please select whether you are looking for work or posting jobs', 'danger')
+            return redirect(url_for('register'))
+
+        # National ID: required, digits only, minimum 8 digits
+        if not national_id:
+            flash('National ID number is required', 'danger')
+            return redirect(url_for('register'))
+        if not national_id.isdigit():
+            flash('National ID must contain numbers only', 'danger')
+            return redirect(url_for('register'))
+        if len(national_id) < 8:
+            flash('National ID must be at least 8 digits', 'danger')
             return redirect(url_for('register'))
         
         if not validate_email(email):
@@ -924,10 +983,30 @@ def profile(user_id=None):
     
     # Get applications (only for own profile)
     applications = []
+    application_meta = {}  # keyed by application.id: {total_applicants, queue_position, ahead_accepted}
     if is_own_profile:
         applications = JobApplication.query.filter_by(
             applicant_id=current_user.id
         ).order_by(JobApplication.applied_at.desc()).all()
+
+        # For each application, compute queue data
+        for app in applications:
+            # Total applicants for this job
+            total = JobApplication.query.filter_by(job_id=app.job_id).count()
+            # Queue position: how many applied before this worker
+            position = JobApplication.query.filter(
+                JobApplication.job_id == app.job_id,
+                JobApplication.applied_at < app.applied_at
+            ).count() + 1
+            # How many accepted so far
+            accepted = JobApplication.query.filter_by(
+                job_id=app.job_id, status='accepted'
+            ).count()
+            application_meta[app.id] = {
+                'total_applicants': total,
+                'queue_position': position,
+                'accepted_count': accepted,
+            }
     
     # Get available jobs to apply
     applied_job_ids_query = db.session.query(JobApplication.job_id).filter_by(
@@ -954,6 +1033,7 @@ def profile(user_id=None):
         is_own_profile=is_own_profile,
         posted_jobs=posted_jobs,
         applications=applications,
+        application_meta=application_meta,
         available_jobs=available_jobs,
         unread_count=unread_count,
         unread_messages=unread_messages
@@ -1098,7 +1178,8 @@ def post_job():
             pay_amount=pay_amount,
             pay_type=pay_type,
             slots_total=slots_total,
-            slots_filled=0
+            slots_filled=0,
+            job_ref=generate_job_ref()
         )
         
         # Handle media uploads
@@ -1163,6 +1244,8 @@ def edit_job(job_id):
         location = request.form.get('location', '').strip()
         requirements = request.form.get('requirements', '').strip()
         status = request.form.get('status', job.status)
+        if status not in ('open', 'filled', 'in_progress', 'completed', 'cancelled'):
+            status = job.status
         
         # Validation
         if not all([title, description, location, requirements]):
@@ -1440,6 +1523,10 @@ def update_application_status(application_id):
     job = application.job
     old_status = application.status
 
+    if job.status in ('in_progress', 'completed', 'cancelled'):
+        flash('This job has already started — applications can no longer be changed', 'warning')
+        return redirect(url_for('job_applications', job_id=application.job_id))
+
     # Guard: don't accept beyond available slots
     if new_status == 'accepted' and old_status != 'accepted' and job.slots_remaining() <= 0:
         flash('Cannot accept — all slots for this job are already filled', 'warning')
@@ -1454,11 +1541,12 @@ def update_application_status(application_id):
         elif old_status == 'accepted' and new_status != 'accepted':
             job.slots_filled = max(0, (job.slots_filled or 0) - 1)
 
-        # Update job status based on staffing level
-        if job.slots_filled >= job.slots_total:
-            job.status = 'filled'
-        elif job.status == 'filled' and job.slots_filled < job.slots_total:
-            job.status = 'open'
+        # Update job status based on staffing level (only while job hasn't started)
+        if job.status in ('open', 'filled'):
+            if job.slots_filled >= job.slots_total:
+                job.status = 'filled'
+            elif job.slots_filled < job.slots_total:
+                job.status = 'open'
 
         db.session.commit()
         
@@ -1477,6 +1565,178 @@ def update_application_status(application_id):
         flash('Failed to update application', 'danger')
     
     return redirect(url_for('job_applications', job_id=application.job_id))
+
+
+@app.route('/job/<int:job_id>/bulk-accept', methods=['POST'])
+@login_required
+def bulk_accept_applications(job_id):
+    """Accept multiple pending applicants at once, up to remaining slots"""
+    job = Job.query.get_or_404(job_id)
+
+    if job.poster_id != current_user.id and not current_user.is_admin:
+        abort(403)
+
+    if job.status in ('in_progress', 'completed', 'cancelled'):
+        flash('This job has already started — applications can no longer be changed', 'warning')
+        return redirect(url_for('job_applications', job_id=job_id))
+
+    application_ids = request.form.getlist('application_ids')
+    if not application_ids:
+        flash('No applicants selected', 'warning')
+        return redirect(url_for('job_applications', job_id=job_id))
+
+    try:
+        applications = JobApplication.query.filter(
+            JobApplication.id.in_(application_ids),
+            JobApplication.job_id == job_id,
+            JobApplication.status == 'pending'
+        ).all()
+
+        remaining = job.slots_remaining()
+        accepted_count = 0
+
+        for application in applications:
+            if remaining <= 0:
+                break
+            application.status = 'accepted'
+            job.slots_filled = (job.slots_filled or 0) + 1
+            remaining -= 1
+            accepted_count += 1
+
+            create_notification(
+                application.applicant_id,
+                f'Your application for "{job.title}" was accepted',
+                'application_accepted',
+                target_url=url_for('profile')
+            )
+
+        if job.slots_filled >= job.slots_total:
+            job.status = 'filled'
+
+        db.session.commit()
+
+        if accepted_count < len(applications):
+            flash(f'Accepted {accepted_count} applicant(s) — remaining slots were not enough for everyone selected', 'warning')
+        else:
+            flash(f'Accepted {accepted_count} applicant(s)', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Bulk accept error: {e}')
+        flash('Failed to accept applicants', 'danger')
+
+    return redirect(url_for('job_applications', job_id=job_id))
+
+
+@app.route('/job/<int:job_id>/start', methods=['POST'])
+@login_required
+def start_job(job_id):
+    """Mark a job as in_progress once staffing has begun"""
+    job = Job.query.get_or_404(job_id)
+
+    if job.poster_id != current_user.id and not current_user.is_admin:
+        abort(403)
+
+    if not job.can_start():
+        flash('Job cannot be started — accept at least one applicant first', 'warning')
+        return redirect(url_for('job_applications', job_id=job_id))
+
+    try:
+        job.status = 'in_progress'
+        job.started_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        # Notify accepted workers
+        for application in job.applications:
+            if application.status == 'accepted':
+                create_notification(
+                    application.applicant_id,
+                    f'The job "{job.title}" has started',
+                    'job_started',
+                    target_url=url_for('job_detail', job_id=job.id)
+                )
+        db.session.commit()
+
+        flash('Job marked as in progress', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Start job error: {e}')
+        flash('Failed to start job', 'danger')
+
+    return redirect(url_for('job_applications', job_id=job_id))
+
+
+@app.route('/job/<int:job_id>/complete', methods=['POST'])
+@login_required
+def complete_job(job_id):
+    """Mark a job as completed, ready for payment release"""
+    job = Job.query.get_or_404(job_id)
+
+    if job.poster_id != current_user.id and not current_user.is_admin:
+        abort(403)
+
+    if not job.can_complete():
+        flash('Job must be in progress before it can be marked complete', 'warning')
+        return redirect(url_for('job_applications', job_id=job_id))
+
+    try:
+        job.status = 'completed'
+        job.completed_at = datetime.now(timezone.utc)
+        db.session.commit()
+
+        # Notify accepted workers
+        for application in job.applications:
+            if application.status == 'accepted':
+                create_notification(
+                    application.applicant_id,
+                    f'The job "{job.title}" has been marked complete',
+                    'job_completed',
+                    target_url=url_for('job_detail', job_id=job.id)
+                )
+        db.session.commit()
+
+        flash('Job marked as completed', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Complete job error: {e}')
+        flash('Failed to complete job', 'danger')
+
+    return redirect(url_for('job_applications', job_id=job_id))
+
+
+@app.route('/job/<int:job_id>/cancel', methods=['POST'])
+@login_required
+def cancel_job(job_id):
+    """Cancel a job posting"""
+    job = Job.query.get_or_404(job_id)
+
+    if job.poster_id != current_user.id and not current_user.is_admin:
+        abort(403)
+
+    if job.status == 'completed':
+        flash('A completed job cannot be cancelled', 'warning')
+        return redirect(url_for('job_applications', job_id=job_id))
+
+    try:
+        job.status = 'cancelled'
+        db.session.commit()
+
+        for application in job.applications:
+            if application.status == 'accepted':
+                create_notification(
+                    application.applicant_id,
+                    f'The job "{job.title}" was cancelled by the recruiter',
+                    'job_cancelled',
+                    target_url=url_for('profile')
+                )
+        db.session.commit()
+
+        flash('Job cancelled', 'info')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Cancel job error: {e}')
+        flash('Failed to cancel job', 'danger')
+
+    return redirect(url_for('job_applications', job_id=job_id))
 
 
 # ============================================================================

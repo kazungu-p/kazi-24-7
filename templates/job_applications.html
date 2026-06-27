@@ -13,6 +13,19 @@
     flex-wrap: wrap;
   }
   .applicant-row:last-child { border-bottom: none; }
+  .applicant-row.is-locked { opacity: .65; }
+  .applicant-check {
+    display: flex;
+    align-items: flex-start;
+    gap: .75rem;
+  }
+  .applicant-check input[type="checkbox"] {
+    margin-top: .35rem;
+    width: 18px;
+    height: 18px;
+    accent-color: var(--clay);
+    cursor: pointer;
+  }
   .applicant-name { font-weight: 700; color: var(--ink); }
   .applicant-meta { font-size: .8rem; color: var(--stone); margin-top: .2rem; }
   .eta-pill {
@@ -34,6 +47,47 @@
   .slots-bar-fill {
     height: 100%; background: var(--sage); border-radius: var(--r-pill);
   }
+
+  /* Job lifecycle banner */
+  .lifecycle-banner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: .9rem 1.5rem;
+    border-bottom: 1px solid var(--dust);
+    background: var(--cream);
+  }
+  .lifecycle-status {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: .3em .75em;
+    border-radius: var(--r-pill);
+  }
+  .lifecycle-status.status-open,
+  .lifecycle-status.status-filled { background: var(--clay-light); color: var(--clay-dark); }
+  .lifecycle-status.status-in_progress { background: var(--ochre-light); color: var(--ochre); }
+  .lifecycle-status.status-completed { background: var(--sage-light); color: var(--sage); }
+  .lifecycle-status.status-cancelled { background: var(--danger-bg); color: var(--danger-fg); }
+
+  .bulk-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: .75rem 1.5rem;
+    border-bottom: 1px solid var(--dust);
+    background: var(--white);
+  }
+  .bulk-bar label { font-size: .85rem; color: var(--stone); display: flex; align-items: center; gap: .5rem; cursor: pointer; }
+  .bulk-bar input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--clay); cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -60,37 +114,102 @@
           </div>
         </div>
       </div>
+
+      <!-- Job Lifecycle Banner -->
+      <div class="lifecycle-banner">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <span class="lifecycle-status status-{{ job.status }}">
+            <i class="bi bi-circle-fill" style="font-size:.5rem;"></i>
+            {{ job.status_label() }}
+          </span>
+          {% if job.status == 'in_progress' and job.started_at %}
+            <span class="small" style="color:var(--stone);">Started {{ job.started_at.strftime('%b %d, %Y %H:%M') }}</span>
+          {% elif job.status == 'completed' and job.completed_at %}
+            <span class="small" style="color:var(--stone);">Completed {{ job.completed_at.strftime('%b %d, %Y %H:%M') }}</span>
+          {% endif %}
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+          {% if job.can_start() %}
+            <form method="post" action="{{ url_for('start_job', job_id=job.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-primary btn-sm">
+                <i class="bi bi-play-fill"></i> Start Job
+              </button>
+            </form>
+          {% endif %}
+          {% if job.can_complete() %}
+            <form method="post" action="{{ url_for('complete_job', job_id=job.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-success btn-sm">
+                <i class="bi bi-check-circle"></i> Mark Completed
+              </button>
+            </form>
+          {% endif %}
+          {% if job.status not in ('completed', 'cancelled') %}
+            <form method="post" action="{{ url_for('cancel_job', job_id=job.id) }}"
+                  onsubmit="return confirm('Cancel this job? Accepted workers will be notified.');">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-x-circle"></i> Cancel Job
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Bulk Accept Bar -->
+      {% if job.status in ('open', 'filled') and applications|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
+        <form method="post" action="{{ url_for('bulk_accept_applications', job_id=job.id) }}" id="bulkAcceptForm">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="bulk-bar">
+            <label>
+              <input type="checkbox" id="selectAllApplicants">
+              Select all pending
+            </label>
+            <button class="btn btn-success btn-sm" type="submit">
+              <i class="bi bi-check2-all"></i> Accept Selected ({{ job.slots_remaining() }} slot{{ 's' if job.slots_remaining() != 1 else '' }} open)
+            </button>
+          </div>
+      {% endif %}
+
       <div>
         {% for a in applications %}
-          <div class="applicant-row">
-            <div>
-              <div class="applicant-name">
-                {{ a.applicant.username or a.applicant.email }}
-                {% if a.distance_km is not none %}
-                  <span class="eta-pill">
-                    <i class="bi bi-signpost-split"></i>
-                    {{ "%.1f"|format(a.distance_km) }} km &middot; ~{{ estimate_travel_minutes(a.distance_km) }} min
+          <div class="applicant-row {% if job.status in ('in_progress', 'completed', 'cancelled') %}is-locked{% endif %}">
+            <div class="applicant-check">
+              {% if a.status == 'pending' and job.status in ('open', 'filled') %}
+                <input type="checkbox" name="application_ids" value="{{ a.id }}" form="bulkAcceptForm" class="applicant-select">
+              {% endif %}
+              <div>
+                <div class="applicant-name">
+                  {{ a.applicant.username or a.applicant.email }}
+                  {% if a.distance_km is not none %}
+                    <span class="eta-pill">
+                      <i class="bi bi-signpost-split"></i>
+                      {{ "%.1f"|format(a.distance_km) }} km &middot; ~{{ estimate_travel_minutes(a.distance_km) }} min
+                    </span>
+                  {% endif %}
+                </div>
+                <div class="applicant-meta">
+                  Applied {{ a.applied_at.strftime('%b %d, %Y %H:%M') }}
+                  &middot; Status:
+                  <span class="badge {% if a.status == 'accepted' %}bg-success{% elif a.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
+                    {{ a.status }}
                   </span>
-                {% endif %}
-              </div>
-              <div class="applicant-meta">
-                Applied {{ a.applied_at.strftime('%b %d, %Y %H:%M') }}
-                &middot; Status:
-                <span class="badge {% if a.status == 'accepted' %}bg-success{% elif a.status == 'rejected' %}bg-danger{% else %}bg-secondary{% endif %}">
-                  {{ a.status }}
-                </span>
+                </div>
               </div>
             </div>
             <div class="d-flex gap-2 align-items-center flex-wrap">
-              <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}" class="d-flex gap-2">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <select class="form-select form-select-sm status-select" name="status">
-                  <option value="pending" {% if a.status=='pending' %}selected{% endif %}>Pending</option>
-                  <option value="accepted" {% if a.status=='accepted' %}selected{% endif %}>Accepted</option>
-                  <option value="rejected" {% if a.status=='rejected' %}selected{% endif %}>Rejected</option>
-                </select>
-                <button class="btn btn-primary btn-sm">Update</button>
-              </form>
+              {% if job.status in ('open', 'filled') %}
+                <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}" class="d-flex gap-2">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <select class="form-select form-select-sm status-select" name="status">
+                    <option value="pending" {% if a.status=='pending' %}selected{% endif %}>Pending</option>
+                    <option value="accepted" {% if a.status=='accepted' %}selected{% endif %}>Accepted</option>
+                    <option value="rejected" {% if a.status=='rejected' %}selected{% endif %}>Rejected</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm">Update</button>
+                </form>
+              {% endif %}
               <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('messages_conversation', other_id=a.applicant.id) }}">
                 <i class="bi bi-chat-dots"></i> Message
               </a>
@@ -102,7 +221,26 @@
           </div>
         {% endfor %}
       </div>
+
+      {% if job.status in ('open', 'filled') and applications|selectattr('status', 'equalto', 'pending')|list|length > 0 %}
+        </form>
+      {% endif %}
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const selectAll = document.getElementById('selectAllApplicants');
+    if (selectAll) {
+      selectAll.addEventListener('change', function () {
+        document.querySelectorAll('.applicant-select').forEach(function (cb) {
+          cb.checked = selectAll.checked;
+        });
+      });
+    }
+  });
+</script>
 {% endblock %}

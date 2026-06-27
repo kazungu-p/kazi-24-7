@@ -45,18 +45,20 @@
             </li>
 
             {% if current_user.is_authenticated %}
-              <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'post_job' %}active{% endif %}"
-                   href="{{ url_for('post_job') }}">
-                  <i class="bi bi-plus-circle"></i> Post Job
-                </a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link {% if request.endpoint == 'all_users' %}active{% endif %}"
-                   href="{{ url_for('all_users') }}">
-                  <i class="bi bi-people"></i> Talent
-                </a>
-              </li>
+              {% if current_user.is_recruiter() %}
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'post_job' %}active{% endif %}"
+                     href="{{ url_for('post_job') }}">
+                    <i class="bi bi-plus-circle"></i> Post Job
+                  </a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link {% if request.endpoint == 'all_users' %}active{% endif %}"
+                     href="{{ url_for('all_users') }}">
+                    <i class="bi bi-people"></i> Talent
+                  </a>
+                </li>
+              {% endif %}
               <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" href="#" role="button"
                    data-bs-toggle="dropdown" aria-expanded="false">
@@ -64,13 +66,13 @@
                 </a>
                 <ul class="dropdown-menu">
                   <li>
-                    <a class="dropdown-item" href="{{ url_for('location_verify') }}">
-                      <i class="bi bi-check-circle"></i> Verify Location
+                    <a class="dropdown-item" href="{{ url_for('jobs_nearby') }}">
+                      <i class="bi bi-pin-map"></i> Jobs Near Me
                     </a>
                   </li>
                   <li>
-                    <a class="dropdown-item" href="{{ url_for('jobs_nearby') }}">
-                      <i class="bi bi-pin-map"></i> Jobs Near Me
+                    <a class="dropdown-item" href="{{ url_for('location_verify') }}">
+                      <i class="bi bi-check-circle"></i> Verify Location
                     </a>
                   </li>
                 </ul>

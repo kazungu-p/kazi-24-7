@@ -115,11 +115,12 @@
               </div>
               
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">National ID</label>
+                <label class="form-label fw-semibold">National ID <span class="text-danger">*</span></label>
                 <div class="input-group">
                   <span class="input-group-text bg-white"><i class="bi bi-card-text"></i></span>
-                  <input class="form-control" name="national_id" placeholder="ID/Passport number">
+                  <input class="form-control" name="national_id" placeholder="e.g. 12345678" inputmode="numeric" pattern="[0-9]{8,}" minlength="8" title="Numbers only, minimum 8 digits" required>
                 </div>
+                <div class="form-text">Numbers only, minimum 8 digits</div>
               </div>
             </div>
 
