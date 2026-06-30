@@ -908,7 +908,22 @@
 
         <div class="profile-info-section">
           <div class="profile-info-left">
-            <h1 class="profile-name">{{ user.username or user.email }}</h1>
+            <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap;">
+              <h1 class="profile-name" style="margin:0;">{{ user.username or user.email.split('@')[0].split('@')[0] }}</h1>
+              <span style="font-size:.7rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+                           padding:.25em .7em; border-radius:999px;
+                           background:{{ 'var(--clay-light)' if user.role == 'recruiter' else 'var(--sage-light)' }};
+                           color:{{ 'var(--clay-dark)' if user.role == 'recruiter' else 'var(--sage)' }};">
+                <i class="bi bi-{{ 'briefcase' if user.role == 'recruiter' else 'person-workspace' }}"></i>
+                {{ user.role|title }}
+              </span>
+              {% if user.avg_rating() %}
+                <span style="font-size:.85rem; color:var(--clay); font-weight:700;">
+                  {{ user.avg_rating() }}★
+                  <span style="font-weight:400; color:var(--stone); font-size:.75rem;">({{ user.rating_count() }})</span>
+                </span>
+              {% endif %}
+            </div>
             <div class="profile-email">
               <i class="bi bi-envelope-fill"></i>
               {{ user.email }}
@@ -978,6 +993,15 @@
                 <i class="bi bi-geo-alt-fill"></i>
                 Verify Location
               </a>
+              <!-- Role toggle -->
+              <form method="post" action="{{ url_for('toggle_role') }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-profile-modern btn-profile-outline btn-profile-sm"
+                  title="Switch to {{ 'Recruiter' if current_user.is_worker() else 'Worker' }} mode">
+                  <i class="bi bi-arrow-left-right"></i>
+                  Switch to {{ 'Recruiter' if current_user.is_worker() else 'Worker' }}
+                </button>
+              </form>
             {% endif %}
             {% if not is_own_profile and not user.burned %}
               <a class="btn-profile-modern btn-profile-primary btn-profile-sm" 
@@ -1000,7 +1024,8 @@
       </div>
     </div>
 
-    <!-- Jobs Posted Section -->
+    <!-- Jobs Posted Section — recruiters only -->
+    {% if user.is_recruiter() %}
     <div class="profile-section-card">
       <div class="profile-section-header">
         <h2 class="profile-section-title">
@@ -1111,6 +1136,7 @@
         {% endfor %}
       </div>
     </div>
+    {% endif %}{# end recruiter check #}
 
     <!-- Applications Section (Workers only, own profile) -->
     {% if is_own_profile and current_user.is_worker() %}
@@ -1262,15 +1288,19 @@
         {{ 'Your Activity' if is_own_profile else 'User Stats' }}
       </h3>
       <div>
-        <div class="stat-row">
-          <span class="stat-label">Jobs Posted:</span>
-          <span class="stat-value highlight">{{ posted_jobs|length }}</span>
-        </div>
-        {% if is_own_profile %}
+        {% if user.is_recruiter() %}
           <div class="stat-row">
-            <span class="stat-label">Applications Sent:</span>
-            <span class="stat-value highlight">{{ applications|length }}</span>
+            <span class="stat-label">Jobs Posted:</span>
+            <span class="stat-value highlight">{{ posted_jobs|length }}</span>
           </div>
+        {% endif %}
+        {% if is_own_profile %}
+          {% if user.is_worker() %}
+            <div class="stat-row">
+              <span class="stat-label">Applications Sent:</span>
+              <span class="stat-value highlight">{{ applications|length }}</span>
+            </div>
+          {% endif %}
           <div class="stat-row">
             <span class="stat-label">Unread Notifications:</span>
             <span class="stat-value danger">{{ unread_count }}</span>
@@ -1288,7 +1318,7 @@
         {% else %}
           <div class="stat-row">
             <span class="stat-label">Member Since:</span>
-            <span class="stat-value">{% if user.created_at %}{{ user.created_at.strftime('%b %Y') }}{% else %}<span class="text-muted">Unknown</span>{% endif %}</span></span>
+            <span class="stat-value">{% if user.created_at %}{{ user.created_at.strftime('%b %Y') }}{% else %}<span class="text-muted">Unknown</span>{% endif %}</span>
           </div>
         {% endif %}
       </div>
@@ -1369,7 +1399,7 @@
     </div>
 
     <!-- Available Jobs (Own Profile) -->
-    {% if is_own_profile and available_jobs %}
+    {% if is_own_profile and current_user.is_worker() and available_jobs %}
     <div class="profile-section-card">
       <div class="profile-section-header" style="padding: 1.25rem;">
         <h3 class="profile-section-title" style="font-size: 1.1rem; margin: 0;">
@@ -1409,6 +1439,94 @@
       </div>
     </div>
     {% endif %}
+
+    <!-- Ratings Card -->
+    <div class="quick-links-card" style="margin-top:1.5rem;">
+      <h3 class="quick-links-title">
+        <i class="bi bi-star-fill" style="color:var(--clay);"></i>
+        Ratings
+        {% if user.avg_rating() %}
+          <span style="font-family:var(--font-body); font-size:.9rem; font-weight:700; color:var(--clay); margin-left:.4rem;">
+            {{ user.avg_rating() }}★
+          </span>
+          <span style="font-size:.75rem; color:var(--stone); font-weight:400;">({{ user.rating_count() }})</span>
+        {% endif %}
+      </h3>
+
+      {% if rateable_jobs %}
+        <div style="padding:.75rem 0; border-bottom:1px solid var(--dust); margin-bottom:.75rem;">
+          <div style="font-size:.8rem; font-weight:700; color:var(--ink); margin-bottom:.5rem;">
+            Rate {{ user.username or user.email.split('@')[0].split('@')[0] }}
+          </div>
+          {% for job in rateable_jobs %}
+            <form method="post" action="{{ url_for('submit_rating', job_id=job.id, ratee_id=user.id) }}" style="margin-bottom:.75rem;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <div style="font-size:.75rem; color:var(--stone); margin-bottom:.35rem;">For: <strong>{{ job.title }}</strong></div>
+              <div class="star-picker" style="display:flex; gap:.25rem; margin-bottom:.4rem;">
+                {% for i in range(1,6) %}
+                  <label style="cursor:pointer; font-size:1.3rem; color:var(--dust);" title="{{ i }} star{{ 's' if i>1 else '' }}">
+                    <input type="radio" name="score" value="{{ i }}" required style="display:none;">
+                    ★
+                  </label>
+                {% endfor %}
+              </div>
+              <textarea name="comment" placeholder="Optional comment..." rows="2"
+                style="width:100%; border:1.5px solid var(--dust); border-radius:var(--r-sm); padding:.4rem .6rem; font-size:.8rem; font-family:var(--font-body); resize:none; margin-bottom:.4rem;"></textarea>
+              <button class="btn btn-primary btn-sm" type="submit">Submit Rating</button>
+            </form>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      {% if ratings_received %}
+        <div style="display:flex; flex-direction:column; gap:.75rem;">
+          {% for r in ratings_received %}
+            <div style="padding:.6rem 0; border-bottom:1px solid var(--dust);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:.2rem;">
+                <span style="color:var(--clay); font-size:1rem; letter-spacing:.1rem;">
+                  {% for i in range(r.score) %}★{% endfor %}{% for i in range(5 - r.score) %}<span style="color:var(--dust);">★</span>{% endfor %}
+                </span>
+                <span style="font-size:.7rem; color:var(--stone);">{{ r.created_at.strftime('%b %d, %Y') }}</span>
+              </div>
+              <div style="font-size:.78rem; color:var(--stone);">
+                by <strong style="color:var(--charcoal);">{{ r.rater.username or r.rater.email }}</strong>
+                for <em>{{ r.job.title }}</em>
+              </div>
+              {% if r.comment %}
+                <div style="font-size:.8rem; color:var(--charcoal); margin-top:.25rem; font-style:italic;">"{{ r.comment }}"</div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div style="text-align:center; padding:1rem 0; color:var(--stone); font-size:.85rem;">
+          <i class="bi bi-star" style="font-size:1.5rem; display:block; margin-bottom:.4rem;"></i>
+          No ratings yet
+        </div>
+      {% endif %}
+    </div>
+
   </div>
 </div>
+{% endblock %}
+{% block scripts %}
+<script>
+// Interactive star picker
+document.querySelectorAll('.star-picker').forEach(function(picker) {
+  const labels = picker.querySelectorAll('label');
+  labels.forEach(function(label, idx) {
+    label.addEventListener('mouseenter', function() {
+      labels.forEach(function(l, i) { l.style.color = i <= idx ? 'var(--clay)' : 'var(--dust)'; });
+    });
+    label.addEventListener('mouseleave', function() {
+      const checked = picker.querySelector('input:checked');
+      const checkedIdx = checked ? parseInt(checked.value) - 1 : -1;
+      labels.forEach(function(l, i) { l.style.color = i <= checkedIdx ? 'var(--clay)' : 'var(--dust)'; });
+    });
+    label.querySelector('input').addEventListener('change', function() {
+      labels.forEach(function(l, i) { l.style.color = i <= idx ? 'var(--clay)' : 'var(--dust)'; });
+    });
+  });
+});
+</script>
 {% endblock %}

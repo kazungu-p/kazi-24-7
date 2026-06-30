@@ -1,112 +1,440 @@
 {% extends 'base.html' %}
 {% block title %}{{ job.title }} — KaziConnect{% endblock %}
 
+{% block head %}
+<style>
+  .completion-banner {
+    border-radius: var(--r-lg);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-left: 4px solid;
+  }
+  .completion-banner.status-in_progress {
+    background: var(--ochre-light, #FBF0E0);
+    border-color: var(--ochre, #D4873A);
+  }
+  .completion-banner.status-completed {
+    background: var(--sage-light, #EAF0E8);
+    border-color: var(--sage, #4A6741);
+  }
+  .completion-banner.status-cancelled {
+    background: var(--danger-bg, #FCEEE9);
+    border-color: var(--danger-fg, #9E2F1A);
+  }
+  .completion-banner h5 {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    margin-bottom: .4rem;
+    color: var(--ink);
+  }
+  .completion-banner p {
+    font-size: .875rem;
+    color: var(--stone);
+    margin-bottom: .75rem;
+  }
+
+  .flow-steps {
+    display: flex;
+    gap: 0;
+    margin: 1.25rem 0;
+  }
+  .flow-step {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    text-align: center;
+  }
+  .flow-step + .flow-step::before {
+    content: '';
+    position: absolute;
+    left: -50%;
+    top: 18px;
+    width: 100%;
+    height: 2px;
+    background: var(--dust);
+    z-index: 0;
+  }
+  .flow-step.done + .flow-step::before { background: var(--sage); }
+  .flow-dot {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .85rem; font-weight: 700;
+    border: 2px solid var(--dust);
+    background: var(--white);
+    color: var(--stone);
+    z-index: 1;
+    position: relative;
+    margin-bottom: .4rem;
+  }
+  .flow-step.done .flow-dot {
+    background: var(--sage); border-color: var(--sage); color: #fff;
+  }
+  .flow-step.active .flow-dot {
+    background: var(--clay); border-color: var(--clay); color: #fff;
+  }
+  .flow-label {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--stone);
+  }
+  .flow-step.done .flow-label { color: var(--sage); }
+  .flow-step.active .flow-label { color: var(--clay); }
+
+  .star-picker-inline { display: flex; gap: .25rem; }
+  .star-picker-inline label {
+    cursor: pointer; font-size: 1.5rem;
+    color: var(--dust); transition: color .1s;
+  }
+  .star-picker-inline input[type=radio] { display: none; }
+  .rate-card {
+    background: var(--cream);
+    border: 1px solid var(--dust);
+    border-radius: var(--r-md);
+    padding: .875rem 1rem;
+    margin-bottom: .75rem;
+  }
+  .rate-card .worker-name {
+    font-weight: 700;
+    color: var(--ink);
+    font-size: .9rem;
+    margin-bottom: .4rem;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
+<div class="row g-4">
   <div class="col-12 col-lg-8">
-    <div class="card mb-3 shadow-sm">
+
+    <!-- ── Job lifecycle progress ── -->
+    {% set s = job.status %}
+    {% if s in ('in_progress', 'completed', 'cancelled') or (s in ('open','filled') and is_poster) %}
+    <div class="completion-banner status-{{ s }}">
+      <!-- Progress steps -->
+      <div class="flow-steps">
+        <div class="flow-step {% if s in ('open','filled','in_progress','completed') %}done{% endif %}">
+          <div class="flow-dot"><i class="bi bi-briefcase-fill"></i></div>
+          <span class="flow-label">Posted</span>
+        </div>
+        <div class="flow-step {% if s in ('filled','in_progress','completed') %}done{% elif s == 'open' %}active{% endif %}">
+          <div class="flow-dot"><i class="bi bi-people-fill"></i></div>
+          <span class="flow-label">Staffed</span>
+        </div>
+        <div class="flow-step {% if s in ('in_progress','completed') %}{% if s == 'in_progress' %}active{% else %}done{% endif %}{% endif %}">
+          <div class="flow-dot"><i class="bi bi-play-fill"></i></div>
+          <span class="flow-label">In Progress</span>
+        </div>
+        <div class="flow-step {% if s == 'completed' %}done{% elif s == 'in_progress' %}active{% endif %}">
+          <div class="flow-dot"><i class="bi bi-check-lg"></i></div>
+          <span class="flow-label">Complete</span>
+        </div>
+        {% if s != 'cancelled' %}
+        <div class="flow-step {% if s == 'completed' %}active{% endif %}">
+          <div class="flow-dot"><i class="bi bi-cash-stack"></i></div>
+          <span class="flow-label">Payment</span>
+        </div>
+        {% endif %}
+      </div>
+
+      {% if s == 'in_progress' %}
+        <h5><i class="bi bi-play-circle-fill me-2" style="color:var(--ochre);"></i>Job is in Progress</h5>
+        <p>Started {{ job.started_at.strftime('%b %d, %Y at %H:%M') if job.started_at else 'recently' }}</p>
+        {% if is_poster %}
+          <div class="d-flex gap-2 flex-wrap">
+            <form method="post" action="{{ url_for('complete_job', job_id=job.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-success">
+                <i class="bi bi-check-circle-fill"></i> Mark Job Complete
+              </button>
+            </form>
+            <form method="post" action="{{ url_for('cancel_job', job_id=job.id) }}"
+                  onsubmit="return confirm('Cancel this job?')">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancel
+              </button>
+            </form>
+          </div>
+        {% else %}
+          <p style="margin:0; font-size:.85rem; color:var(--stone);">
+            <i class="bi bi-info-circle me-1"></i>
+            Waiting for the recruiter to mark this job complete. Payment will be released upon completion.
+          </p>
+        {% endif %}
+
+      {% elif s == 'completed' %}
+        <h5><i class="bi bi-check-circle-fill me-2" style="color:var(--sage);"></i>Job Completed</h5>
+        <p>Completed {{ job.completed_at.strftime('%b %d, %Y at %H:%M') if job.completed_at else '' }}
+          — payment release and ratings are now available.</p>
+
+        {% if is_poster %}
+          <!-- Recruiter: fund escrow + release payment + rate workers -->
+          {% set escrow = job.payments | selectattr('type', 'equalto', 'escrow') | selectattr('status', 'equalto', 'completed') | list | first %}
+          <div class="d-flex gap-2 flex-wrap mb-3">
+            {% if not escrow %}
+              <a href="{{ url_for('fund_job', job_id=job.id) }}" class="btn btn-primary">
+                <i class="bi bi-lock-fill"></i> Fund Escrow (KES {{ '{:,.0f}'.format((job.pay_amount or 0) * (job.slots_filled or 1)) }})
+              </a>
+            {% else %}
+              <a href="{{ url_for('release_payments', job_id=job.id) }}" class="btn btn-primary">
+                <i class="bi bi-cash-stack"></i> Release Payments to Workers
+              </a>
+              <span style="font-size:.8rem; color:var(--sage); align-self:center;">
+                <i class="bi bi-check-circle-fill me-1"></i>Escrow funded · KES {{ '{:,.0f}'.format(escrow.amount) }}
+              </span>
+            {% endif %}
+          </div>
+
+          {% if rateable_workers %}
+            <div style="font-weight:700; font-size:.85rem; color:var(--ink); margin-bottom:.6rem;">
+              <i class="bi bi-star-fill" style="color:var(--clay);"></i> Rate your workers
+            </div>
+            {% for worker in rateable_workers %}
+              <div class="rate-card">
+                <div class="worker-name">{{ worker.username or worker.email.split('@')[0] }}</div>
+                <form method="post" action="{{ url_for('submit_rating', job_id=job.id, ratee_id=worker.id) }}"
+                      style="display:flex; flex-direction:column; gap:.5rem;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="star-picker-inline" data-picker>
+                    {% for i in range(1,6) %}
+                      <label title="{{ i }}★">
+                        <input type="radio" name="score" value="{{ i }}" required> ★
+                      </label>
+                    {% endfor %}
+                  </div>
+                  <input type="text" name="comment" placeholder="Optional comment…"
+                    class="form-control form-control-sm">
+                  <button class="btn btn-primary btn-sm" style="align-self:flex-start;">
+                    Submit Rating
+                  </button>
+                </form>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p style="font-size:.82rem; color:var(--stone); margin:0;">
+              <i class="bi bi-check2-all me-1"></i>All workers have been rated.
+            </p>
+          {% endif %}
+
+        {% else %}
+          <!-- Worker: rate the recruiter -->
+          {% if user_application and user_application.status == 'accepted' %}
+            <div style="font-size:.875rem; color:var(--stone); margin-bottom:.75rem;">
+              <i class="bi bi-info-circle me-1"></i>
+              Payment will be processed to your M-Pesa shortly.
+            </div>
+            {% if can_rate_poster %}
+              <div style="font-weight:700; font-size:.85rem; color:var(--ink); margin-bottom:.5rem;">
+                <i class="bi bi-star-fill" style="color:var(--clay);"></i>
+                Rate {{ job.poster.username or job.poster.email.split('@')[0] }}
+              </div>
+              <div class="rate-card">
+                <form method="post" action="{{ url_for('submit_rating', job_id=job.id, ratee_id=job.poster_id) }}"
+                      style="display:flex; flex-direction:column; gap:.5rem;">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <div class="star-picker-inline" data-picker>
+                    {% for i in range(1,6) %}
+                      <label title="{{ i }}★">
+                        <input type="radio" name="score" value="{{ i }}" required> ★
+                      </label>
+                    {% endfor %}
+                  </div>
+                  <input type="text" name="comment" placeholder="Optional comment…"
+                    class="form-control form-control-sm">
+                  <button class="btn btn-primary btn-sm" style="align-self:flex-start;">
+                    Submit Rating
+                  </button>
+                </form>
+              </div>
+            {% else %}
+              <p style="font-size:.82rem; color:var(--stone); margin:0;">
+                <i class="bi bi-check2-all me-1"></i>You've already rated this job.
+              </p>
+            {% endif %}
+          {% endif %}
+        {% endif %}
+
+      {% elif s == 'cancelled' %}
+        <h5><i class="bi bi-x-circle-fill me-2" style="color:var(--danger-fg);"></i>Job Cancelled</h5>
+        <p style="margin:0;">This job was cancelled. No payments will be processed.</p>
+
+      {% elif is_poster and s in ('open', 'filled') %}
+        <h5><i class="bi bi-people-fill me-2" style="color:var(--clay);"></i>
+          {{ job.slots_filled }}/{{ job.slots_total }} workers accepted</h5>
+        {% if job.can_start() %}
+          <p>All set — start the job when workers are on site.</p>
+          <form method="post" action="{{ url_for('start_job', job_id=job.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-primary">
+              <i class="bi bi-play-fill"></i> Start Job
+            </button>
+          </form>
+        {% else %}
+          <p style="margin:0; font-size:.875rem;">
+            Accept workers on the <a href="{{ url_for('job_applications', job_id=job.id) }}">Applicants page</a> before starting.
+          </p>
+        {% endif %}
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ── Job details card ── -->
+    <div class="card shadow-sm">
       <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
           <div>
             <h3 class="mb-1">{{ job.title }}</h3>
             <div class="small text-muted">
               <i class="bi bi-geo-alt"></i> {{ job.location }}
-              &nbsp;•&nbsp;
-              Posted by <strong>{{ job.poster.username or job.poster.email }}</strong>
-              &nbsp;•&nbsp;
-              {{ job.created_at.strftime('%Y-%m-%d %H:%M') }}
+              &nbsp;·&nbsp;
+              Posted by <strong>{{ job.poster.username or job.poster.email.split('@')[0] }}</strong>
+              &nbsp;·&nbsp;
+              {{ job.created_at.strftime('%b %d, %Y') }}
             </div>
           </div>
-
-          <div class="text-end">
+          <div class="d-flex gap-2">
             {% if is_poster %}
-              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('edit_job', job_id=job.id) }}">
+              <a class="btn btn-sm btn-outline-secondary" href="{{ url_for('edit_job', job_id=job.id) }}">
                 <i class="bi bi-pencil"></i> Edit
               </a>
-            {% endif %}
-            {% if current_user.is_authenticated and current_user.id != job.poster_id %}
-              <form method="post" action="{{ url_for('apply_job', job_id=job.id) }}" class="d-inline">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <button class="btn btn-sm btn-success">
-                  <i class="bi bi-check-circle"></i> Apply
-                </button>
-              </form>
+              <a class="btn btn-sm btn-primary" href="{{ url_for('job_applications', job_id=job.id) }}">
+                <i class="bi bi-people"></i> Applicants
+              </a>
+            {% elif current_user.is_authenticated and current_user.is_worker() %}
+              {% if not user_application %}
+                {% if job.status == 'open' and job.slots_remaining() > 0 %}
+                  <form method="post" action="{{ url_for('apply_job', job_id=job.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button class="btn btn-sm btn-success">
+                      <i class="bi bi-check-circle"></i> Apply
+                    </button>
+                  </form>
+                {% endif %}
+              {% else %}
+                <span class="badge bg-secondary" style="font-size:.8rem; padding:.4rem .75rem;">
+                  Applied — {{ user_application.status|capitalize }}
+                </span>
+              {% endif %}
             {% endif %}
           </div>
         </div>
 
         <hr>
 
-        {# Full media gallery #}
         {% if job.media %}
-          <div class="mb-3">
-            <div class="d-flex flex-wrap gap-2 mb-2">
-              {% for m in job.media %}
-                <div class="text-center" style="max-width:240px;">
-                  {% if m.media_type == 'image' %}
-                    <a href="#" class="job-media-thumb" data-media-url="{{ url_for('uploaded_file', filename=m.filename) }}" data-media-type="image" title="View image">
-                      <img src="{{ url_for('uploaded_file', filename=m.filename) }}"
-                           alt="Media for {{ job.title }}"
-                           style="width:240px; height:160px; object-fit:cover; border-radius:6px; border:1px solid #e9ecef;">
-                    </a>
-                  {% elif m.media_type == 'video' %}
-                    <a href="#" class="job-media-thumb" data-media-url="{{ url_for('uploaded_file', filename=m.filename) }}" data-media-type="video" title="View video">
-                      <video width="240" height="160" muted preload="metadata" style="display:block; border-radius:6px; border:1px solid #e9ecef; background:#000;">
-                        <source src="{{ url_for('uploaded_file', filename=m.filename) }}">
-                      </video>
-                    </a>
-                  {% else %}
-                    <a class="d-block small text-muted" href="{{ url_for('uploaded_file', filename=m.filename) }}" target="_blank">{{ m.filename }}</a>
-                  {% endif %}
-                  <div class="small text-muted mt-1">ID: {{ m.id }}</div>
-                </div>
-              {% endfor %}
-            </div>
-            <div class="small text-muted">Click a thumbnail to view full-size.</div>
+          <div class="mb-3 d-flex flex-wrap gap-2">
+            {% for m in job.media %}
+              {% if m.media_type == 'image' %}
+                <a href="#" class="job-media-thumb"
+                   data-media-url="{{ url_for('uploaded_file', filename=m.filename) }}"
+                   data-media-type="image">
+                  <img src="{{ url_for('uploaded_file', filename=m.filename) }}"
+                       style="width:160px; height:110px; object-fit:cover; border-radius:var(--r-md); border:1px solid var(--dust);">
+                </a>
+              {% elif m.media_type == 'video' %}
+                <a href="#" class="job-media-thumb"
+                   data-media-url="{{ url_for('uploaded_file', filename=m.filename) }}"
+                   data-media-type="video">
+                  <video style="width:160px; height:110px; object-fit:cover; border-radius:var(--r-md); border:1px solid var(--dust);" preload="metadata" muted>
+                    <source src="{{ url_for('uploaded_file', filename=m.filename) }}">
+                  </video>
+                </a>
+              {% endif %}
+            {% endfor %}
           </div>
         {% endif %}
 
-        <h5>Description</h5>
-        <p>{{ job.description }}</p>
+        <div class="mb-3">
+          <h6 class="fw-bold text-muted small text-uppercase mb-1">Description</h6>
+          <p class="mb-0" style="white-space:pre-wrap;">{{ job.description }}</p>
+        </div>
 
-        <h6>Requirements</h6>
-        <p>{{ job.requirements }}</p>
-
+        {% if job.requirements %}
+          <div class="mb-0">
+            <h6 class="fw-bold text-muted small text-uppercase mb-1">Requirements</h6>
+            <p class="mb-0" style="white-space:pre-wrap;">{{ job.requirements }}</p>
+          </div>
+        {% endif %}
       </div>
     </div>
   </div>
 
+  <!-- ── Sidebar ── -->
   <div class="col-12 col-lg-4">
+    <!-- Pay & slots -->
     <div class="card shadow-sm mb-3">
       <div class="card-body">
-        <h6 class="mb-3"><i class="bi bi-person"></i> Poster</h6>
+        <h6 class="fw-bold mb-3"><i class="bi bi-cash-stack me-1"></i>Pay & Slots</h6>
+        <div style="font-size:1.5rem; font-weight:800; color:var(--clay); margin-bottom:.25rem;">
+          {{ job.pay_label() }}
+        </div>
+        <div class="small text-muted mb-2">
+          <i class="bi bi-people me-1"></i>
+          {{ job.slots_filled }}/{{ job.slots_total }} slot{{ 's' if job.slots_total != 1 else '' }} filled
+          &nbsp;·&nbsp;
+          {{ job.slots_remaining() }} open
+        </div>
+        <!-- Slots bar -->
+        <div style="height:6px; background:var(--dust); border-radius:999px; overflow:hidden;">
+          <div style="height:100%; width:{{ [job.slots_filled / job.slots_total * 100, 100]|min if job.slots_total else 0 }}%;
+                      background:var(--sage); border-radius:999px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Poster info -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3"><i class="bi bi-person-fill me-1"></i>Posted By</h6>
         <div class="d-flex align-items-center gap-3">
           {% if job.poster.profile_picture %}
-            <img src="{{ url_for('uploaded_file', filename=job.poster.profile_picture) }}" alt="Poster" width="64" height="64" class="rounded-circle" style="object-fit:cover;">
+            <img src="{{ url_for('uploaded_file', filename=job.poster.profile_picture) }}"
+                 width="48" height="48" class="rounded-circle" style="object-fit:cover;">
           {% else %}
-            <div class="rounded-circle bg-secondary d-flex align-items-center justify-content-center text-white" style="width:64px; height:64px;">
-              <i class="bi bi-person-fill"></i>
+            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                 style="width:48px;height:48px;background:var(--clay);color:#fff;font-weight:700;font-size:1.1rem;">
+              {{ (job.poster.username or job.poster.email)[0].upper() }}
             </div>
           {% endif %}
           <div>
-            <div class="fw-bold">{{ job.poster.username or job.poster.email }}</div>
-            <div class="small text-muted">{{ job.poster.location or '' }}</div>
-            <div class="mt-2">
-              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('profile', user_id=job.poster.id) }}">View Profile</a>
-            </div>
+            <div class="fw-bold">{{ job.poster.username or job.poster.email.split('@')[0] }}</div>
+            {% if job.poster.avg_rating() %}
+              <div class="small" style="color:var(--clay);">
+                {{ job.poster.avg_rating() }}★
+                <span class="text-muted">({{ job.poster.rating_count() }})</span>
+              </div>
+            {% endif %}
+            <a class="small" href="{{ url_for('profile', user_id=job.poster.id) }}">View Profile</a>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Job details -->
     <div class="card shadow-sm">
       <div class="card-body">
-        <h6 class="mb-2"><i class="bi bi-info-circle"></i> Details</h6>
-        <ul class="list-unstyled small mb-0">
-          <li><strong>Status:</strong> {{ job.status|capitalize }}</li>
-          <li><strong>Posted:</strong> {{ job.created_at.strftime('%b %d, %Y') }}</li>
-          <li><strong>Job ID:</strong> {{ job.id }}</li>
-        </ul>
+        <h6 class="fw-bold mb-3"><i class="bi bi-info-circle me-1"></i>Details</h6>
+        <table style="width:100%; font-size:.85rem; border-collapse:collapse;">
+          <tr><td style="color:var(--stone); padding:.3rem 0;">Status</td>
+              <td class="text-end fw-bold">{{ job.status_label() }}</td></tr>
+          <tr><td style="color:var(--stone); padding:.3rem 0;">Job Ref</td>
+              <td class="text-end fw-bold" style="font-family:monospace; font-size:.8rem;">
+                {{ job.job_ref or ('#' ~ job.id) }}</td></tr>
+          <tr><td style="color:var(--stone); padding:.3rem 0;">Posted</td>
+              <td class="text-end">{{ job.created_at.strftime('%b %d, %Y') }}</td></tr>
+          {% if job.started_at %}
+          <tr><td style="color:var(--stone); padding:.3rem 0;">Started</td>
+              <td class="text-end">{{ job.started_at.strftime('%b %d, %Y') }}</td></tr>
+          {% endif %}
+          {% if job.completed_at %}
+          <tr><td style="color:var(--stone); padding:.3rem 0;">Completed</td>
+              <td class="text-end">{{ job.completed_at.strftime('%b %d, %Y') }}</td></tr>
+          {% endif %}
+        </table>
       </div>
     </div>
   </div>
@@ -115,10 +443,21 @@
 
 {% block scripts %}
 <script>
-  // Optional: stop any playing videos when modal closes (handled by base modal clear)
-  document.addEventListener('DOMContentLoaded', function() {
-    // The base.html modal behavior is already wired to open previews for elements with class 'job-media-thumb'
-    // No additional JS required here; thumbnails have data-media-url and data-media-type attributes.
+document.querySelectorAll('[data-picker]').forEach(function(picker) {
+  const labels = picker.querySelectorAll('label');
+  labels.forEach(function(label, idx) {
+    label.addEventListener('mouseenter', function() {
+      labels.forEach(function(l, i) { l.style.color = i <= idx ? 'var(--clay)' : 'var(--dust)'; });
+    });
+    label.addEventListener('mouseleave', function() {
+      const checked = picker.querySelector('input:checked');
+      const ci = checked ? parseInt(checked.value) - 1 : -1;
+      labels.forEach(function(l, i) { l.style.color = i <= ci ? 'var(--clay)' : 'var(--dust)'; });
+    });
+    label.querySelector('input').addEventListener('change', function() {
+      labels.forEach(function(l, i) { l.style.color = i <= idx ? 'var(--clay)' : 'var(--dust)'; });
+    });
   });
+});
 </script>
 {% endblock %}

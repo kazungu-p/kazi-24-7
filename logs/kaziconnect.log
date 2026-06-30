@@ -1,3 +1,3 @@
-2026-06-27 18:10:24,516 INFO: KaziConnect production startup [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:2648]
-2026-06-27 18:11:34,301 INFO: KaziConnect production startup [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:2648]
-2026-06-27 18:11:34,304 INFO: DEFAULT_ADMIN_EMAIL/PASSWORD not set; skipping default admin creation [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:601]
+2026-06-30 22:56:46,151 INFO: KaziConnect production startup [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:3330]
+2026-06-30 22:56:46,367 INFO: DEFAULT_ADMIN_EMAIL/PASSWORD not set; skipping default admin creation [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:799]
+2026-06-30 22:56:46,467 INFO: Backfilled job_ref for 1 jobs [in /Users/patrick/Documents/Projects/kazi-24-7/app.py:3352]

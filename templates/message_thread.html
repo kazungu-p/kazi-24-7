@@ -1,63 +1,258 @@
 {% extends 'base.html' %}
-{% block title %}Conversation with {{ other.username or other.email }} — KaziConnect{% endblock %}
+{% block title %}Chat with {{ other.username or other.email.split('@')[0] }} — KaziConnect{% endblock %}
+
+{% block head %}
+<style>
+  .chat-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 1.25rem;
+    height: calc(100vh - 140px);
+    min-height: 500px;
+  }
+  .chat-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+  .chat-person-card {
+    background: var(--white);
+    border: 1px solid var(--dust);
+    border-radius: var(--r-lg);
+    padding: 1.25rem;
+  }
+  .chat-person-avatar {
+    width: 52px; height: 52px; border-radius: 50%;
+    background: var(--clay); color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; font-weight: 700; margin-bottom: .75rem;
+  }
+  .chat-person-name { font-family: var(--font-display); font-size: 1.1rem; color: var(--ink); }
+  .chat-person-role { font-size: .75rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: .04em; color: var(--stone); margin-top: .15rem; }
+  .chat-person-actions { display: flex; flex-direction: column; gap: .5rem; margin-top: 1rem; }
+
+  .chat-main {
+    display: flex;
+    flex-direction: column;
+    background: var(--white);
+    border: 1px solid var(--dust);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+  }
+  .chat-header {
+    padding: .875rem 1.25rem;
+    border-bottom: 1px solid var(--dust);
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+  }
+  .chat-header-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: var(--clay); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; font-weight: 700; flex-shrink: 0;
+  }
+  .chat-header-name { font-weight: 700; color: var(--ink); font-size: .95rem; }
+  .chat-status { font-size: .72rem; color: var(--stone); }
+  .online-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--sage); margin-right: .3rem; }
+
+  .chat-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .5rem;
+    scroll-behavior: smooth;
+  }
+
+  .msg-row { display: flex; align-items: flex-end; gap: .5rem; }
+  .msg-row.sent { flex-direction: row-reverse; }
+  .msg-avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--dust); color: var(--stone);
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; flex-shrink: 0;
+  }
+  .msg-bubble {
+    max-width: min(85%, 600px);
+    min-width: 60px;
+    width: fit-content;
+    padding: .75rem 1.1rem;
+    border-radius: var(--r-lg);
+    font-size: .9rem;
+    line-height: 1.65;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+  }
+  .msg-row.recv .msg-bubble {
+    background: var(--cream);
+    border: 1px solid var(--dust);
+    border-bottom-left-radius: var(--r-sm);
+    color: var(--ink);
+  }
+  .msg-row.sent .msg-bubble {
+    background: var(--clay);
+    color: #fff;
+    border-bottom-right-radius: var(--r-sm);
+  }
+  .msg-time {
+    font-size: .65rem;
+    color: var(--stone);
+    margin-top: .2rem;
+    display: block;
+  }
+  .msg-row.sent .msg-time { text-align: right; color: rgba(255,255,255,.7); }
+
+  .chat-footer {
+    padding: .875rem 1.25rem;
+    border-top: 1px solid var(--dust);
+    background: var(--white);
+    display: flex;
+    gap: .75rem;
+    align-items: flex-end;
+  }
+  .chat-input {
+    flex: 1;
+    border: 1.5px solid var(--dust);
+    border-radius: var(--r-lg);
+    padding: .6rem .9rem;
+    font-family: var(--font-body);
+    font-size: .9rem;
+    resize: none;
+    outline: none;
+    max-height: 120px;
+    transition: border-color .2s;
+    line-height: 1.5;
+  }
+  .chat-input:focus { border-color: var(--clay); }
+  .chat-send-btn {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--clay); color: #fff;
+    border: none; cursor: pointer; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; transition: background .2s, transform .15s;
+  }
+  .chat-send-btn:hover { background: var(--clay-dark); transform: scale(1.06); }
+  .chat-send-btn:disabled { background: var(--dust); transform: none; cursor: not-allowed; }
+
+  .chat-date-divider {
+    text-align: center;
+    font-size: .7rem;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--stone);
+    margin: .5rem 0;
+    position: relative;
+  }
+  .chat-date-divider::before, .chat-date-divider::after {
+    content: ''; position: absolute; top: 50%; width: 30%;
+    height: 1px; background: var(--dust);
+  }
+  .chat-date-divider::before { left: 0; }
+  .chat-date-divider::after { right: 0; }
+
+  .typing-indicator {
+    display: none;
+    align-items: center; gap: .4rem;
+    font-size: .75rem; color: var(--stone);
+    padding: .25rem 0;
+  }
+  .typing-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--dust); animation: typingPulse 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes typingPulse { 0%,100%{opacity:.3} 50%{opacity:1} }
+
+  @media (max-width: 768px) {
+    .chat-layout { grid-template-columns: 1fr; height: auto; }
+    .chat-sidebar { display: none; }
+    .chat-main { height: calc(100vh - 160px); }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-  <div class="col-12 col-lg-4 mb-3">
-    <div class="card shadow-sm">
-      <div class="card-body">
-        <h6>{{ other.username or other.email }}</h6>
-        <div class="small text-muted">User id: {{ other.id }}</div>
-        <div class="mt-3 d-grid gap-2">
-          <a class="btn btn-outline-primary" href="{{ url_for('profile') }}">See my profile</a>
-          <a class="btn btn-outline-secondary" href="{{ url_for('messages_list') }}">Back to conversations</a>
+<div class="chat-layout">
+  <!-- Sidebar -->
+  <div class="chat-sidebar">
+    <div class="chat-person-card">
+      <div class="chat-person-avatar">{{ (other.username or other.email.split('@')[0])[0].upper() }}</div>
+      <div class="chat-person-name">{{ other.username or other.email.split('@')[0] }}</div>
+      <div class="chat-person-role">{{ other.role|capitalize }}</div>
+      {% if other.location %}
+        <div class="mt-2" style="font-size:.8rem; color:var(--stone);">
+          <i class="bi bi-geo-alt me-1"></i>{{ other.location }}
         </div>
+      {% endif %}
+      <div class="chat-person-actions">
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('profile', user_id=other.id) }}">
+          <i class="bi bi-person"></i> View Profile
+        </a>
+        <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('messages_list') }}">
+          <i class="bi bi-arrow-left"></i> All Conversations
+        </a>
       </div>
     </div>
   </div>
 
-  <div class="col-12 col-lg-8">
-    <div class="card shadow-sm">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <div>
-          <strong>{{ other.username or other.email }}</strong>
-          <div class="small text-muted">Conversation</div>
-        </div>
-        <div class="small text-muted">Last: {% if messages %}{{ messages[-1].created_at.strftime('%Y-%m-%d %H:%M') }}{% else %}—{% endif %}</div>
-      </div>
-
-      <div class="card-body" style="height:60vh; overflow:auto;" id="messages-container">
-        <div class="d-flex flex-column gap-2">
-          {% for m in messages %}
-            {% if m.sender_id == current_user.id %}
-              <div class="d-flex justify-content-end">
-                <div class="message-bubble message-sent">
-                  <div class="small text-muted mb-1">You • {{ m.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                  <div>{{ m.body|e }}</div>
-                </div>
-              </div>
-            {% else %}
-              <div class="d-flex justify-content-start">
-                <div class="message-bubble message-recv">
-                  <div class="small text-muted mb-1">{{ other.username or other.email }} • {{ m.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                  <div>{{ m.body|e }}</div>
-                  <div class="mt-1"><a href="{{ url_for('profile') }}" class="small">See profile</a></div>
-                </div>
-              </div>
-            {% endif %}
-          {% endfor %}
+  <!-- Chat main -->
+  <div class="chat-main">
+    <div class="chat-header">
+      <div class="chat-header-avatar">{{ (other.username or other.email.split('@')[0])[0].upper() }}</div>
+      <div>
+        <div class="chat-header-name">{{ other.username or other.email.split('@')[0] }}</div>
+        <div class="chat-status" id="chatStatus">
+          <span class="online-dot"></span>Active
         </div>
       </div>
+    </div>
 
-      <div class="card-footer">
-        <form id="composeForm" method="post" action="{{ url_for('messages_conversation', other_id=other.id) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <div class="input-group">
-            <textarea class="form-control" name="body" id="body" rows="1" placeholder="Write a message..." required></textarea>
-            <button class="btn btn-primary" id="sendBtn">Send</button>
+    <div class="chat-body" id="chatBody">
+      {% set last_date = namespace(val=None) %}
+      {% for m in messages %}
+        {% set msg_date = m.created_at.strftime('%b %d, %Y') %}
+        {% if msg_date != last_date.val %}
+          <div class="chat-date-divider">{{ msg_date }}</div>
+          {% set last_date.val = msg_date %}
+        {% endif %}
+        {% if m.sender_id == current_user.id %}
+          <div class="msg-row sent" data-msg-id="{{ m.id }}">
+            <div>
+              <div class="msg-bubble">{{ m.body|e }}</div>
+              <span class="msg-time">{{ m.created_at.strftime('%H:%M') }}</span>
+            </div>
           </div>
-        </form>
+        {% else %}
+          <div class="msg-row recv" data-msg-id="{{ m.id }}">
+            <div class="msg-avatar">{{ (other.username or other.email.split('@')[0])[0].upper() }}</div>
+            <div>
+              <div class="msg-bubble">{{ m.body|e }}</div>
+              <span class="msg-time">{{ m.created_at.strftime('%H:%M') }}</span>
+            </div>
+          </div>
+        {% endif %}
+      {% endfor %}
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="msg-avatar">{{ (other.username or other.email.split('@')[0])[0].upper() }}</div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
       </div>
+    </div>
+
+    <div class="chat-footer">
+      <textarea class="chat-input" id="chatInput" placeholder="Write a message…" rows="1"></textarea>
+      <button class="chat-send-btn" id="sendBtn" title="Send">
+        <i class="bi bi-send-fill"></i>
+      </button>
     </div>
   </div>
 </div>
@@ -65,46 +260,131 @@
 
 {% block scripts %}
 <script>
-  // scroll to bottom
-  const container = document.getElementById('messages-container');
-  if (container) { container.scrollTop = container.scrollHeight; }
+const OTHER_ID    = {{ other.id }};
+const MY_ID       = {{ current_user.id }};
+const MY_INITIAL  = '{{ (current_user.username or current_user.email.split('@')[0])[0].upper() }}';
+const OTHER_INIT  = '{{ (other.username or other.email.split('@')[0])[0].upper() }}';
+const CSRF        = '{{ csrf_token() }}';
+const SEND_URL    = '{{ url_for("messages_send_api") }}';
+const POLL_URL    = '{{ url_for("messages_poll", other_id=other.id) }}';
 
-  // send via AJAX to be fast, with fallback to normal POST
-  document.getElementById('composeForm').addEventListener('submit', async function(e){
-    e.preventDefault();
-    const body = document.getElementById('body').value.trim();
-    if (!body) return;
-    const btn = document.getElementById('sendBtn');
-    btn.disabled = true;
-    try {
-      const res = await fetch('{{ url_for("messages_send_api") }}', {
-        method: 'POST',
-        credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
-        body: JSON.stringify({recipient_id: {{ other.id }}, body: body})
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.status === 'ok' && data.message) {
-          const m = data.message;
-          const wrapper = document.createElement('div'); wrapper.className = 'd-flex justify-content-end';
-          wrapper.innerHTML = `<div class="message-bubble message-sent"><div class="small text-muted mb-1">You • ${new Date(m.created_at).toLocaleString()}</div><div>${m.body.replace(/</g,'&lt;')}</div></div>`;
-          const list = document.querySelector('#messages-container .d-flex');
-          if (list) list.appendChild(wrapper);
-          if (container) container.scrollTop = container.scrollHeight;
-          document.getElementById('body').value = '';
-        } else {
-          alert('Failed: ' + (data.error || 'unknown'));
-        }
-      } else {
-        alert('Network error sending message');
+const chatBody  = document.getElementById('chatBody');
+const chatInput = document.getElementById('chatInput');
+const sendBtn   = document.getElementById('sendBtn');
+
+// Track last seen message id for polling
+let lastId = {{ messages[-1].id if messages else 0 }};
+let pollTimer = null;
+
+function scrollBottom() {
+  chatBody.scrollTop = chatBody.scrollHeight;
+}
+
+function formatTime(iso) {
+  const d = new Date(iso);
+  return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function escape(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function appendMessage(m) {
+  const isMine = m.sender_id === MY_ID;
+  const row = document.createElement('div');
+  row.className = 'msg-row ' + (isMine ? 'sent' : 'recv');
+  row.dataset.msgId = m.id;
+  if (isMine) {
+    row.innerHTML = `<div><div class="msg-bubble">${escape(m.body)}</div><span class="msg-time">${formatTime(m.created_at)}</span></div>`;
+  } else {
+    row.innerHTML = `<div class="msg-avatar">${OTHER_INIT}</div><div><div class="msg-bubble">${escape(m.body)}</div><span class="msg-time">${formatTime(m.created_at)}</span></div>`;
+  }
+  // Insert before typing indicator
+  const typing = document.getElementById('typingIndicator');
+  chatBody.insertBefore(row, typing);
+  scrollBottom();
+}
+
+async function sendMessage() {
+  const body = chatInput.value.trim();
+  if (!body) return;
+  sendBtn.disabled = true;
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+  try {
+    const res = await fetch(SEND_URL, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+      body: JSON.stringify({ recipient_id: OTHER_ID, body })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (data.status === 'ok' && data.message) {
+        appendMessage(data.message);
+        lastId = data.message.id;
       }
-    } catch (err) {
-      console.error(err);
-      alert('Error sending message');
-    } finally {
-      btn.disabled = false;
+    } else {
+      // Restore message on failure
+      chatInput.value = body;
     }
-  });
+  } catch (err) {
+    console.error('Send failed:', err);
+    chatInput.value = body;
+  } finally {
+    sendBtn.disabled = false;
+    chatInput.focus();
+    // Immediately poll after sending so the other party sees it without waiting
+    clearTimeout(pollTimer);
+    poll();
+  }
+}
+
+async function poll() {
+  try {
+    const res = await fetch(`${POLL_URL}?since=${lastId}`, { credentials: 'same-origin' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.messages && data.messages.length > 0) {
+      data.messages.forEach(m => {
+        if (!document.querySelector(`[data-msg-id="${m.id}"]`)) {
+          appendMessage(m);
+        }
+      });
+      lastId = data.last_id;
+    }
+  } catch (e) { /* silent - will retry */ }
+  finally {
+    // Poll every 2s when tab visible, 8s when hidden
+    pollTimer = setTimeout(poll, document.hidden ? 8000 : 2000);
+  }
+}
+
+// Send on button click
+sendBtn.addEventListener('click', sendMessage);
+
+// Send on Enter (Shift+Enter for newline)
+chatInput.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+});
+
+// Auto-resize textarea
+chatInput.addEventListener('input', function() {
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+});
+
+// Start polling and scroll to bottom
+scrollBottom();
+poll();
+
+// Stop polling when page is hidden, resume when visible
+document.addEventListener('visibilitychange', function() {
+  clearTimeout(pollTimer);
+  poll(); // immediately polls at correct speed based on document.hidden
+});
 </script>
 {% endblock %}

@@ -218,7 +218,7 @@
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title">User Details: {{ u.username or u.email }}</h5>
+                                            <h5 class="modal-title">User Details: {{ u.username or u.email.split('@')[0] }}</h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                         </div>
                                         <div class="modal-body">
@@ -301,7 +301,7 @@
                                         <form method="post" action="{{ url_for('admin_suspend_with_duration', user_id=u.id) }}">
                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                             <div class="modal-header">
-                                                <h5 class="modal-title">Suspend User: {{ u.username or u.email }}</h5>
+                                                <h5 class="modal-title">Suspend User: {{ u.username or u.email.split('@')[0] }}</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body">
@@ -346,7 +346,7 @@
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body">
-                                                <p>Are you sure you want to permanently ban <strong>{{ u.username or u.email }}</strong>?</p>
+                                                <p>Are you sure you want to permanently ban <strong>{{ u.username or u.email.split('@')[0] }}</strong>?</p>
                                                 <div class="mb-3">
                                                     <label class="form-label fw-semibold">Reason for Permanent Ban</label>
                                                     <textarea class="form-control" name="reason" rows="3" required 

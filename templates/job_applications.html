@@ -200,15 +200,36 @@
             </div>
             <div class="d-flex gap-2 align-items-center flex-wrap">
               {% if job.status in ('open', 'filled') %}
-                <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}" class="d-flex gap-2">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                  <select class="form-select form-select-sm status-select" name="status">
-                    <option value="pending" {% if a.status=='pending' %}selected{% endif %}>Pending</option>
-                    <option value="accepted" {% if a.status=='accepted' %}selected{% endif %}>Accepted</option>
-                    <option value="rejected" {% if a.status=='rejected' %}selected{% endif %}>Rejected</option>
-                  </select>
-                  <button class="btn btn-primary btn-sm">Update</button>
-                </form>
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                  {% if a.status != 'accepted' %}
+                    <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="status" value="accepted">
+                      <button class="btn btn-success btn-sm" type="submit"
+                        {% if job.slots_remaining() == 0 and a.status != 'accepted' %}disabled title="No slots remaining"{% endif %}>
+                        <i class="bi bi-check-circle"></i> Accept
+                      </button>
+                    </form>
+                  {% endif %}
+                  {% if a.status != 'rejected' %}
+                    <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="status" value="rejected">
+                      <button class="btn btn-outline-secondary btn-sm" type="submit">
+                        <i class="bi bi-x-circle"></i> Reject
+                      </button>
+                    </form>
+                  {% endif %}
+                  {% if a.status in ('accepted', 'rejected') %}
+                    <form method="post" action="{{ url_for('update_application_status', application_id=a.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <input type="hidden" name="status" value="pending">
+                      <button class="btn btn-outline-secondary btn-sm" type="submit">
+                        <i class="bi bi-arrow-counterclockwise"></i> Undo
+                      </button>
+                    </form>
+                  {% endif %}
+                </div>
               {% endif %}
               <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('messages_conversation', other_id=a.applicant.id) }}">
                 <i class="bi bi-chat-dots"></i> Message

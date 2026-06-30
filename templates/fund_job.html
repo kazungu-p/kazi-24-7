@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Fund Job — KaziConnect{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-5">
+    <div class="card">
+      <div class="card-header">
+        <div style="font-family:var(--font-display); font-size:1.2rem; color:var(--ink);">
+          Fund Job Escrow
+        </div>
+        <div class="small" style="color:var(--stone);">{{ job.title }} · {{ job.job_ref }}</div>
+      </div>
+      <div class="card-body">
+
+        <!-- Pay summary -->
+        <div style="background:var(--cream); border:1px solid var(--dust); border-radius:var(--r-md); padding:1rem 1.25rem; margin-bottom:1.5rem;">
+          <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.4rem;">
+            <span style="color:var(--stone);">Pay per worker</span>
+            <strong>KES {{ '{:,.0f}'.format(job.pay_amount or 0) }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.4rem;">
+            <span style="color:var(--stone);">Accepted workers</span>
+            <strong>{{ job.slots_filled }}</strong>
+          </div>
+          <hr style="border-color:var(--dust); margin:.6rem 0;">
+          <div style="display:flex; justify-content:space-between; font-size:1rem; font-weight:700;">
+            <span>Total escrow</span>
+            <span style="color:var(--clay);">KES {{ '{:,.0f}'.format(total or 0) }}</span>
+          </div>
+          <div style="font-size:.75rem; color:var(--stone); margin-top:.4rem;">
+            Held securely until job is marked complete, then released to workers.
+          </div>
+        </div>
+
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="mb-4">
+            <label class="form-label">M-Pesa Phone Number</label>
+            <div class="input-group">
+              <span class="input-group-text bg-white" style="color:var(--stone);">
+                <i class="bi bi-phone-fill"></i>
+              </span>
+              <input class="form-control" type="tel" name="phone"
+                     placeholder="07XX XXX XXX or +254..."
+                     value="{{ current_user.phone_number or '' }}"
+                     required>
+            </div>
+            <div class="form-text">Enter the phone registered with M-Pesa. You'll receive a push notification to confirm payment.</div>
+          </div>
+
+          <div style="background:#FBF1DD; border:1px solid var(--clay); border-radius:var(--r-sm); padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.82rem; color:#875A12;">
+            <i class="bi bi-shield-lock-fill me-2"></i>
+            <strong>Secure escrow:</strong> funds are held by KaziConnect and only released to workers after you mark the job complete.
+          </div>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary flex-grow-1" type="submit">
+              <i class="bi bi-phone-fill"></i> Send STK Push · KES {{ '{:,.0f}'.format(total or 0) }}
+            </button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('job_detail', job_id=job.id) }}">
+              Cancel
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

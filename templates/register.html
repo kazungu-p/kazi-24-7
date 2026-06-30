@@ -71,11 +71,12 @@
             
             <div class="row">
               <div class="col-md-6 mb-3">
-                <label class="form-label fw-semibold">Username <span class="text-muted fw-light">(optional)</span></label>
+                <label class="form-label fw-semibold">Username</label>
                 <div class="input-group">
                   <span class="input-group-text bg-white"><i class="bi bi-person"></i></span>
-                  <input class="form-control" name="username" placeholder="Choose a username">
+                  <input class="form-control" name="username" placeholder="e.g. Patrick, jane-smith, wangdu" minlength="3" maxlength="30" pattern="[A-Za-z0-9_-]+" title="Letters, numbers, underscores and hyphens">
                 </div>
+                <div class="form-text">Optional — letters, numbers, underscores, hyphens</div>
               </div>
               
               <div class="col-md-6 mb-3">

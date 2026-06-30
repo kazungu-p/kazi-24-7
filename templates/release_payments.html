@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% block title %}Release Payments — KaziConnect{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-7">
+    <div class="card">
+      <div class="card-header">
+        <div style="font-family:var(--font-display); font-size:1.2rem; color:var(--ink);">
+          Release Payments
+        </div>
+        <div class="small" style="color:var(--stone);">
+          {{ job.title }} · {{ job.job_ref }}
+        </div>
+      </div>
+      <div class="card-body">
+
+        <!-- Summary -->
+        <div style="background:var(--cream); border:1px solid var(--dust); border-radius:var(--r-md); padding:1rem 1.25rem; margin-bottom:1.5rem;">
+          <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.35rem;">
+            <span style="color:var(--stone);">Escrow funded</span>
+            <strong style="color:var(--sage);">KES {{ '{:,.0f}'.format(escrow.amount) }} ✓</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.35rem;">
+            <span style="color:var(--stone);">Workers to pay</span>
+            <strong>{{ accepted_apps|length }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:.85rem; margin-bottom:.35rem;">
+            <span style="color:var(--stone);">Amount per worker</span>
+            <strong>KES {{ '{:,.0f}'.format(worker_amount) }}</strong>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:.75rem; color:var(--stone);">
+            <span>Platform fee ({{ platform_fee_pct }}%)</span>
+            <span>KES {{ '{:,.0f}'.format(job.pay_amount * platform_fee_pct / 100) }} per worker</span>
+          </div>
+        </div>
+
+        <form method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+          {% for app in accepted_apps %}
+            {% set worker = app.applicant %}
+            {% set already_paid = worker.payments_received | selectattr('job_id', 'equalto', job.id) | selectattr('type', 'equalto', 'payout') | selectattr('status', 'equalto', 'completed') | list | length > 0 %}
+            <div style="display:flex; align-items:center; gap:1rem; padding:.875rem 0; border-bottom:1px solid var(--dust); flex-wrap:wrap;">
+              <div style="width:36px; height:36px; border-radius:50%; background:var(--clay); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.9rem; flex-shrink:0;">
+                {{ (worker.username or worker.email)[0].upper() }}
+              </div>
+              <div style="flex:1; min-width:120px;">
+                <div style="font-weight:700; color:var(--ink); font-size:.9rem;">
+                  {{ worker.username or worker.email.split('@')[0] }}
+                </div>
+                <div style="font-size:.75rem; color:var(--stone);">KES {{ '{:,.0f}'.format(worker_amount) }}</div>
+              </div>
+              {% if already_paid %}
+                <span style="font-size:.75rem; font-weight:700; color:var(--sage); background:var(--sage-light); padding:.25em .7em; border-radius:999px;">
+                  <i class="bi bi-check-circle-fill me-1"></i>Paid
+                </span>
+              {% else %}
+                <div style="display:flex; align-items:center; gap:.5rem;">
+                  <div class="input-group input-group-sm" style="width:180px;">
+                    <span class="input-group-text bg-white"><i class="bi bi-phone-fill" style="color:var(--stone);"></i></span>
+                    <input class="form-control" type="tel"
+                           name="phone_{{ worker.id }}"
+                           placeholder="07XX XXX XXX"
+                           value="{{ worker.phone_number or '' }}"
+                           required>
+                  </div>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+
+          <div style="margin-top:1.5rem; display:flex; gap:.75rem; flex-wrap:wrap;">
+            <button class="btn btn-primary flex-grow-1" type="submit"
+                    onclick="return confirm('Send M-Pesa payments to {{ accepted_apps|length }} worker(s)?')">
+              <i class="bi bi-cash-stack"></i> Send M-Pesa Payments
+            </button>
+            <a class="btn btn-outline-secondary" href="{{ url_for('job_detail', job_id=job.id) }}">
+              Cancel
+            </a>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

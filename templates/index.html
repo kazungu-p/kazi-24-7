@@ -133,9 +133,20 @@
     border-radius: var(--r-pill);
     flex-shrink: 0;
   }
-  .status-active   { background: var(--sage-light); color: var(--sage); }
-  .status-closed   { background: var(--danger-bg);  color: var(--danger-fg); }
-  .status-pending  { background: var(--ochre-light);color: var(--warning-fg); }
+  .status-active, .status-open { background: var(--sage-light); color: var(--sage); }
+  .status-filled    { background: var(--clay-light); color: var(--clay-dark); }
+  .status-closed, .status-cancelled { background: var(--danger-bg); color: var(--danger-fg); }
+  .status-pending   { background: var(--ochre-light); color: var(--warning-fg); }
+  .status-completed { background: var(--sage-light); color: var(--sage); }
+  .status-in_progress {
+    background: var(--ochre-light, #FBF0E0);
+    color: #875A12;
+    animation: pulse-badge 2s ease-in-out infinite;
+  }
+  @keyframes pulse-badge {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: .55; }
+  }
 
   .job-footer-bar {
     padding: .875rem 1.5rem;
@@ -211,7 +222,7 @@
         <div class="job-card-body">
           <div class="d-flex justify-content-between align-items-start gap-2 mb-1">
             <h3 class="job-title">{{ job.title }}</h3>
-            <span class="status-badge status-{{ job.status }}">{{ job.status }}</span>
+            <span class="status-badge status-{{ job.status }}">{{ job.status_label() }}</span>
           </div>
           <div class="job-location">
             <i class="bi bi-geo-alt"></i> {{ job.location }}
@@ -276,11 +287,31 @@
                 {{ job.created_at.strftime('%b %d, %Y') }}
               </div>
             </div>
-            <div class="d-flex gap-2 align-items-center">
+            <div class="d-flex gap-2 align-items-center flex-wrap">
               {% if view == 'recruiter' %}
-                <a class="btn btn-primary btn-sm" href="{{ url_for('job_applications', job_id=job.id) }}">
-                  <i class="bi bi-people"></i> Applicants
-                  {% if job.slots_filled > 0 %}<span class="badge bg-light text-dark ms-1">{{ job.slots_filled }}/{{ job.slots_total }}</span>{% endif %}
+                {% if job.status == 'in_progress' %}
+                  <a class="btn btn-success btn-sm" href="{{ url_for('job_detail', job_id=job.id) }}">
+                    <i class="bi bi-check-circle-fill"></i> Mark Complete
+                  </a>
+                {% elif job.status == 'completed' %}
+                  {% set escrow_done = job.payments | selectattr('type','equalto','escrow') | selectattr('status','equalto','completed') | list | length > 0 %}
+                  {% if escrow_done %}
+                    <a class="btn btn-primary btn-sm" href="{{ url_for('release_payments', job_id=job.id) }}">
+                      <i class="bi bi-cash-stack"></i> Pay Workers
+                    </a>
+                  {% else %}
+                    <a class="btn btn-primary btn-sm" href="{{ url_for('fund_job', job_id=job.id) }}">
+                      <i class="bi bi-lock-fill"></i> Fund Escrow
+                    </a>
+                  {% endif %}
+                {% else %}
+                  <a class="btn btn-primary btn-sm" href="{{ url_for('job_applications', job_id=job.id) }}">
+                    <i class="bi bi-people"></i> Applicants
+                    {% if job.slots_filled > 0 %}<span class="badge bg-light text-dark ms-1">{{ job.slots_filled }}/{{ job.slots_total }}</span>{% endif %}
+                  </a>
+                {% endif %}
+                <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('job_detail', job_id=job.id) }}">
+                  <i class="bi bi-eye"></i>
                 </a>
                 <a class="btn btn-outline-secondary btn-sm" href="{{ url_for('edit_job', job_id=job.id) }}">
                   <i class="bi bi-pencil"></i>

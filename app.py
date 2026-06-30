@@ -271,6 +271,15 @@ class User(UserMixin, db.Model):
         """Check if user registered as a worker (freelancer/recruit)"""
         return self.role == 'worker'
 
+    def avg_rating(self):
+        """Average rating received, or None if no ratings"""
+        from sqlalchemy import func
+        result = db.session.query(func.avg(Rating.score)).filter_by(ratee_id=self.id).scalar()
+        return round(float(result), 1) if result else None
+
+    def rating_count(self):
+        return Rating.query.filter_by(ratee_id=self.id).count()
+
     def __repr__(self):
         return f'<User {self.username or self.email}>'
 
@@ -371,6 +380,66 @@ class JobApplication(db.Model):
         return f'<JobApplication {self.id} for Job {self.job_id}>'
 
 
+class Rating(db.Model):
+    """Mutual ratings after a job completes — worker rates recruiter and vice versa"""
+    __tablename__ = 'rating'
+
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    rater_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)     # who gave the rating
+    ratee_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)     # who received it
+    score = db.Column(db.Integer, nullable=False)                                   # 1–5
+    comment = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    # Relationships
+    job = db.relationship('Job', backref=db.backref('ratings', lazy=True))
+    rater = db.relationship('User', foreign_keys=[rater_id], backref=db.backref('ratings_given', lazy=True))
+    ratee = db.relationship('User', foreign_keys=[ratee_id], backref=db.backref('ratings_received', lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint('job_id', 'rater_id', 'ratee_id', name='unique_rating_per_job'),
+    )
+
+    def __repr__(self):
+        return f'<Rating {self.score}★ for User {self.ratee_id} on Job {self.job_id}>'
+
+
+class Payment(db.Model):
+    """Tracks M-Pesa payments for jobs — escrow hold by recruiter, release to workers"""
+    __tablename__ = 'payment'
+
+    id = db.Column(db.Integer, primary_key=True)
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'), nullable=False)
+    payer_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)    # recruiter funding
+    payee_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)    # worker receiving
+
+    amount = db.Column(db.Float, nullable=False)
+    phone_number = db.Column(db.String(20), nullable=True)                       # M-Pesa phone
+
+    # STK Push (recruiter funding escrow)
+    mpesa_checkout_id = db.Column(db.String(100), nullable=True, unique=True)    # CheckoutRequestID
+    mpesa_receipt = db.Column(db.String(50), nullable=True)                      # MpesaReceiptNumber
+
+    # B2C (worker payout)
+    b2c_conversation_id = db.Column(db.String(100), nullable=True)
+    b2c_originator_id = db.Column(db.String(100), nullable=True)
+
+    type = db.Column(db.String(20), nullable=False, default='escrow')            # escrow | payout
+    status = db.Column(db.String(20), nullable=False, default='pending')         # pending | completed | failed | refunded
+
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc),
+                           onupdate=lambda: datetime.now(timezone.utc))
+
+    job   = db.relationship('Job',  backref=db.backref('payments', lazy=True))
+    payer = db.relationship('User', foreign_keys=[payer_id], backref=db.backref('payments_made',  lazy=True))
+    payee = db.relationship('User', foreign_keys=[payee_id], backref=db.backref('payments_received', lazy=True))
+
+    def __repr__(self):
+        return f'<Payment {self.type} KES {self.amount} status={self.status}>'
+
+
 class Notification(db.Model):
     """User notification model"""
     __tablename__ = 'notification'
@@ -462,6 +531,135 @@ def generate_job_ref():
         ref = f'KZJ-{code}'
         if not Job.query.filter_by(job_ref=ref).first():
             return ref
+
+
+class MpesaService:
+    """Safaricom Daraja API wrapper — STK Push (C2B) and B2C payouts"""
+
+    BASE_SANDBOX = 'https://sandbox.safaricom.co.ke'
+    BASE_PROD    = 'https://api.safaricom.co.ke'
+
+    def __init__(self):
+        self.consumer_key    = os.environ.get('MPESA_CONSUMER_KEY', '')
+        self.consumer_secret = os.environ.get('MPESA_CONSUMER_SECRET', '')
+        self.shortcode       = os.environ.get('MPESA_SHORTCODE', '174379')          # sandbox default
+        self.passkey         = os.environ.get('MPESA_PASSKEY', '')
+        self.b2c_shortcode   = os.environ.get('MPESA_B2C_SHORTCODE', '')
+        self.b2c_initiator   = os.environ.get('MPESA_B2C_INITIATOR', '')
+        self.b2c_credential  = os.environ.get('MPESA_B2C_SECURITY_CREDENTIAL', '')
+        self.callback_base   = os.environ.get('MPESA_CALLBACK_BASE', 'https://yourdomain.com')
+        self.env             = os.environ.get('MPESA_ENV', 'sandbox')               # sandbox | production
+        self.base            = self.BASE_PROD if self.env == 'production' else self.BASE_SANDBOX
+
+    def _token(self):
+        """Get OAuth access token"""
+        import base64
+        creds = base64.b64encode(f'{self.consumer_key}:{self.consumer_secret}'.encode()).decode()
+        r = requests.get(
+            f'{self.base}/oauth/v1/generate?grant_type=client_credentials',
+            headers={'Authorization': f'Basic {creds}'}, timeout=15
+        )
+        r.raise_for_status()
+        return r.json()['access_token']
+
+    def _timestamp(self):
+        return datetime.now().strftime('%Y%m%d%H%M%S')
+
+    def _password(self):
+        import base64
+        ts = self._timestamp()
+        raw = f'{self.shortcode}{self.passkey}{ts}'
+        return base64.b64encode(raw.encode()).decode(), ts
+
+    def sanitize_phone(self, phone):
+        """Normalize Kenyan phone to 254XXXXXXXXX format"""
+        phone = re.sub(r'\D', '', phone)
+        if phone.startswith('0'):
+            phone = '254' + phone[1:]
+        elif phone.startswith('+'):
+            phone = phone[1:]
+        if not phone.startswith('254') or len(phone) != 12:
+            raise ValueError(f'Invalid Kenyan phone number: {phone}')
+        return phone
+
+    def stk_push(self, phone, amount, account_ref, description):
+        """Initiate Lipa Na M-Pesa Online (STK Push) — recruiter funds escrow"""
+        token = self._token()
+        password, ts = self._password()
+        phone = self.sanitize_phone(phone)
+        payload = {
+            'BusinessShortCode': self.shortcode,
+            'Password': password,
+            'Timestamp': ts,
+            'TransactionType': 'CustomerPayBillOnline',
+            'Amount': int(amount),
+            'PartyA': phone,
+            'PartyB': self.shortcode,
+            'PhoneNumber': phone,
+            'CallBackURL': f'{self.callback_base}/mpesa/callback/stk',
+            'AccountReference': account_ref[:12],
+            'TransactionDesc': description[:13],
+        }
+        r = requests.post(
+            f'{self.base}/mpesa/stkpush/v1/processrequest',
+            json=payload,
+            headers={'Authorization': f'Bearer {token}'},
+            timeout=20
+        )
+        r.raise_for_status()
+        data = r.json()
+        if data.get('ResponseCode') != '0':
+            raise RuntimeError(data.get('ResponseDescription', 'STK Push failed'))
+        return data  # contains CheckoutRequestID
+
+    def stk_query(self, checkout_request_id):
+        """Query STK Push status"""
+        token = self._token()
+        password, ts = self._password()
+        r = requests.post(
+            f'{self.base}/mpesa/stkpushquery/v1/query',
+            json={
+                'BusinessShortCode': self.shortcode,
+                'Password': password,
+                'Timestamp': ts,
+                'CheckoutRequestID': checkout_request_id,
+            },
+            headers={'Authorization': f'Bearer {token}'},
+            timeout=20
+        )
+        r.raise_for_status()
+        return r.json()
+
+    def b2c_payout(self, phone, amount, job_ref, remarks):
+        """Send money to worker via B2C"""
+        token = self._token()
+        phone = self.sanitize_phone(phone)
+        payload = {
+            'InitiatorName': self.b2c_initiator,
+            'SecurityCredential': self.b2c_credential,
+            'CommandID': 'BusinessPayment',
+            'Amount': int(amount),
+            'PartyA': self.b2c_shortcode,
+            'PartyB': phone,
+            'Remarks': remarks[:100],
+            'QueueTimeOutURL': f'{self.callback_base}/mpesa/callback/b2c/timeout',
+            'ResultURL': f'{self.callback_base}/mpesa/callback/b2c/result',
+            'Occasion': job_ref,
+        }
+        r = requests.post(
+            f'{self.base}/mpesa/b2c/v3/paymentrequest',
+            json=payload,
+            headers={'Authorization': f'Bearer {token}'},
+            timeout=20
+        )
+        r.raise_for_status()
+        data = r.json()
+        if data.get('ResponseCode') != '0':
+            raise RuntimeError(data.get('ResponseDescription', 'B2C failed'))
+        return data
+
+
+mpesa = MpesaService()
 
 
 def haversine_km(lat1, lon1, lat2, lon2):
@@ -775,6 +973,18 @@ def register():
             flash('Please select whether you are looking for work or posting jobs', 'danger')
             return redirect(url_for('register'))
 
+        # Username: optional but if provided must be 3-30 chars, letters/numbers/underscore/hyphen
+        if username:
+            if len(username) < 3 or len(username) > 30:
+                flash('Username must be between 3 and 30 characters', 'danger')
+                return redirect(url_for('register'))
+            if not re.match(r'^[A-Za-z0-9_-]+$', username):
+                flash('Username can only contain letters, numbers, underscores and hyphens', 'danger')
+                return redirect(url_for('register'))
+            if User.query.filter_by(username=username).first():
+                flash('That username is already taken', 'danger')
+                return redirect(url_for('register'))
+
         # National ID: required, digits only, minimum 8 digits
         if not national_id:
             flash('National ID number is required', 'danger')
@@ -799,11 +1009,7 @@ def register():
         if User.query.filter_by(email=email).first():
             flash('Email already registered', 'warning')
             return redirect(url_for('register'))
-        
-        if username and User.query.filter_by(username=username).first():
-            flash('Username already taken', 'warning')
-            return redirect(url_for('register'))
-        
+
         # Create user
         user = User(
             username=username,
@@ -1026,7 +1232,43 @@ def profile(user_id=None):
         read=False
     ).count()
     unread_messages = profile_user.unread_messages_count() if is_own_profile else 0
-    
+
+    # Ratings
+    ratings_received = Rating.query.filter_by(
+        ratee_id=profile_user.id
+    ).order_by(Rating.created_at.desc()).limit(20).all()
+
+    rateable_jobs = []
+    if current_user.is_authenticated and not is_own_profile:
+        if current_user.is_recruiter():
+            rateable_jobs = db.session.query(Job).join(
+                JobApplication,
+                and_(JobApplication.job_id == Job.id,
+                     JobApplication.applicant_id == profile_user.id,
+                     JobApplication.status == 'accepted')
+            ).filter(
+                Job.poster_id == current_user.id,
+                Job.status == 'completed'
+            ).filter(
+                ~Rating.query.filter_by(
+                    job_id=Job.id, rater_id=current_user.id, ratee_id=profile_user.id
+                ).exists()
+            ).all()
+        else:
+            rateable_jobs = db.session.query(Job).join(
+                JobApplication,
+                and_(JobApplication.job_id == Job.id,
+                     JobApplication.applicant_id == current_user.id,
+                     JobApplication.status == 'accepted')
+            ).filter(
+                Job.poster_id == profile_user.id,
+                Job.status == 'completed'
+            ).filter(
+                ~Rating.query.filter_by(
+                    job_id=Job.id, rater_id=current_user.id, ratee_id=profile_user.id
+                ).exists()
+            ).all()
+
     return render_template(
         'profile.html',
         user=profile_user,
@@ -1036,8 +1278,26 @@ def profile(user_id=None):
         application_meta=application_meta,
         available_jobs=available_jobs,
         unread_count=unread_count,
-        unread_messages=unread_messages
+        unread_messages=unread_messages,
+        ratings_received=ratings_received,
+        rateable_jobs=rateable_jobs
     )
+
+
+@app.route('/toggle-role', methods=['POST'])
+@login_required
+def toggle_role():
+    """Switch between worker and recruiter roles"""
+    new_role = 'recruiter' if current_user.is_worker() else 'worker'
+    try:
+        current_user.role = new_role
+        db.session.commit()
+        flash(f'Switched to {new_role.title()} mode', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Role toggle error: {e}')
+        flash('Failed to switch role', 'danger')
+    return redirect(url_for('profile'))
 
 
 @app.route('/edit-profile', methods=['GET', 'POST'])
@@ -1409,7 +1669,42 @@ def job_detail(job_id):
     """View job detail page with media gallery"""
     job = Job.query.get_or_404(job_id)
     is_poster = (current_user.is_authenticated and current_user.id == job.poster_id)
-    return render_template('job_detail.html', job=job, is_poster=is_poster)
+
+    # Worker's application for this job
+    user_application = None
+    can_rate_poster = False
+    if current_user.is_authenticated and not is_poster:
+        user_application = JobApplication.query.filter_by(
+            job_id=job_id, applicant_id=current_user.id
+        ).first()
+        # Worker can rate recruiter if job completed and they were accepted and haven't rated yet
+        if job.status == 'completed' and user_application and user_application.status == 'accepted':
+            existing_rating = Rating.query.filter_by(
+                job_id=job_id, rater_id=current_user.id, ratee_id=job.poster_id
+            ).first()
+            can_rate_poster = not existing_rating
+
+    # Recruiter can rate accepted workers if job is completed
+    rateable_workers = []
+    if is_poster and job.status == 'completed':
+        accepted_apps = JobApplication.query.filter_by(
+            job_id=job_id, status='accepted'
+        ).all()
+        for app in accepted_apps:
+            already_rated = Rating.query.filter_by(
+                job_id=job_id, rater_id=current_user.id, ratee_id=app.applicant_id
+            ).first()
+            if not already_rated:
+                rateable_workers.append(app.applicant)
+
+    return render_template(
+        'job_detail.html',
+        job=job,
+        is_poster=is_poster,
+        user_application=user_application,
+        can_rate_poster=can_rate_poster,
+        rateable_workers=rateable_workers
+    )
 
 
 # ============================================================================
@@ -1740,6 +2035,362 @@ def cancel_job(job_id):
 
 
 # ============================================================================
+# RATING ROUTES
+# ============================================================================
+
+@app.route('/rate/<int:job_id>/<int:ratee_id>', methods=['POST'])
+@login_required
+def submit_rating(job_id, ratee_id):
+    """Submit a rating for a user after a completed job"""
+    job = Job.query.get_or_404(job_id)
+    ratee = User.query.get_or_404(ratee_id)
+
+    if ratee_id == current_user.id:
+        flash('You cannot rate yourself', 'warning')
+        return redirect(url_for('job_detail', job_id=job_id))
+
+    # Job must be completed
+    if job.status != 'completed':
+        flash('Ratings can only be submitted after a job is completed', 'warning')
+        return redirect(url_for('job_detail', job_id=job_id))
+
+    # Recruiter can rate accepted workers; workers can rate the job's recruiter
+    if current_user.is_recruiter():
+        # Must be the job poster, ratee must be an accepted worker
+        if job.poster_id != current_user.id:
+            abort(403)
+        accepted = JobApplication.query.filter_by(
+            job_id=job_id, applicant_id=ratee_id, status='accepted'
+        ).first()
+        if not accepted:
+            flash('You can only rate workers who were accepted for this job', 'warning')
+            return redirect(url_for('job_detail', job_id=job_id))
+    else:
+        # Worker can only rate the recruiter of a job they were accepted for
+        accepted = JobApplication.query.filter_by(
+            job_id=job_id, applicant_id=current_user.id, status='accepted'
+        ).first()
+        if not accepted:
+            flash('You can only rate the recruiter for jobs you were accepted for', 'warning')
+            return redirect(url_for('job_detail', job_id=job_id))
+        if ratee_id != job.poster_id:
+            abort(403)
+
+    # Check not already rated
+    existing = Rating.query.filter_by(job_id=job_id, rater_id=current_user.id, ratee_id=ratee_id).first()
+    if existing:
+        flash('You have already rated this person for this job', 'warning')
+        return redirect(url_for('profile', user_id=ratee_id))
+
+    try:
+        score = int(request.form.get('score', 0))
+        if score < 1 or score > 5:
+            flash('Rating must be between 1 and 5 stars', 'danger')
+            return redirect(url_for('profile', user_id=ratee_id))
+    except (ValueError, TypeError):
+        flash('Invalid rating score', 'danger')
+        return redirect(url_for('profile', user_id=ratee_id))
+
+    comment = request.form.get('comment', '').strip()[:500]
+
+    try:
+        rating = Rating(
+            job_id=job_id,
+            rater_id=current_user.id,
+            ratee_id=ratee_id,
+            score=score,
+            comment=comment or None
+        )
+        db.session.add(rating)
+        create_notification(
+            ratee_id,
+            f'{current_user.username or current_user.email} gave you a {score}★ rating for "{job.title}"',
+            'new_rating',
+            target_url=url_for('profile', user_id=ratee_id)
+        )
+        db.session.commit()
+        flash(f'{score}★ rating submitted successfully', 'success')
+    except Exception as e:
+        db.session.rollback()
+        app.logger.error(f'Rating error: {e}')
+        flash('Failed to submit rating', 'danger')
+
+    return redirect(url_for('profile', user_id=ratee_id))
+
+
+# ============================================================================
+# M-PESA PAYMENT ROUTES
+# ============================================================================
+
+@app.route('/job/<int:job_id>/fund', methods=['GET', 'POST'])
+@login_required
+def fund_job(job_id):
+    """Recruiter funds the job escrow via STK Push"""
+    job = Job.query.get_or_404(job_id)
+    if job.poster_id != current_user.id:
+        abort(403)
+
+    if job.status == 'completed':
+        flash('This job is already completed', 'info')
+        return redirect(url_for('job_detail', job_id=job_id))
+
+    # Check if escrow already funded
+    existing = Payment.query.filter_by(job_id=job_id, type='escrow', status='completed').first()
+    if existing:
+        flash('This job is already funded', 'info')
+        return redirect(url_for('job_detail', job_id=job_id))
+
+    if request.method == 'POST':
+        phone = request.form.get('phone', '').strip()
+        if not phone:
+            flash('Please enter your M-Pesa phone number', 'danger')
+            return render_template('fund_job.html', job=job)
+
+        total = (job.pay_amount or 0) * (job.slots_filled or job.slots_total or 1)
+        if total <= 0:
+            flash('Job has no pay amount set', 'danger')
+            return redirect(url_for('edit_job', job_id=job_id))
+
+        try:
+            phone_clean = mpesa.sanitize_phone(phone)
+        except ValueError as e:
+            flash(str(e), 'danger')
+            return render_template('fund_job.html', job=job)
+
+        try:
+            result = mpesa.stk_push(
+                phone=phone_clean,
+                amount=total,
+                account_ref=job.job_ref or f'JOB{job_id}',
+                description=f'KaziConnect Job {job.job_ref or job_id}'
+            )
+            payment = Payment(
+                job_id=job_id,
+                payer_id=current_user.id,
+                amount=total,
+                phone_number=phone_clean,
+                type='escrow',
+                status='pending',
+                mpesa_checkout_id=result.get('CheckoutRequestID')
+            )
+            db.session.add(payment)
+            db.session.commit()
+            flash(f'STK Push sent to {phone}. Enter your M-Pesa PIN to complete payment of KES {total:,.0f}.', 'success')
+            return redirect(url_for('payment_status', payment_id=payment.id))
+        except Exception as e:
+            app.logger.error(f'STK Push error: {e}')
+            flash(f'M-Pesa request failed: {e}', 'danger')
+            return render_template('fund_job.html', job=job)
+
+    total = (job.pay_amount or 0) * (job.slots_filled or job.slots_total or 1)
+    return render_template('fund_job.html', job=job, total=total)
+
+
+@app.route('/payment/<int:payment_id>/status')
+@login_required
+def payment_status(payment_id):
+    """Check payment status — polls STK query if still pending"""
+    payment = Payment.query.get_or_404(payment_id)
+    if payment.payer_id != current_user.id and payment.payee_id != current_user.id and not current_user.is_admin:
+        abort(403)
+
+    # If pending, try querying Daraja
+    if payment.status == 'pending' and payment.mpesa_checkout_id:
+        try:
+            result = mpesa.stk_query(payment.mpesa_checkout_id)
+            rc = result.get('ResultCode')
+            if rc == '0' or rc == 0:
+                payment.status = 'completed'
+                payment.mpesa_receipt = result.get('MpesaReceiptNumber')
+                db.session.commit()
+                flash('Payment confirmed! Escrow funded successfully.', 'success')
+            elif rc is not None and str(rc) != '1032':  # 1032 = request cancelled by user
+                payment.status = 'failed'
+                db.session.commit()
+                flash(f'Payment failed: {result.get("ResultDesc", "Unknown error")}', 'danger')
+        except Exception as e:
+            app.logger.warning(f'STK query error: {e}')
+
+    return render_template('payment_status.html', payment=payment)
+
+
+@app.route('/job/<int:job_id>/release-payments', methods=['GET', 'POST'])
+@login_required
+def release_payments(job_id):
+    """Recruiter releases payment to accepted workers after job completion"""
+    job = Job.query.get_or_404(job_id)
+    if job.poster_id != current_user.id:
+        abort(403)
+
+    if job.status != 'completed':
+        flash('Job must be completed before releasing payments', 'warning')
+        return redirect(url_for('job_detail', job_id=job_id))
+
+    # Escrow must be funded
+    escrow = Payment.query.filter_by(job_id=job_id, type='escrow', status='completed').first()
+    if not escrow:
+        flash('Please fund the job escrow first before releasing payments', 'warning')
+        return redirect(url_for('fund_job', job_id=job_id))
+
+    accepted_apps = JobApplication.query.filter_by(job_id=job_id, status='accepted').all()
+    per_worker = job.pay_amount or 0
+    platform_fee_pct = float(os.environ.get('PLATFORM_FEE_PCT', '5'))  # 5% default
+    worker_amount = round(per_worker * (1 - platform_fee_pct / 100), 2)
+
+    if request.method == 'POST':
+        released = 0
+        errors = []
+        for app_ in accepted_apps:
+            # Skip if already paid
+            already = Payment.query.filter_by(
+                job_id=job_id, payee_id=app_.applicant_id, type='payout', status='completed'
+            ).first()
+            if already:
+                continue
+
+            worker = app_.applicant
+            phone = request.form.get(f'phone_{worker.id}', worker.phone_number or '').strip()
+            if not phone:
+                errors.append(f'No phone for {worker.username or worker.email.split("@")[0]}')
+                continue
+
+            try:
+                result = mpesa.b2c_payout(
+                    phone=phone,
+                    amount=worker_amount,
+                    job_ref=job.job_ref or f'JOB{job_id}',
+                    remarks=f'Payment for {job.title[:50]}'
+                )
+                payout = Payment(
+                    job_id=job_id,
+                    payer_id=current_user.id,
+                    payee_id=worker.id,
+                    amount=worker_amount,
+                    phone_number=mpesa.sanitize_phone(phone),
+                    type='payout',
+                    status='pending',
+                    b2c_conversation_id=result.get('ConversationID'),
+                    b2c_originator_id=result.get('OriginatorConversationID')
+                )
+                db.session.add(payout)
+                create_notification(
+                    worker.id,
+                    f'KES {worker_amount:,.0f} payment for "{job.title}" is being processed to your M-Pesa',
+                    'payment_sent',
+                    target_url=url_for('profile')
+                )
+                released += 1
+            except Exception as e:
+                errors.append(f'{worker.username or worker.email.split("@")[0]}: {e}')
+
+        db.session.commit()
+        if released:
+            flash(f'Payments initiated for {released} worker(s). Funds will arrive within minutes.', 'success')
+        for err in errors:
+            flash(f'Failed: {err}', 'danger')
+        return redirect(url_for('job_detail', job_id=job_id))
+
+    return render_template(
+        'release_payments.html',
+        job=job,
+        accepted_apps=accepted_apps,
+        worker_amount=worker_amount,
+        platform_fee_pct=platform_fee_pct,
+        escrow=escrow
+    )
+
+
+@app.route('/mpesa/callback/stk', methods=['POST'])
+def mpesa_stk_callback():
+    """Daraja callback for STK Push — updates payment status"""
+    try:
+        data = request.get_json(force=True) or {}
+        body = data.get('Body', {}).get('stkCallback', {})
+        checkout_id = body.get('CheckoutRequestID')
+        result_code = body.get('ResultCode')
+
+        payment = Payment.query.filter_by(mpesa_checkout_id=checkout_id).first()
+        if payment:
+            if result_code == 0:
+                items = body.get('CallbackMetadata', {}).get('Item', [])
+                receipt = next((i['Value'] for i in items if i['Name'] == 'MpesaReceiptNumber'), None)
+                payment.status = 'completed'
+                payment.mpesa_receipt = receipt
+                create_notification(
+                    payment.payer_id,
+                    f'Escrow payment of KES {payment.amount:,.0f} confirmed (Receipt: {receipt})',
+                    'payment_confirmed',
+                    target_url=url_for('job_detail', job_id=payment.job_id)
+                )
+            else:
+                payment.status = 'failed'
+                create_notification(
+                    payment.payer_id,
+                    f'Escrow payment failed: {body.get("ResultDesc", "Unknown error")}',
+                    'payment_failed',
+                    target_url=url_for('fund_job', job_id=payment.job_id)
+                )
+            db.session.commit()
+    except Exception as e:
+        app.logger.error(f'STK callback error: {e}')
+    return jsonify({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+
+@app.route('/mpesa/callback/b2c/result', methods=['POST'])
+def mpesa_b2c_result():
+    """Daraja callback for B2C payout results"""
+    try:
+        data = request.get_json(force=True) or {}
+        result = data.get('Result', {})
+        conversation_id = result.get('ConversationID')
+        result_code = result.get('ResultCode')
+
+        payment = Payment.query.filter_by(b2c_conversation_id=conversation_id).first()
+        if payment:
+            if result_code == 0:
+                params = {p['Key']: p['Value'] for p in
+                          result.get('ResultParameters', {}).get('ResultParameter', [])}
+                payment.status = 'completed'
+                payment.mpesa_receipt = params.get('TransactionReceipt')
+                if payment.payee_id:
+                    create_notification(
+                        payment.payee_id,
+                        f'KES {payment.amount:,.0f} received on M-Pesa (Receipt: {payment.mpesa_receipt})',
+                        'payment_received',
+                        target_url=url_for('profile')
+                    )
+            else:
+                payment.status = 'failed'
+                if payment.payee_id:
+                    create_notification(
+                        payment.payee_id,
+                        f'Payment of KES {payment.amount:,.0f} failed — contact support',
+                        'payment_failed',
+                        target_url=url_for('profile')
+                    )
+            db.session.commit()
+    except Exception as e:
+        app.logger.error(f'B2C result callback error: {e}')
+    return jsonify({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+
+@app.route('/mpesa/callback/b2c/timeout', methods=['POST'])
+def mpesa_b2c_timeout():
+    """Daraja timeout callback for B2C"""
+    try:
+        data = request.get_json(force=True) or {}
+        result = data.get('Result', {})
+        conversation_id = result.get('ConversationID')
+        payment = Payment.query.filter_by(b2c_conversation_id=conversation_id).first()
+        if payment:
+            payment.status = 'failed'
+            db.session.commit()
+    except Exception as e:
+        app.logger.error(f'B2C timeout error: {e}')
+    return jsonify({'ResultCode': 0, 'ResultDesc': 'Accepted'})
+
+
+# ============================================================================
 # NOTIFICATION ROUTES
 # ============================================================================
 
@@ -1976,6 +2627,37 @@ def messages_unread_count():
     """Get unread message count (API)"""
     count = current_user.unread_messages_count()
     return jsonify({'count': count})
+
+
+@app.route('/messages/poll/<int:other_id>')
+@login_required
+def messages_poll(other_id):
+    """Poll for new messages since a given message ID — used for real-time chat"""
+    since_id = request.args.get('since', 0, type=int)
+    msgs = Message.query.filter(
+        or_(
+            and_(Message.sender_id == current_user.id, Message.recipient_id == other_id),
+            and_(Message.sender_id == other_id, Message.recipient_id == current_user.id)
+        ),
+        Message.id > since_id
+    ).order_by(Message.created_at.asc()).all()
+
+    # Mark newly received messages as read
+    try:
+        Message.query.filter(
+            Message.sender_id == other_id,
+            Message.recipient_id == current_user.id,
+            Message.id > since_id,
+            Message.read == False
+        ).update({'read': True}, synchronize_session=False)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+    return jsonify({
+        'messages': [m.to_dict() for m in msgs],
+        'last_id': msgs[-1].id if msgs else since_id
+    })
 
 
 @app.route('/messages/conversations')
@@ -2659,9 +3341,33 @@ if __name__ == '__main__':
             ensure_default_admin()
         except Exception as exc:
             app.logger.error(f'Startup admin creation failed: {exc}')
-    
+
+        # Backfill job_ref for existing jobs that don't have one
+        try:
+            jobs_without_ref = Job.query.filter(Job.job_ref == None).all()
+            for job in jobs_without_ref:
+                job.job_ref = generate_job_ref()
+            if jobs_without_ref:
+                db.session.commit()
+                app.logger.info(f'Backfilled job_ref for {len(jobs_without_ref)} jobs')
+        except Exception as exc:
+            db.session.rollback()
+            app.logger.error(f'job_ref backfill failed: {exc}')
+
+        # Fix legacy "closed" status → "cancelled"
+        try:
+            legacy = Job.query.filter_by(status='closed').all()
+            for job in legacy:
+                job.status = 'cancelled'
+            if legacy:
+                db.session.commit()
+                app.logger.info(f'Migrated {len(legacy)} jobs from closed → cancelled')
+        except Exception as exc:
+            db.session.rollback()
+            app.logger.error(f'Status migration failed: {exc}')
+
     # Get configuration from environment
     debug_mode = os.environ.get('FLASK_DEBUG', '0') == '1'
     port = int(os.environ.get('PORT', 5000))
-    
+
     app.run(host='0.0.0.0', port=port, debug=debug_mode)

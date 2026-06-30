@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Payment Status — KaziConnect{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-6 col-lg-5">
+    <div class="card text-center">
+      <div class="card-body" style="padding:2.5rem 2rem;">
+
+        {% if payment.status == 'completed' %}
+          <div style="font-size:3.5rem; color:var(--sage); margin-bottom:1rem;">
+            <i class="bi bi-check-circle-fill"></i>
+          </div>
+          <h2 style="font-family:var(--font-display); color:var(--ink);">Payment Confirmed</h2>
+          <p style="color:var(--stone);">
+            KES {{ '{:,.0f}'.format(payment.amount) }} successfully received.<br>
+            {% if payment.mpesa_receipt %}Receipt: <strong>{{ payment.mpesa_receipt }}</strong>{% endif %}
+          </p>
+          <a class="btn btn-primary mt-2" href="{{ url_for('job_detail', job_id=payment.job_id) }}">
+            <i class="bi bi-arrow-left"></i> Back to Job
+          </a>
+
+        {% elif payment.status == 'failed' %}
+          <div style="font-size:3.5rem; color:var(--danger-fg); margin-bottom:1rem;">
+            <i class="bi bi-x-circle-fill"></i>
+          </div>
+          <h2 style="font-family:var(--font-display); color:var(--ink);">Payment Failed</h2>
+          <p style="color:var(--stone);">The payment did not go through. Please try again.</p>
+          <a class="btn btn-primary mt-2" href="{{ url_for('fund_job', job_id=payment.job_id) }}">
+            Try Again
+          </a>
+
+        {% else %}
+          <!-- Pending — auto-refresh every 5s -->
+          <div style="font-size:3.5rem; color:var(--clay); margin-bottom:1rem;" id="statusIcon">
+            <i class="bi bi-phone-fill"></i>
+          </div>
+          <h2 style="font-family:var(--font-display); color:var(--ink);">Waiting for M-Pesa</h2>
+          <p style="color:var(--stone);">
+            Check your phone for a PIN prompt from M-Pesa.<br>
+            Enter your PIN to confirm payment of <strong>KES {{ '{:,.0f}'.format(payment.amount) }}</strong>.
+          </p>
+          <div class="loading-spinner mx-auto mb-3"></div>
+          <p style="font-size:.8rem; color:var(--stone);">
+            This page refreshes automatically. If you didn't get a prompt,
+            <a href="{{ url_for('fund_job', job_id=payment.job_id) }}">try again</a>.
+          </p>
+          <script>
+            setTimeout(function() { window.location.reload(); }, 6000);
+          </script>
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
